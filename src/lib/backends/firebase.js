@@ -25,21 +25,69 @@ const dayRef = (restaurantId, ms = Date.now()) => doc(db, 'days', `${restaurantI
 
 // restaurantIds — список заведений, доступных вошедшему сотруднику (см. firestore.rules:
 // allow list требует, чтобы запрос был ограничен по restaurantId, иначе Firestore его отклонит).
-// Ограничение оператора `in` — 30 значений (проверено на эмуляторе); заведений в каталоге 18,
-// то есть запас есть. Если их станет больше 30, запрос придётся разбивать на части, иначе
-// кухня с доступом "*" получит invalid-argument и останется с пустым экраном.
+// Ограничение оператора `in` — 30 значений (проверено на эмуляторе); заведений в каталоге 18.
+// ВАЖНО: два фильтра `in` перемножаются в дизъюнкции (18 заведений × 2 статуса = 36 > 30),
+// поэтому «активные» заказы читаются отдельными запросами по одному статусу.
 export function subscribeOrders(restaurantIds, cb) {
   return subscribeWithDayRollover(() => {
-    const q = query(
-      collection(db, 'orders'),
-      where('createdAt', '>=', startOfDay()),
-      where('restaurantId', 'in', restaurantIds)
-    );
-    return onSnapshot(
-      q,
-      (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
-      (err) => console.error('orders subscription failed', err)
-    );
+    // Кухне нужны две разные выборки:
+    //  1) незавершённые заказы — независимо от даты создания. Фильтр «createdAt >= начало
+    //     сегодняшнего дня» иначе уносит с экрана заказ, оформленный в 23:59 и ещё не выданный;
+    //  2) всё, что создано сегодня — для истории выдач и метрик.
+    const queries = [
+      query(
+        collection(db, 'orders'),
+        where('createdAt', '>=', startOfDay()),
+        where('restaurantId', 'in', restaurantIds)
+      ),
+      query(
+        collection(db, 'orders'),
+        where('restaurantId', 'in', restaurantIds),
+        where('status', '==', 'pending')
+      ),
+      query(
+        collection(db, 'orders'),
+        where('restaurantId', 'in', restaurantIds),
+        where('status', '==', 'ready')
+      )
+    ];
+
+    const lists = queries.map(() => []);
+    let reported = 0;
+
+    // Отдаём данные только когда ответили все запросы: иначе экран на секунду показывает
+    // неполный список (сначала «сегодня», потом активные) и колонки прыгают.
+    const emit = () => {
+      const merged = new Map();
+      for (const list of lists) for (const order of list) merged.set(order.id, order);
+      cb([...merged.values()]);
+    };
+
+    const stops = queries.map((q, i) => {
+      let first = true;
+      const settle = () => {
+        if (first) {
+          first = false;
+          reported += 1;
+        }
+        if (reported === queries.length) emit();
+      };
+      return onSnapshot(
+        q,
+        (snap) => {
+          lists[i] = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          settle();
+        },
+        (err) => {
+          // Без индекса или при отказе правил показываем то, что успели получить,
+          // вместо пустого экрана.
+          console.error('orders subscription failed', err);
+          settle();
+        }
+      );
+    });
+
+    return () => stops.forEach((stop) => stop());
   });
 }
 
@@ -99,15 +147,19 @@ export async function updateOrder(id, patch) {
   await updateDoc(doc(db, 'orders', id), patch);
 }
 
-// Отмена клиентом в течение минуты после оформления (см. firestore.rules) — заодно
-// освобождаем занятый слот, иначе счётчик занятости остался бы завышен навсегда.
-export async function cancelOrder(id) {
+// Отмена заказа — клиентом (в течение минуты, это проверяют правила) или сотрудником
+// кухни. Слот освобождается в той же транзакции: счётчик занятости и статус заказа
+// не должны разъезжаться, иначе «отменённый» заказ навсегда держит место в слоте.
+// allowReady — отмена уже готового заказа (гость не пришёл); правила Firestore разрешают
+// это только сотруднику, поэтому клиентский вызов оставляет флаг выключенным.
+export async function cancelOrder(id, { allowReady = false } = {}) {
   const orderRef = doc(db, 'orders', id);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(orderRef);
     if (!snap.exists()) return;
     const order = snap.data();
-    if (order.status !== 'pending') return;
+    const cancellable = order.status === 'pending' || (allowReady && order.status === 'ready');
+    if (!cancellable) return;
 
     const ref = dayRef(order.restaurantId, order.pickupAt);
     const daySnap = await tx.get(ref);
@@ -115,7 +167,28 @@ export async function cancelOrder(id) {
     const used = daySnap.exists() ? daySnap.data().slots?.[slotKey] || 0 : 0;
 
     tx.update(orderRef, { status: 'cancelled' });
-    tx.set(ref, { slots: { [slotKey]: Math.max(0, used - order.units) } }, { merge: true });
+    tx.set(
+      ref,
+      // Если документа дня ещё нет (например, его чистили вручную), seq нужно задать
+      // явно: правила требуют целочисленный seq в любом запросе к days.
+      {
+        ...(daySnap.exists() ? {} : { seq: 0 }),
+        slots: { [slotKey]: Math.max(0, used - order.units) }
+      },
+      { merge: true }
+    );
+  });
+}
+
+// Переход статуса только из ожидаемого состояния. Без этого кухня могла «воскресить»
+// отменённый заказ: markReady перезаписал бы cancelled на ready, а слот уже освобождён.
+export async function transitionOrder(id, from, patch) {
+  return runTransaction(db, async (tx) => {
+    const ref = doc(db, 'orders', id);
+    const snap = await tx.get(ref);
+    if (!snap.exists() || snap.data().status !== from) return false;
+    tx.update(ref, patch);
+    return true;
   });
 }
 

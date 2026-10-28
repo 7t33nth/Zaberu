@@ -63,7 +63,11 @@ export function subscribeOrders(restaurantIds, cb) {
     subscribe(
       (db) =>
         Object.values(db.orders).filter(
-          (o) => isToday(o) && restaurantIds.includes(o.restaurantId)
+          (o) =>
+            restaurantIds.includes(o.restaurantId) &&
+            // Незавершённые заказы показываем всегда, даже если они оформлены вчера:
+            // иначе в полночь они исчезают с экрана кухни, хотя ещё не выданы.
+            (isToday(o) || o.status === 'pending' || o.status === 'ready')
         ),
       cb
     )
@@ -124,11 +128,21 @@ export async function updateOrder(id, patch) {
   write(db);
 }
 
-// Отмена клиентом в течение минуты после оформления — слот освобождается сам собой,
-// так как занятость слота здесь всегда считается заново по живым заказам (см. subscribeSlots).
-export async function cancelOrder(id) {
+// Переход статуса только из ожидаемого состояния (см. transitionOrder в firebase.js).
+export async function transitionOrder(id, from, patch) {
   const db = read();
-  if (db.orders[id]?.status !== 'pending') return;
+  if (db.orders[id]?.status !== from) return false;
+  db.orders[id] = { ...db.orders[id], ...patch };
+  write(db);
+  return true;
+}
+
+// Отмена клиентом или кухней — слот освобождается сам собой, так как занятость здесь
+// всегда считается заново по живым заказам (см. subscribeSlots).
+export async function cancelOrder(id, { allowReady = false } = {}) {
+  const db = read();
+  const status = db.orders[id]?.status;
+  if (status !== 'pending' && !(allowReady && status === 'ready')) return;
   db.orders[id].status = 'cancelled';
   write(db);
 }

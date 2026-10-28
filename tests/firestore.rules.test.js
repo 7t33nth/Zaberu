@@ -9,7 +9,16 @@ import {
   assertSucceeds,
   assertFails
 } from '@firebase/rules-unit-testing';
-import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  updateDoc,
+  where
+} from 'firebase/firestore';
 
 let testEnv;
 
@@ -78,10 +87,26 @@ test('unauthenticated cannot list orders at all', async () => {
 
 test('staff for r01 can mark their own order ready', async () => {
   const db = ctxFor('staffA@example.com');
-  await assertSucceeds(updateDoc(doc(db, 'orders', 'o1'), { status: 'ready', readyAt: Date.now() }));
+  await assertSucceeds(
+    updateDoc(doc(db, 'orders', 'o1'), { status: 'ready', readyAt: Date.now() })
+  );
 });
 
-test('staff for r01 cannot touch another restaurant\'s order', async () => {
+test('staff can cancel a ready order (the app frees its slot in the same transaction)', async () => {
+  await seed(async (db) =>
+    setDoc(doc(db, 'orders', 'ready2'), {
+      restaurantId: 'r01',
+      status: 'ready',
+      units: 1,
+      pickupAt: soon(),
+      createdAt: Date.now()
+    })
+  );
+  const db = ctxFor('staffA@example.com');
+  await assertSucceeds(updateDoc(doc(db, 'orders', 'ready2'), { status: 'cancelled' }));
+});
+
+test("staff for r01 cannot touch another restaurant's order", async () => {
   const db = ctxFor('staffA@example.com');
   await assertFails(updateDoc(doc(db, 'orders', 'o2'), { status: 'ready', readyAt: Date.now() }));
 });
@@ -90,7 +115,9 @@ test('wildcard staff can list and update any restaurant', async () => {
   const db = ctxFor('admin@example.com');
   const q = query(collection(db, 'orders'), where('restaurantId', 'in', ['r01', 'r02']));
   await assertSucceeds(getDocs(q));
-  await assertSucceeds(updateDoc(doc(db, 'orders', 'o2'), { status: 'ready', readyAt: Date.now() }));
+  await assertSucceeds(
+    updateDoc(doc(db, 'orders', 'o2'), { status: 'ready', readyAt: Date.now() })
+  );
 });
 
 // Кухня с доступом "*" подписывается сразу на все заведения каталога. Проверено на
@@ -101,6 +128,21 @@ test('wildcard staff can list all 18 restaurants in one query', async () => {
   const ids = Array.from({ length: 18 }, (_, i) => `r${String(i + 1).padStart(2, '0')}`);
   const q = query(collection(db, 'orders'), where('restaurantId', 'in', ids));
   await assertSucceeds(getDocs(q));
+});
+
+// «Активные» заказы читаются двумя запросами: `in` по 18 заведениям и `==` по статусу.
+// Два фильтра `in` дали бы 36 дизъюнкций и были бы отклонены (лимит 30).
+test('wildcard staff can list pending and ready orders across 18 restaurants', async () => {
+  const db = ctxFor('admin@example.com');
+  const ids = Array.from({ length: 18 }, (_, i) => `r${String(i + 1).padStart(2, '0')}`);
+  for (const status of ['pending', 'ready']) {
+    const q = query(
+      collection(db, 'orders'),
+      where('restaurantId', 'in', ids),
+      where('status', '==', status)
+    );
+    await assertSucceeds(getDocs(q));
+  }
 });
 
 // --- orders: create ---
@@ -202,7 +244,7 @@ test('staff can read their own staff doc', async () => {
   await assertSucceeds(getDoc(doc(db, 'staff', 'staffa@example.com')));
 });
 
-test('staff cannot read someone else\'s staff doc', async () => {
+test("staff cannot read someone else's staff doc", async () => {
   const db = ctxFor('staffA@example.com');
   await assertFails(getDoc(doc(db, 'staff', 'admin@example.com')));
 });
@@ -221,7 +263,7 @@ test('clients can never write to the staff collection, even their own doc', asyn
 
 test('anyone can write a well-shaped days doc', async () => {
   const db = testEnv.unauthenticatedContext().firestore();
-  await assertSucceeds(setDoc(doc(db, 'days', 'r01_20260101'), { seq: 1, slots: { '123': 2 } }));
+  await assertSucceeds(setDoc(doc(db, 'days', 'r01_20260101'), { seq: 1, slots: { 123: 2 } }));
 });
 
 test('days doc write rejects unexpected fields', async () => {
@@ -232,4 +274,26 @@ test('days doc write rejects unexpected fields', async () => {
 test('days doc write rejects a negative seq', async () => {
   const db = testEnv.unauthenticatedContext().firestore();
   await assertFails(setDoc(doc(db, 'days', 'r01_20260103'), { seq: -1, slots: {} }));
+});
+
+// Так cancelOrder освобождает слот: merge-запись только своего ключа, seq берётся из
+// существующего документа.
+test('slot decrement merges into an existing day doc and keeps seq', async () => {
+  await seed(async (db) =>
+    setDoc(doc(db, 'days', 'r01_20260501'), { seq: 3, slots: { '111': 2 } })
+  );
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertSucceeds(
+    setDoc(doc(db, 'days', 'r01_20260501'), { slots: { '111': 1 } }, { merge: true })
+  );
+});
+
+test('slot decrement over a missing day doc needs an explicit seq', async () => {
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertFails(
+    setDoc(doc(db, 'days', 'r01_20260502'), { slots: { '111': 0 } }, { merge: true })
+  );
+  await assertSucceeds(
+    setDoc(doc(db, 'days', 'r01_20260502'), { seq: 0, slots: { '111': 0 } }, { merge: true })
+  );
 });

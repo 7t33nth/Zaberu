@@ -51,11 +51,17 @@ export async function placeOrder({ restaurant, lines, pickupAt, name = '', comme
 }
 
 const patch = (id, fields) => backendPromise.then((b) => b.updateOrder(id, fields));
+const transition = (id, from, fields) =>
+  backendPromise.then((b) => b.transitionOrder(id, from, fields));
 
-export const markReady = (id) => patch(id, { status: 'ready', readyAt: Date.now() });
+export const markReady = (id) =>
+  transition(id, 'pending', { status: 'ready', readyAt: Date.now() });
+export const markDone = (id) => transition(id, 'ready', { status: 'done', issuedAt: Date.now() });
 export const markArrived = (id) => patch(id, { arrivedAt: Date.now() });
-export const markDone = (id) => patch(id, { status: 'done', issuedAt: Date.now() });
 export const cancelOrder = (id) => backendPromise.then((b) => b.cancelOrder(id));
+// Кухня может отменить и готовый заказ (гость не пришёл) — клиенту это запрещено правилами.
+export const cancelOrderByStaff = (id) =>
+  backendPromise.then((b) => b.cancelOrder(id, { allowReady: true }));
 export const resetAll = () => backendPromise.then((b) => b.resetAll());
 export const clearDoneOrders = (restaurantId) =>
   backendPromise.then((b) => b.clearDoneOrders(restaurantId));

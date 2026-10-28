@@ -218,6 +218,8 @@ export default {
   'admin.pickupAt': 'pickup {time}',
   'admin.customerHere': 'Customer is here',
   'admin.markDoneBtn': 'Picked up',
+  'admin.cancelOrder': 'Cancel order',
+  'admin.cancelConfirm': 'Cancel this order and free up the slot?',
   'admin.restaurantLabel': 'Restaurant',
   'admin.searchByCodeAria': 'Find order by number',
   'admin.searchByCodePlaceholder': 'Order number (scan/type)',

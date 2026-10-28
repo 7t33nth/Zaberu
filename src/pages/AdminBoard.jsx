@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { restaurants, restaurantById } from '../data/index.js';
 import {
   canReset,
+  cancelOrderByStaff,
   clearDoneOrders,
   markDone,
   markReady,
@@ -149,7 +150,7 @@ function Metric({ label, value, hint, tone }) {
   );
 }
 
-function OrderCard({ order, now, onReady, onDone, t }) {
+function OrderCard({ order, now, onReady, onDone, onCancel, t }) {
   const msLeft = order.pickupAt - now;
   const ready = order.status === 'ready';
   const urgent = !ready && msLeft < 3 * 60000;
@@ -215,6 +216,13 @@ function OrderCard({ order, now, onReady, onDone, t }) {
           {t('item.done')}
         </button>
       )}
+      <button
+        type="button"
+        onClick={() => onCancel(order.id)}
+        className="self-start text-xs font-semibold text-muted hover:text-danger transition-colors"
+      >
+        {t('admin.cancelOrder')}
+      </button>
     </div>
   );
 }
@@ -306,6 +314,11 @@ function Board({ staff, allowedRestaurants }) {
     if (!window.confirm(t('admin.prepDemoConfirm', { name: restaurant.name }))) return;
     await resetAll();
     await seedDemoOrders(restaurantId);
+  }
+
+  async function cancelWithConfirm(id) {
+    if (!window.confirm(t('admin.cancelConfirm'))) return;
+    await cancelOrderByStaff(id);
   }
 
   return (
@@ -444,6 +457,7 @@ function Board({ staff, allowedRestaurants }) {
                   now={now}
                   onReady={markReady}
                   onDone={markDone}
+                  onCancel={cancelWithConfirm}
                   t={t}
                 />
               ))}
@@ -466,6 +480,7 @@ function Board({ staff, allowedRestaurants }) {
                   now={now}
                   onReady={markReady}
                   onDone={markDone}
+                  onCancel={cancelWithConfirm}
                   t={t}
                 />
               ))}

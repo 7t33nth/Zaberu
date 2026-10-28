@@ -71,6 +71,96 @@ test('слот освобождается, если заказ отменён', 
   const o = base();
   const a = await local.placeOrder(o, { capacity: 2, codePrefix: 'B' });
   await assert.rejects(() => local.placeOrder(o, { capacity: 2, codePrefix: 'B' }), SlotFullError);
-  await local.updateOrder(a.id, { status: 'cancelled' });
+  await local.cancelOrder(a.id);
   await local.placeOrder(o, { capacity: 2, codePrefix: 'B' });
+});
+
+test('кухня отменяет готовый заказ — слот освобождается', async () => {
+  await local.resetAll();
+  const o = base();
+  const a = await local.placeOrder(o, { capacity: 2, codePrefix: 'B' });
+  assert.equal(await local.transitionOrder(a.id, 'pending', { status: 'ready' }), true);
+
+  let loads = {};
+  const stop = local.subscribeSlots('r01', (x) => (loads = x));
+  assert.equal(loads[o.pickupAt], 2);
+
+  await local.cancelOrder(a.id, { allowReady: true });
+  assert.equal(loads[o.pickupAt] ?? 0, 0);
+
+  // место снова можно занять
+  await local.placeOrder(o, { capacity: 2, codePrefix: 'B' });
+  stop();
+});
+
+test('повторная отмена не освобождает чужое место в слоте', async () => {
+  await local.resetAll();
+  const o = base({ units: 1 });
+  const first = await local.placeOrder(o, { capacity: 5, codePrefix: 'B' });
+  await local.placeOrder(base({ units: 2 }), { capacity: 5, codePrefix: 'B' });
+
+  let loads = {};
+  const stop = local.subscribeSlots('r01', (x) => (loads = x));
+
+  await local.cancelOrder(first.id);
+  await local.cancelOrder(first.id);
+  assert.equal(loads[o.pickupAt], 2);
+  stop();
+});
+
+test('клиент не может отменить готовый заказ', async () => {
+  await local.resetAll();
+  const a = await local.placeOrder(base(), opts);
+  await local.transitionOrder(a.id, 'pending', { status: 'ready' });
+
+  await local.cancelOrder(a.id); // как клиент: allowReady выключен
+
+  let orders = [];
+  local.subscribeOrders(['r01'], (x) => (orders = x))();
+  assert.equal(orders.find((x) => x.id === a.id).status, 'ready');
+});
+
+test('выданный заказ отменить нельзя', async () => {
+  await local.resetAll();
+  const a = await local.placeOrder(base(), opts);
+  await local.transitionOrder(a.id, 'pending', { status: 'ready' });
+  await local.transitionOrder(a.id, 'ready', { status: 'done', issuedAt: Date.now() });
+  await local.cancelOrder(a.id, { allowReady: true });
+
+  let orders = [];
+  local.subscribeOrders(['r01'], (x) => (orders = x))();
+  assert.equal(orders.find((x) => x.id === a.id).status, 'done');
+});
+
+test('переход статуса не срабатывает из неожиданного состояния', async () => {
+  await local.resetAll();
+  const a = await local.placeOrder(base(), opts);
+  await local.cancelOrder(a.id);
+
+  assert.equal(await local.transitionOrder(a.id, 'pending', { status: 'ready' }), false);
+  let orders = [];
+  local.subscribeOrders(['r01'], (x) => (orders = x))();
+  assert.equal(orders.find((x) => x.id === a.id).status, 'cancelled');
+});
+
+test('незавершённый вчерашний заказ остаётся в списке кухни, а завершённый — нет', async () => {
+  await local.resetAll();
+  const active = await local.placeOrder(base(), opts);
+  const doneOld = await local.placeOrder(base(), opts);
+  await local.transitionOrder(doneOld.id, 'pending', { status: 'ready' });
+  await local.transitionOrder(doneOld.id, 'ready', { status: 'done', issuedAt: Date.now() });
+
+  // переносим заказы во вчерашний день напрямую в «базе»
+  const db = JSON.parse(localStorage.getItem('ep_db_v1'));
+  const yesterday = Date.now() - 24 * 60 * 60 * 1000;
+  db.orders[active.id].createdAt = yesterday;
+  db.orders[doneOld.id].createdAt = yesterday;
+  localStorage.setItem('ep_db_v1', JSON.stringify(db));
+
+  let orders = [];
+  local.subscribeOrders(['r01'], (x) => (orders = x))();
+  assert.deepEqual(
+    orders.map((o) => o.id),
+    [active.id]
+  );
 });

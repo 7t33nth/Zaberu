@@ -218,6 +218,8 @@ export default {
   'admin.pickupAt': 'выдача {time}',
   'admin.customerHere': 'Клиент на месте',
   'admin.markDoneBtn': 'Выдано',
+  'admin.cancelOrder': 'Отменить заказ',
+  'admin.cancelConfirm': 'Отменить заказ и освободить слот?',
   'admin.restaurantLabel': 'Заведение',
   'admin.searchByCodeAria': 'Найти заказ по номеру',
   'admin.searchByCodePlaceholder': 'Номер заказа (скан/ввод)',

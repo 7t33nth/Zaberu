@@ -219,6 +219,8 @@ export default {
   'admin.pickupAt': 'беру {time}',
   'admin.customerHere': 'Клиент осында',
   'admin.markDoneBtn': 'Берілді',
+  'admin.cancelOrder': 'Тапсырысты болдырмау',
+  'admin.cancelConfirm': 'Тапсырысты болдырмай, слотты босату керек пе?',
   'admin.restaurantLabel': 'Мекеме',
   'admin.searchByCodeAria': 'Тапсырысты нөмірі бойынша табу',
   'admin.searchByCodePlaceholder': 'Тапсырыс нөмірі (сканер/енгізу)',
