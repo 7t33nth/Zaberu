@@ -1,0 +1,4 @@
+# Единые окончания строк в репозитории: LF в индексе и в рабочей копии.
+# Без этого core.autocrlf=true на Windows возвращает CRLF, и Prettier
+# (endOfLine: lf) начинает ругаться на каждый файл после любого checkout.
+* text=auto eol=lf

@@ -15,6 +15,7 @@ import {
 import { firebaseApp } from '../firebaseApp.js';
 import { SlotFullError } from '../errors.js';
 import { dayKey, startOfDay } from '../time.js';
+import { subscribeWithDayRollover } from '../dayRollover.js';
 
 const db = getFirestore(firebaseApp);
 
@@ -24,17 +25,22 @@ const dayRef = (restaurantId, ms = Date.now()) => doc(db, 'days', `${restaurantI
 
 // restaurantIds — список заведений, доступных вошедшему сотруднику (см. firestore.rules:
 // allow list требует, чтобы запрос был ограничен по restaurantId, иначе Firestore его отклонит).
+// Ограничение оператора `in` — 30 значений (проверено на эмуляторе); заведений в каталоге 18,
+// то есть запас есть. Если их станет больше 30, запрос придётся разбивать на части, иначе
+// кухня с доступом "*" получит invalid-argument и останется с пустым экраном.
 export function subscribeOrders(restaurantIds, cb) {
-  const q = query(
-    collection(db, 'orders'),
-    where('createdAt', '>=', startOfDay()),
-    where('restaurantId', 'in', restaurantIds)
-  );
-  return onSnapshot(
-    q,
-    (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
-    (err) => console.error('orders subscription failed', err)
-  );
+  return subscribeWithDayRollover(() => {
+    const q = query(
+      collection(db, 'orders'),
+      where('createdAt', '>=', startOfDay()),
+      where('restaurantId', 'in', restaurantIds)
+    );
+    return onSnapshot(
+      q,
+      (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+      (err) => console.error('orders subscription failed', err)
+    );
+  });
 }
 
 export function subscribeOrder(id, cb) {
@@ -49,15 +55,19 @@ export function subscribeOrder(id, cb) {
 }
 
 export function subscribeSlots(restaurantId, cb) {
-  return onSnapshot(
-    dayRef(restaurantId),
-    (snap) => {
-      const raw = snap.exists() ? snap.data().slots || {} : {};
-      const loads = {};
-      for (const [k, v] of Object.entries(raw)) loads[Number(k)] = v;
-      cb(loads);
-    },
-    (err) => console.error('slots subscription failed', err)
+  // dayRef() без второго аргумента считает сегодняшнюю дату — при пересоздании подписки
+  // после полуночи она пересчитается сама.
+  return subscribeWithDayRollover(() =>
+    onSnapshot(
+      dayRef(restaurantId),
+      (snap) => {
+        const raw = snap.exists() ? snap.data().slots || {} : {};
+        const loads = {};
+        for (const [k, v] of Object.entries(raw)) loads[Number(k)] = v;
+        cb(loads);
+      },
+      (err) => console.error('slots subscription failed', err)
+    )
   );
 }
 

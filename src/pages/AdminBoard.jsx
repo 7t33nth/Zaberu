@@ -17,6 +17,7 @@ import ThemeToggle from '../components/ThemeToggle.jsx';
 import LangSwitch from '../components/LangSwitch.jsx';
 import { ChatIcon } from '../components/Icons.jsx';
 import { onStaffAuthChange, signInStaff, signOutStaff } from '../lib/staffAuth.js';
+import { allowedRestaurantsFor, isRestaurantAllowed } from '../lib/staffAccess.js';
 import { useLang, useT } from '../lib/i18n/store.js';
 
 function formatWait(ms, lang = 'ru') {
@@ -218,16 +219,14 @@ function OrderCard({ order, now, onReady, onDone, t }) {
   );
 }
 
-function Board({ staff }) {
+function Board({ staff, allowedRestaurants }) {
   const { restaurantId: paramId } = useParams();
   const navigate = useNavigate();
   const t = useT();
   const lang = useLang();
-  const allowAll = staff.restaurantIds.includes('*');
-  const allowedRestaurants = allowAll
-    ? restaurants
-    : restaurants.filter((r) => staff.restaurantIds.includes(r.id));
-  const allowedId = (id) => allowAll || staff.restaurantIds.includes(id);
+  const allowedId = (id) => isRestaurantAllowed(staff.restaurantIds, id);
+  // allowedRestaurants не пуст: AdminBoard не пускает сюда, если доступа нет ни к одному
+  // заведению каталога (например, в staff/{email} опечатка в id).
   const restaurantId =
     allowedId(paramId) && restaurantById[paramId] ? paramId : allowedRestaurants[0].id;
 
@@ -537,6 +536,12 @@ export default function AdminBoard() {
 
   if (staff === undefined) return null;
   if (!staff) return <LoginGate />;
-  if (!staff.restaurantIds.length) return <NoAccessGate email={staff.email} />;
-  return <Board staff={staff} />;
+
+  // staff/{email} заполняется вручную в консоли Firebase: там бывает опечатка или
+  // устаревший id. Раньше Board падал на allowedRestaurants[0].id и весь /staff
+  // превращался в белый экран — теперь это обычный экран «нет доступа».
+  const allowedRestaurants = allowedRestaurantsFor(staff.restaurantIds, restaurants);
+  if (!allowedRestaurants.length) return <NoAccessGate email={staff.email} />;
+
+  return <Board staff={staff} allowedRestaurants={allowedRestaurants} />;
 }

@@ -2,6 +2,7 @@
 // синхронизируются через BroadcastChannel и событие storage. Работает без интернета и без настройки.
 import { SlotFullError } from '../errors.js';
 import { dayKey, startOfDay } from '../time.js';
+import { subscribeWithDayRollover } from '../dayRollover.js';
 
 const KEY = 'ep_db_v1';
 const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
@@ -57,10 +58,15 @@ const isToday = (o) => o.createdAt >= startOfDay();
 export const name = 'local';
 
 export function subscribeOrders(restaurantIds, cb) {
-  return subscribe(
-    (db) =>
-      Object.values(db.orders).filter((o) => isToday(o) && restaurantIds.includes(o.restaurantId)),
-    cb
+  // Без пересоздания подписки фильтр isToday() остался бы вчерашним до следующей записи.
+  return subscribeWithDayRollover(() =>
+    subscribe(
+      (db) =>
+        Object.values(db.orders).filter(
+          (o) => isToday(o) && restaurantIds.includes(o.restaurantId)
+        ),
+      cb
+    )
   );
 }
 
@@ -70,14 +76,16 @@ export function subscribeOrder(id, cb) {
 
 // { [slotStartMs]: занятые порции } для заведения (только сегодня, без отменённых)
 export function subscribeSlots(restaurantId, cb) {
-  return subscribe((db) => {
-    const loads = {};
-    for (const o of Object.values(db.orders)) {
-      if (o.restaurantId !== restaurantId || o.status === 'cancelled' || !isToday(o)) continue;
-      loads[o.pickupAt] = (loads[o.pickupAt] || 0) + o.units;
-    }
-    return loads;
-  }, cb);
+  return subscribeWithDayRollover(() =>
+    subscribe((db) => {
+      const loads = {};
+      for (const o of Object.values(db.orders)) {
+        if (o.restaurantId !== restaurantId || o.status === 'cancelled' || !isToday(o)) continue;
+        loads[o.pickupAt] = (loads[o.pickupAt] || 0) + o.units;
+      }
+      return loads;
+    }, cb)
+  );
 }
 
 export async function placeOrder(order, { capacity, codePrefix }) {

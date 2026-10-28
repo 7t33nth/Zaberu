@@ -93,6 +93,16 @@ test('wildcard staff can list and update any restaurant', async () => {
   await assertSucceeds(updateDoc(doc(db, 'orders', 'o2'), { status: 'ready', readyAt: Date.now() }));
 });
 
+// Кухня с доступом "*" подписывается сразу на все заведения каталога. Проверено на
+// эмуляторе: оператор `in` принимает до 30 значений, так что 18 заведений проходят.
+// Если заведений станет больше 30, запрос придётся разбивать на части.
+test('wildcard staff can list all 18 restaurants in one query', async () => {
+  const db = ctxFor('admin@example.com');
+  const ids = Array.from({ length: 18 }, (_, i) => `r${String(i + 1).padStart(2, '0')}`);
+  const q = query(collection(db, 'orders'), where('restaurantId', 'in', ids));
+  await assertSucceeds(getDocs(q));
+});
+
 // --- orders: create ---
 
 test('unauthenticated can create a well-formed pending order', async () => {
