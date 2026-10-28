@@ -1,0 +1,145 @@
+@import './design-tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Светлая тема — значения по умолчанию. Каналы через пробел (не #hex), чтобы Tailwind мог
+   подставлять alpha через rgb(var(...) / <alpha-value>) для классов вида bg-ink/50. */
+:root {
+  /* Без этого некоторые браузеры (особенно мобильный Safari/WebKit) рисуют нативную
+     "подложку" полей ввода и другие form-control виджеты по своим умолчаниям, даже когда
+     цвет текста и фона уже явно заданы в CSS — отсюда, например, плохо видимый текст в
+     инпуте времени в тёмной теме на некоторых устройствах. */
+  color-scheme: light;
+  --color-paper: 245 245 241; /* #F5F5F1 */
+  --color-card: 255 255 255; /* #FFFFFF */
+  --color-ink: 21 32 28; /* #15201C */
+  --color-muted: 95 107 101; /* #5F6B65 */
+  --color-line: 225 229 222; /* #E1E5DE */
+  --color-primary: 21 32 28; /* #15201C */
+  --color-brand: 194 65 12; /* #C2410C */
+  --color-brand-soft: 253 226 209; /* #FDE2D1 */
+  --color-accent: 0 178 133; /* #00B285 */
+  --color-accent-dark: 11 125 99; /* #0B7D63 */
+  --color-accent-soft: 221 246 238; /* #DDF6EE */
+  --color-warn: 183 121 31; /* #B7791F */
+  --color-warn-soft: 253 241 216; /* #FDF1D8 */
+  --color-danger: 198 61 53; /* #C63D35 */
+  --color-danger-soft: 251 228 226; /* #FBE4E2 */
+  --color-backdrop: 231 233 226;
+}
+
+/* Тёмная тема */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --color-paper: 16 17 20; /* #101114 */
+    --color-card: 26 27 31; /* #1A1B1F */
+    --color-ink: 240 241 245; /* #F0F1F5 */
+    --color-muted: 156 160 170; /* #9CA0AA */
+    --color-line: 45 48 56; /* #2D3038 */
+    --color-brand: 234 88 12; /* #EA580C */
+    --color-brand-soft: 55 26 14; /* #371A0E */
+    --color-accent: 52 211 153; /* #34D399 */
+    --color-accent-dark: 52 211 153;
+    --color-accent-soft: 14 48 36; /* #0E3024 */
+    --color-warn: 245 158 11; /* #F59E0B */
+    --color-warn-soft: 54 36 10; /* #36240A */
+    --color-danger: 239 68 68; /* #EF4444 */
+    --color-danger-soft: 54 18 18; /* #361212 */
+    --color-backdrop: 10 10 12;
+  }
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-paper: 16 17 20;
+  --color-card: 26 27 31;
+  --color-ink: 240 241 245;
+  --color-muted: 156 160 170;
+  --color-line: 45 48 56;
+  --color-brand: 234 88 12;
+  --color-brand-soft: 55 26 14;
+  --color-accent: 52 211 153;
+  --color-accent-dark: 52 211 153;
+  --color-accent-soft: 14 48 36;
+  --color-warn: 245 158 11;
+  --color-warn-soft: 54 36 10;
+  --color-danger: 239 68 68;
+  --color-danger-soft: 54 18 18;
+  --color-backdrop: 10 10 12;
+}
+
+html, body, #root {
+  min-height: 100%;
+  background-color: rgb(var(--color-paper));
+  color: rgb(var(--color-ink));
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Сплошные непрозрачные фоны для карточек, модалок и диалогов */
+.bg-card,
+[role="dialog"],
+.modal-solid {
+  background-color: rgb(var(--color-card)) !important;
+  opacity: 1 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.bg-paper {
+  background-color: rgb(var(--color-paper)) !important;
+}
+
+.text-ink {
+  color: rgb(var(--color-ink)) !important;
+}
+
+.text-muted {
+  color: rgb(var(--color-muted)) !important;
+}
+
+.border-line {
+  border-color: rgb(var(--color-line)) !important;
+}
+
+:focus-visible {
+  outline: 2px solid rgb(var(--color-accent-dark));
+  outline-offset: 2px;
+}
+
+button {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+button:disabled { cursor: not-allowed; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.shell {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background-color: rgb(var(--color-paper));
+  position: relative;
+}
+
+@media (min-width: 640px) {
+  html { font-size: 18px; }
+  .shell { max-width: 640px; }
+}
+
+@media (min-width: 1024px) {
+  .shell { max-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

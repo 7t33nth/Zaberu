@@ -1,0 +1,132 @@
+/* ============================================
+   Express Pick-Up — Design Tokens
+   Centralized repository for all visual variables.
+   ============================================ */
+
+:root {
+  /* ── Primary Brand / Action ── */
+  --ep-primary: #00A082;
+  --ep-primary-hover: #008F73;
+  --ep-primary-light: #E6F7F2;
+  --ep-primary-text: #FFFFFF;
+
+  /* ── Accent Colors ── */
+  --ep-accent-warm: #F5A623;
+  --ep-accent-warm-light: #FFF3D6;
+  --ep-accent-orange: #E8722A;
+  --ep-accent-orange-light: #FDE8D8;
+  --ep-accent-success: #34C759;
+  --ep-accent-success-light: #E6F9ED;
+  --ep-accent-danger: #D64045;
+  --ep-accent-danger-light: #FCEAEB;
+
+  /* ── Neutral / Surface ── */
+  --ep-bg: #FFFFFF;
+  --ep-surface: #F7F8FA;
+  --ep-surface-alt: #EDEEF2;
+  --ep-border: #E4E6EB;
+  --ep-border-light: #F0F1F5;
+
+  /* ── Text ── */
+  --ep-text: #1A1D26;
+  --ep-text-secondary: #6B7280;
+  --ep-text-muted: #9CA3AF;
+  --ep-text-inverse: #FFFFFF;
+
+  /* ── Typography ── */
+  --ep-font-family: 'Manrope Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ep-font-size-xs: 0.75rem;
+  --ep-font-size-sm: 0.875rem;
+  --ep-font-size-base: 1rem;
+  --ep-font-size-lg: 1.125rem;
+  --ep-font-size-xl: 1.25rem;
+  --ep-font-size-2xl: 1.5rem;
+  --ep-font-size-3xl: 2rem;
+  --ep-font-size-4xl: 2.75rem;
+  --ep-font-size-hero: 3.5rem;
+  --ep-font-weight-semibold: 600;
+  --ep-font-weight-bold: 700;
+  --ep-font-weight-extrabold: 800;
+  --ep-line-height-tight: 1.1;
+  --ep-line-height-normal: 1.5;
+
+  /* ── Spacing Scale ── */
+  --ep-space-0: 0;
+  --ep-space-1: 0.25rem;
+  --ep-space-2: 0.5rem;
+  --ep-space-3: 0.75rem;
+  --ep-space-4: 1rem;
+  --ep-space-5: 1.25rem;
+  --ep-space-6: 1.5rem;
+  --ep-space-8: 2rem;
+  --ep-space-10: 2.5rem;
+  --ep-space-12: 3rem;
+  --ep-space-16: 4rem;
+
+  /* ── Border Radius ── */
+  --ep-radius-sm: 8px;
+  --ep-radius-md: 12px;
+  --ep-radius-lg: 16px;
+  --ep-radius-xl: 20px;
+  --ep-radius-2xl: 24px;
+  --ep-radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --ep-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --ep-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --ep-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --ep-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.06);
+
+  /* ── Transitions ── */
+  --ep-transition-fast: 150ms ease;
+  --ep-transition-base: 250ms ease;
+  --ep-transition-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Dark Theme Overrides ── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --ep-primary: #00B894;
+    --ep-primary-hover: #00A082;
+    --ep-primary-light: #1A3A30;
+    --ep-primary-text: #FFFFFF;
+
+    --ep-bg: #121214;
+    --ep-surface: #1C1C1F;
+    --ep-surface-alt: #2A2A2F;
+    --ep-border: #363640;
+    --ep-border-light: #2A2A2F;
+
+    --ep-text: #EDEDF0;
+    --ep-text-secondary: #9A9AA3;
+    --ep-text-muted: #6B6B76;
+    --ep-text-inverse: #1A1D26;
+
+    --ep-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+    --ep-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --ep-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --ep-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.5);
+  }
+}
+:root[data-theme='dark'] {
+  --ep-primary: #00B894;
+  --ep-primary-hover: #00A082;
+  --ep-primary-light: #1A3A30;
+  --ep-primary-text: #FFFFFF;
+
+  --ep-bg: #121214;
+  --ep-surface: #1C1C1F;
+  --ep-surface-alt: #2A2A2F;
+  --ep-border: #363640;
+  --ep-border-light: #2A2A2F;
+
+  --ep-text: #EDEDF0;
+  --ep-text-secondary: #9A9AA3;
+  --ep-text-muted: #6B6B76;
+  --ep-text-inverse: #1A1D26;
+
+  --ep-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --ep-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --ep-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --ep-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.5);
+}

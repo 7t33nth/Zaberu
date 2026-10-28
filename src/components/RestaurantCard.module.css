@@ -1,0 +1,106 @@
+/* ── RestaurantCard Component ── */
+.card {
+  display: block;
+  background: var(--ep-bg);
+  border-radius: var(--ep-radius-xl);
+  border: 1px solid var(--ep-border);
+  padding: var(--ep-space-4);
+  text-decoration: none;
+  box-shadow: var(--ep-shadow-sm);
+  transition: box-shadow var(--ep-transition-fast), transform var(--ep-transition-fast);
+}
+
+.card:active {
+  transform: scale(0.99);
+}
+
+.card:hover {
+  box-shadow: var(--ep-shadow-md);
+}
+
+.row {
+  display: flex;
+  gap: var(--ep-space-3);
+}
+
+.logoWrap {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--ep-radius-2xl);
+  flex-shrink: 0;
+  border: 1px solid var(--ep-border);
+  overflow: hidden;
+}
+
+.info {
+  min-width: 0;
+  flex: 1;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ep-space-2);
+}
+
+.name {
+  font-weight: var(--ep-font-weight-extrabold);
+  color: var(--ep-text);
+  font-size: 17px;
+  line-height: var(--ep-line-height-tight);
+}
+
+.rating {
+  font-size: var(--ep-font-size-sm);
+  font-weight: var(--ep-font-weight-bold);
+  color: var(--ep-text);
+  flex-shrink: 0;
+}
+
+.address {
+  color: var(--ep-text-secondary);
+  font-size: var(--ep-font-size-sm);
+  margin-top: 2px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: var(--ep-space-2);
+}
+
+.tag {
+  font-size: var(--ep-font-size-xs);
+  background: var(--ep-surface);
+  color: var(--ep-text-secondary);
+  padding: 2px var(--ep-space-2);
+  border-radius: var(--ep-radius-full);
+}
+
+.statusBadge {
+  margin-top: var(--ep-space-3);
+  font-size: var(--ep-font-size-xs);
+  font-weight: var(--ep-font-weight-semibold);
+  border-radius: var(--ep-radius-sm);
+  padding: var(--ep-space-2) var(--ep-space-3);
+}
+
+.statusOpen {
+  composes: statusBadge;
+  background: var(--ep-primary-light);
+  color: var(--ep-primary);
+}
+
+.statusSoon {
+  composes: statusBadge;
+  background: var(--ep-accent-warm-light);
+  color: var(--ep-accent-warm);
+}
+
+.statusClosed {
+  composes: statusBadge;
+  background: var(--ep-surface);
+  color: var(--ep-text-secondary);
+}

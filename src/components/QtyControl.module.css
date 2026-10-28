@@ -1,0 +1,65 @@
+/* ── QtyControl Component ── */
+.control {
+  display: flex;
+  align-items: center;
+  gap: var(--ep-space-2);
+}
+
+.btn {
+  border-radius: var(--ep-radius-full);
+  border: 1px solid var(--ep-border);
+  background: var(--ep-bg);
+  color: var(--ep-text);
+  font-weight: var(--ep-font-weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--ep-transition-fast), transform var(--ep-transition-fast);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
+.btnMd {
+  composes: btn;
+  width: 36px;
+  height: 36px;
+  font-size: var(--ep-font-size-lg);
+}
+
+.btnLg {
+  composes: btn;
+  width: 44px;
+  height: 44px;
+  font-size: var(--ep-font-size-xl);
+}
+
+.btnPlus {
+  composes: btnMd;
+  background: var(--ep-primary);
+  color: var(--ep-text-inverse);
+  border-color: var(--ep-primary);
+}
+
+.btnPlusLg {
+  composes: btnLg;
+  background: var(--ep-primary);
+  color: var(--ep-text-inverse);
+  border-color: var(--ep-primary);
+}
+
+.btnPlus:disabled,
+.btnPlusLg:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.qty {
+  min-width: 24px;
+  text-align: center;
+  font-weight: var(--ep-font-weight-bold);
+  color: var(--ep-text);
+  user-select: none;
+}

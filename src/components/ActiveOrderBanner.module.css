@@ -1,0 +1,55 @@
+/* ── ActiveOrderBanner Component ── */
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: var(--ep-radius-xl);
+  padding: var(--ep-space-3) var(--ep-space-4);
+  margin: 0 var(--ep-space-4) var(--ep-space-4);
+  text-decoration: none;
+  transition: transform var(--ep-transition-fast), box-shadow var(--ep-transition-fast);
+}
+
+.banner:active {
+  transform: scale(0.98);
+}
+
+.bannerReady {
+  composes: banner;
+  background: var(--ep-primary);
+  color: var(--ep-primary-text);
+}
+
+.bannerPending {
+  composes: banner;
+  background: var(--ep-primary);
+  color: var(--ep-primary-text);
+}
+
+.icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.textGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--ep-space-3);
+}
+
+.meta {
+  font-size: var(--ep-font-size-xs);
+  opacity: 0.7;
+}
+
+.code {
+  display: block;
+  font-size: var(--ep-font-size-lg);
+  font-weight: var(--ep-font-weight-extrabold);
+}
+
+.link {
+  font-size: var(--ep-font-size-sm);
+  font-weight: var(--ep-font-weight-bold);
+  flex-shrink: 0;
+}

@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Сотрудник считается "своим" для заведения restaurantId, если его документ
+    // staff/{email} существует и содержит этот id (или "*" — доступ ко всем).
+    // ВАЖНО: без этой проверки любой залогиненный сотрудник ЛЮБОГО одного заведения
+    // мог бы через list/update видеть и менять заказы ЧУЖИХ заведений — именно
+    // это и было дырой, которую эта функция закрывает.
+    function staffDoc() {
+      return get(/databases/$(database)/documents/staff/$(request.auth.token.email.lower()));
+    }
+    function isStaffFor(restaurantId) {
+      return request.auth != null
+             && request.auth.token.email != null
+             && staffDoc().data.restaurantIds.hasAny([restaurantId, '*']);
+    }
+
+    // Заказы: клиент создаёт заказ и читает его по id (без входа),
+    // кухня (авторизованный сотрудник СВОЕГО заведения) видит список и меняет статус.
+    match /orders/{orderId} {
+      allow get: if true;
+      // Список нужен только экрану кухни. Клиент обязан фильтровать запрос по
+      // restaurantId (см. subscribeOrders в lib/backends/firebase.js) — иначе Firestore
+      // не сможет доказать, что список ограничен только "своими" документами, и отклонит запрос.
+      allow list: if isStaffFor(resource.data.restaurantId);
+      allow create: if request.resource.data.status == 'pending'
+                    && request.resource.data.restaurantId is string
+                    && request.resource.data.pickupAt is int
+                    && request.resource.data.units is int
+                    && request.resource.data.units > 0
+                    && request.resource.data.units <= 30
+                    // Начальные статусные поля нельзя подделать при создании — их
+                    // выставляет только кухня/клиент отдельными разрешёнными update-ами.
+                    && !('readyAt' in request.resource.data)
+                    && !('arrivedAt' in request.resource.data)
+                    && !('issuedAt' in request.resource.data);
+      // Клиент без входа может: 1) отметить своё прибытие (arrivedAt, таймстамп);
+      // 2) отменить СВЕЖИЙ (ещё 'pending') заказ в течение 1 минуты после создания —
+      // окно намеренно короткое, чтобы это не превращалось в лазейку для отмены уже
+      // готовящихся заказов. Статус заказа (готово/выдано) меняет только вошедший
+      // сотрудник СВОЕГО заведения.
+      allow update: if (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['arrivedAt'])
+                         && request.resource.data.arrivedAt is int)
+                    || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+                        && request.resource.data.status == 'cancelled'
+                        && resource.data.status == 'pending'
+                        && request.time.toMillis() < resource.data.createdAt + 60000)
+                    || (isStaffFor(resource.data.restaurantId)
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['status', 'readyAt', 'arrivedAt', 'issuedAt']));
+      allow delete: if false;
+    }
+
+    // Занятость слотов и счётчик номеров: меняется транзакцией из приложения при
+    // оформлении заказа (клиент без входа), поэтому запись остаётся открытой без
+    // входа — но хотя бы ограничена по форме (только эти два поля, seq — неотрицательное
+    // целое). Полная защита от порчи данных потребовала бы переноса оформления заказа
+    // на серверную Cloud Function — вне рамок этого демо на чистом клиенте.
+    match /days/{dayId} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasOnly(['seq', 'slots'])
+                   && request.resource.data.seq is int
+                   && request.resource.data.seq >= 0;
+    }
+
+    // Привязка сотрудника (по email из Firebase Auth) к заведению(-ям).
+    // Документ заводится вручную в консоли Firebase, id документа — email в нижнем регистре:
+    // { restaurantIds: ["r01"] } или { restaurantIds: ["*"] } для доступа ко всем заведениям.
+    match /staff/{staffId} {
+      allow get: if request.auth != null
+                 && request.auth.token.email != null
+                 && request.auth.token.email.lower() == staffId;
+      allow write: if false;
+    }
+  }
+}

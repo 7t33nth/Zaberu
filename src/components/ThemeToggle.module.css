@@ -1,0 +1,19 @@
+/* ── ThemeToggle Component ── */
+.toggle {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ep-radius-full);
+  background: var(--ep-bg);
+  border: 1px solid var(--ep-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--ep-font-size-sm);
+  cursor: pointer;
+  transition: background var(--ep-transition-fast), border-color var(--ep-transition-fast);
+}
+
+.toggle:hover {
+  background: var(--ep-surface);
+  border-color: var(--ep-text-muted);
+}

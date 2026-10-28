@@ -1,0 +1,70 @@
+/* ── TopBar Component ── */
+.mobileBar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ep-space-3);
+  padding: var(--ep-space-2) var(--ep-space-4);
+  font-size: var(--ep-font-size-xs);
+}
+
+@media (min-width: 1024px) {
+  .mobileBar { display: none; }
+}
+
+.desktopBar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ep-space-4) var(--ep-space-10);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+  .desktopBar { display: flex; }
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--ep-space-2);
+  font-size: var(--ep-font-size-lg);
+  font-weight: var(--ep-font-weight-extrabold);
+  color: var(--ep-text);
+  text-decoration: none;
+}
+
+.logoIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ep-radius-md);
+  background: var(--ep-primary);
+  color: var(--ep-text-inverse);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--ep-font-size-base);
+}
+
+.navLink {
+  font-weight: var(--ep-font-weight-semibold);
+  font-size: var(--ep-font-size-sm);
+  color: var(--ep-text-secondary);
+  text-decoration: none;
+  transition: color var(--ep-transition-fast);
+}
+
+.navLink:hover {
+  color: var(--ep-text);
+}
+
+.navGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--ep-space-6);
+}
+
+.desktopBorder {
+  border-bottom: 1px solid var(--ep-border);
+}
