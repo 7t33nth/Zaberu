@@ -21,7 +21,9 @@ export default function MyOrders() {
   const [orders, setOrders] = useState({});
 
   useEffect(() => {
-    const unsubs = ids.map((id) => subscribeOrder(id, (o) => setOrders((prev) => ({ ...prev, [id]: o }))));
+    const unsubs = ids.map((id) =>
+      subscribeOrder(id, (o) => setOrders((prev) => ({ ...prev, [id]: o })))
+    );
     return () => unsubs.forEach((stop) => stop());
   }, [ids]);
 

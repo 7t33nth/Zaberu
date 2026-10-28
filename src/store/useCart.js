@@ -21,7 +21,10 @@ export const useCart = create(
         if (restaurantId && restaurantId !== dish.restaurantId && sum(lines) > 0) return 'conflict';
         const capacity = restaurantById[dish.restaurantId].slotCapacity;
         if (sum(lines) + 1 > capacity || (lines[dish.id] || 0) >= MAX_PER_DISH) return 'limit';
-        set({ restaurantId: dish.restaurantId, lines: { ...lines, [dish.id]: (lines[dish.id] || 0) + 1 } });
+        set({
+          restaurantId: dish.restaurantId,
+          lines: { ...lines, [dish.id]: (lines[dish.id] || 0) + 1 }
+        });
         return 'ok';
       },
 

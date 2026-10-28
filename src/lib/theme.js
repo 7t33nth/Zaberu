@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
 const KEY = 'ep_theme';
-const media = () => (typeof window !== 'undefined' ? window.matchMedia('(prefers-color-scheme: dark)') : null);
+const media = () =>
+  typeof window !== 'undefined' ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
 function getStored() {
   try {

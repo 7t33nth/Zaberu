@@ -58,7 +58,8 @@ export const name = 'local';
 
 export function subscribeOrders(restaurantIds, cb) {
   return subscribe(
-    (db) => Object.values(db.orders).filter((o) => isToday(o) && restaurantIds.includes(o.restaurantId)),
+    (db) =>
+      Object.values(db.orders).filter((o) => isToday(o) && restaurantIds.includes(o.restaurantId)),
     cb
   );
 }
@@ -82,7 +83,12 @@ export function subscribeSlots(restaurantId, cb) {
 export async function placeOrder(order, { capacity, codePrefix }) {
   const db = read();
   const used = Object.values(db.orders)
-    .filter((o) => o.restaurantId === order.restaurantId && o.pickupAt === order.pickupAt && o.status !== 'cancelled')
+    .filter(
+      (o) =>
+        o.restaurantId === order.restaurantId &&
+        o.pickupAt === order.pickupAt &&
+        o.status !== 'cancelled'
+    )
     .reduce((s, o) => s + o.units, 0);
   if (used + order.units > capacity) throw new SlotFullError();
 

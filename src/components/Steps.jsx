@@ -11,7 +11,11 @@ export default function Steps({ current }) {
         const n = i + 1;
         const state = n < current ? 'done' : n === current ? 'now' : 'next';
         return (
-          <li key={label} className="flex items-center gap-1.5" aria-current={state === 'now' ? 'step' : undefined}>
+          <li
+            key={label}
+            className="flex items-center gap-1.5"
+            aria-current={state === 'now' ? 'step' : undefined}
+          >
             <span
               className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[11px] ${
                 state === 'now'

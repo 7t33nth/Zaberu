@@ -24,7 +24,10 @@ function Shell({ children }) {
 function PageFallback() {
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center">
-      <span className="w-8 h-8 border-2 border-line border-t-brand rounded-full animate-spin" aria-hidden="true" />
+      <span
+        className="w-8 h-8 border-2 border-line border-t-brand rounded-full animate-spin"
+        aria-hidden="true"
+      />
     </div>
   );
 }
@@ -37,10 +40,38 @@ export default function App() {
         <Route path="/staff" element={<Navigate to={`/staff/${restaurants[0].id}`} replace />} />
         {/* старый путь: не ломаем ссылки, которые уже могли раздать сотрудникам */}
         <Route path="/admin" element={<Navigate to={`/staff/${restaurants[0].id}`} replace />} />
-        <Route path="/" element={<Shell><Home /></Shell>} />
-        <Route path="/restaurant/:id" element={<Shell><RestaurantMenu /></Shell>} />
-        <Route path="/order/:orderId" element={<Shell><OrderTracking /></Shell>} />
-        <Route path="/my-orders" element={<Shell><MyOrders /></Shell>} />
+        <Route
+          path="/"
+          element={
+            <Shell>
+              <Home />
+            </Shell>
+          }
+        />
+        <Route
+          path="/restaurant/:id"
+          element={
+            <Shell>
+              <RestaurantMenu />
+            </Shell>
+          }
+        />
+        <Route
+          path="/order/:orderId"
+          element={
+            <Shell>
+              <OrderTracking />
+            </Shell>
+          }
+        />
+        <Route
+          path="/my-orders"
+          element={
+            <Shell>
+              <MyOrders />
+            </Shell>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

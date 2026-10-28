@@ -5,13 +5,14 @@ export default {
   'topbar.myOrders': 'My orders',
 
   'home.title': 'Lunch without the wait',
-  'home.subtitle': 'Pick your dishes and pickup time. Your order will be ready right on the dot. No sign-up needed.',
+  'home.subtitle':
+    'Pick your dishes and pickup time. Your order will be ready right on the dot. No sign-up needed.',
   'home.searchPlaceholder': 'Find a restaurant',
   'home.searchAria': 'Search restaurants',
   'home.ratingAny': 'Any rating',
   'home.howItWorks': 'How it works',
   'home.howItWorksStep1': 'Build your order at one restaurant',
-  'home.howItWorksStep2': "Pick your own pickup time — we factor in prep time and opening hours",
+  'home.howItWorksStep2': 'Pick your own pickup time — we factor in prep time and opening hours',
   'home.howItWorksStep3': 'Pick up with your code or QR — no line at the counter',
   'home.restaurantsCount': '{count} restaurants in Almaty are already taking orders',
   'home.ratingLabel': 'Rating',
@@ -46,10 +47,11 @@ export default {
   'restaurantStatus.opensAt': 'Opens at {time}, you can order ahead',
 
   'menu.back': 'Back to restaurants',
-  'menu.closedNotice': "Not taking orders anymore today: the restaurant is open until {time}.",
+  'menu.closedNotice': 'Not taking orders anymore today: the restaurant is open until {time}.',
   'menu.otherCartNotice': 'Your cart has items from {name}. Adding a dish here will replace it.',
   'menu.conflictHeading': 'Order from a different restaurant?',
-  'menu.conflictText': 'Your cart has items from {name}. You can only order from one place at a time, so the cart needs to be cleared.',
+  'menu.conflictText':
+    'Your cart has items from {name}. You can only order from one place at a time, so the cart needs to be cleared.',
   'menu.conflictKeep': 'Keep it',
   'menu.conflictSwitch': 'Clear and add',
   'menu.limitToast': "The kitchen can't handle more than {portions} at once",
@@ -96,12 +98,15 @@ export default {
   'checkout.sheetLabel': 'Checkout',
   'checkout.close': 'Close',
   'checkout.whenPickup': 'When will you pick it up?',
-  'checkout.whenPickupSubtitle': "Type in your own time — we'll match it against the kitchen's current load.",
-  'checkout.noSlots': 'No free time today for an order this size. Make it smaller or come back tomorrow.',
+  'checkout.whenPickupSubtitle':
+    "Type in your own time — we'll match it against the kitchen's current load.",
+  'checkout.noSlots':
+    'No free time today for an order this size. Make it smaller or come back tomorrow.',
   'checkout.pickupAtLabel': 'Pick up at',
   'checkout.timePlaceholder': 'HH:MM',
   'checkout.waitIn': 'in {time}',
-  'checkout.prepHint': "Prep takes ~{prep}, the kitchen is open until {close} — pickup time has to fall in that window, otherwise we'll suggest the closest one that works.",
+  'checkout.prepHint':
+    "Prep takes ~{prep}, the kitchen is open until {close} — pickup time has to fall in that window, otherwise we'll suggest the closest one that works.",
   'checkout.quickPick': 'Or pick quickly',
   'checkout.slotTaken': 'full',
   'checkout.next': 'Next',
@@ -120,12 +125,16 @@ export default {
   'checkout.payBusy': 'Paying…',
   'checkout.slotJustTaken': '{time} was just taken. Picked the closest one instead: {next}.',
   'checkout.noSlotsToday': 'No free time left for today.',
-  'checkout.timeBusyCorrected': 'The kitchen is already full at {time} — set the closest free time instead: {next}.',
-  'checkout.timeTooFarCorrected': "We only take pre-orders up to {hours}h ahead for now — set the latest available time instead: {next}.",
-  'checkout.timeOutOfRangeCorrected': '{time} is outside opening or prep hours — set the closest available time instead: {next}.',
+  'checkout.timeBusyCorrected':
+    'The kitchen is already full at {time} — set the closest free time instead: {next}.',
+  'checkout.timeTooFarCorrected':
+    'We only take pre-orders up to {hours}h ahead for now — set the latest available time instead: {next}.',
+  'checkout.timeOutOfRangeCorrected':
+    '{time} is outside opening or prep hours — set the closest available time instead: {next}.',
   'checkout.timeJustTaken': 'That time was just taken. Please pick another.',
   'checkout.placeFailed': "Couldn't place the order. Check your connection and try again.",
-  'checkout.noSmsNotice': "No account or SMS needed. The order number will show up on the next screen.",
+  'checkout.noSmsNotice':
+    'No account or SMS needed. The order number will show up on the next screen.',
 
   'myorders.heading': 'My orders',
   'myorders.subtitle': 'Recent orders on this device. No account needed.',
@@ -172,19 +181,24 @@ export default {
 
   'footer.faqHeading': 'Frequently asked questions',
   'footer.faq.q1': 'How does "Заберу!" work?',
-  'footer.faq.a1': "Pick a restaurant and dishes, then set your own pickup time — the order will be ready exactly then. Payment happens right at checkout, and pickup is by order number or QR code, no line at the counter.",
+  'footer.faq.a1':
+    'Pick a restaurant and dishes, then set your own pickup time — the order will be ready exactly then. Payment happens right at checkout, and pickup is by order number or QR code, no line at the counter.',
   'footer.faq.q2': 'Do I need to sign up?',
-  'footer.faq.a2': 'No. No accounts or passwords — just an order number and, if you like, a name to make pickup easier.',
+  'footer.faq.a2':
+    'No. No accounts or passwords — just an order number and, if you like, a name to make pickup easier.',
   'footer.faq.q3': 'Can I change or cancel an order after placing it?',
-  'footer.faq.a3': "You can cancel within the first minute after placing it — there's a button on the order page. After that the contents and time are locked in; if something's wrong, contact the restaurant directly at the address on your order page.",
+  'footer.faq.a3':
+    "You can cancel within the first minute after placing it — there's a button on the order page. After that the contents and time are locked in; if something's wrong, contact the restaurant directly at the address on your order page.",
   'footer.faq.q4': 'What payment methods are available?',
   'footer.faq.a4': 'Card online or Kaspi Pay — payment happens right when you place the order.',
   'footer.faq.q5': "What if I'm late for my pickup time?",
-  'footer.faq.a5': 'No problem — the order will wait at the kitchen. Its status and number are always on the tracking page.',
+  'footer.faq.a5':
+    'No problem — the order will wait at the kitchen. Its status and number are always on the tracking page.',
   'footer.faq.q6': 'Which cities is the service available in?',
   'footer.faq.a6': 'Right now, only Almaty. Astana and Shymkent are in the works — coming soon.',
   'footer.cooperationHeading': 'Partnerships',
-  'footer.cooperationText': 'Want to add your restaurant to the service or discuss a partnership? Write to us — we reply fast.',
+  'footer.cooperationText':
+    'Want to add your restaurant to the service or discuss a partnership? Write to us — we reply fast.',
   'footer.cooperationButton': 'Contact us',
   'footer.rights': '© 2026 "Заберу!" — pre-order food for a precise pickup time',
 
@@ -195,7 +209,8 @@ export default {
   'admin.passwordPlaceholder': 'Password',
   'admin.backToClient': '← To the customer side',
   'admin.noAccessHeading': 'No access',
-  'admin.noAccessText': "Account {email} isn't linked to any restaurant. Contact an admin to get access.",
+  'admin.noAccessText':
+    "Account {email} isn't linked to any restaurant. Contact an admin to get access.",
   'admin.signOutTryAnother': 'Sign out and try another account',
   'admin.noName': 'no name',
   'admin.paidKaspi': '· Kaspi Pay',
@@ -234,9 +249,11 @@ export default {
   'admin.waitLabel': 'wait {time}',
   'admin.addDemoOrders': 'Add demo orders',
   'admin.clearStats': 'Reset stats',
-  'admin.clearStatsConfirm': 'Clear the picked-up order history for "{name}"? The current queue is untouched.',
+  'admin.clearStatsConfirm':
+    'Clear the picked-up order history for "{name}"? The current queue is untouched.',
   'admin.prepDemo': 'Clear everything and prep for a demo',
-  'admin.prepDemoConfirm': 'Wipe ALL orders (every restaurant) and add fresh demo orders for "{name}"?',
+  'admin.prepDemoConfirm':
+    'Wipe ALL orders (every restaurant) and add fresh demo orders for "{name}"?',
   'admin.clearData': 'Clear data',
   'admin.clearDataConfirm': 'Delete all orders in this browser?'
 };

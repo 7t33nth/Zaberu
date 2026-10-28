@@ -25,7 +25,9 @@ export default function CitySelect() {
       >
         <LocationIcon className="w-3.5 h-3.5 text-brand shrink-0" />
         <span>{t(current.key)}</span>
-        <span aria-hidden="true" className="text-muted text-xs">▼</span>
+        <span aria-hidden="true" className="text-muted text-xs">
+          ▼
+        </span>
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} label={t('city.sheetLabel')}>
         <h2 className="font-extrabold text-xl text-ink">{t('city.heading')}</h2>
@@ -44,7 +46,9 @@ export default function CitySelect() {
                   : 'border-line bg-paper text-muted cursor-not-allowed'
               }`}
             >
-              <span className={`font-semibold ${c.active ? 'text-brand' : 'text-muted'}`}>{t(c.key)}</span>
+              <span className={`font-semibold ${c.active ? 'text-brand' : 'text-muted'}`}>
+                {t(c.key)}
+              </span>
               {c.active ? (
                 <span className="text-xs font-bold text-brand">{t('city.selected')}</span>
               ) : (

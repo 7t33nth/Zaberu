@@ -16,7 +16,9 @@ export default function ActiveOrderBanner() {
 
   useEffect(() => {
     const ids = getMyOrderIds();
-    const unsubs = ids.map((id) => subscribeOrder(id, (o) => setOrders((prev) => ({ ...prev, [id]: o }))));
+    const unsubs = ids.map((id) =>
+      subscribeOrder(id, (o) => setOrders((prev) => ({ ...prev, [id]: o })))
+    );
     return () => unsubs.forEach((stop) => stop());
   }, []);
 
@@ -39,19 +41,25 @@ export default function ActiveOrderBanner() {
             }`}
           >
             <span className="flex items-center gap-3">
-              <span className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0" aria-hidden="true">
+              <span
+                className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0"
+                aria-hidden="true"
+              >
                 {ready ? <BagIcon className="w-5 h-5" /> : <ReceiptIcon className="w-5 h-5" />}
               </span>
               <span>
                 <span className="block text-xs text-white/80 font-medium">
-                  {ready ? t('banner.ready') : t('banner.yourOrder')} · {restaurantById[order.restaurantId]?.name}
+                  {ready ? t('banner.ready') : t('banner.yourOrder')} ·{' '}
+                  {restaurantById[order.restaurantId]?.name}
                 </span>
                 <span className="block font-extrabold text-lg">
                   {order.code} · {formatClock(order.pickupAt)}
                 </span>
               </span>
             </span>
-            <span className="text-sm font-bold shrink-0 underline-offset-2 hover:underline">{t('banner.open')}</span>
+            <span className="text-sm font-bold shrink-0 underline-offset-2 hover:underline">
+              {t('banner.open')}
+            </span>
           </Link>
         );
       })}

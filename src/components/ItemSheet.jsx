@@ -10,14 +10,13 @@ export default function ItemSheet({ dish, qty, disabled, onClose, onAdd, onDecre
     <Sheet open={Boolean(dish)} onClose={onClose} label={dish?.name || t('item.defaultLabel')}>
       {dish && (
         <>
-          <Thumb
-            src={dish.image}
-            className="h-48 rounded-2xl mb-4 border border-line"
-          />
+          <Thumb src={dish.image} className="h-48 rounded-2xl mb-4 border border-line" />
           <h2 className="font-extrabold text-xl text-ink">{dish.name}</h2>
           {dish.description && <p className="text-muted text-sm mt-1">{dish.description}</p>}
           <div className="text-xs text-muted mt-2">
-            {[dish.weight, t('item.prepTime', { min: dish.prepMinutes })].filter(Boolean).join(' · ')}
+            {[dish.weight, t('item.prepTime', { min: dish.prepMinutes })]
+              .filter(Boolean)
+              .join(' · ')}
           </div>
           {dish.allergens?.length > 0 && (
             <div className="mt-2 text-xs text-muted">

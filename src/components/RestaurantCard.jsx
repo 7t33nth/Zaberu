@@ -6,8 +6,10 @@ import { useT } from '../lib/i18n/store.js';
 
 function status(restaurant, now, t) {
   const { openMs, closeMs } = hoursForDay(restaurant.hours, now);
-  if (!ordersOpen(restaurant.hours, now)) return { text: t('restaurantStatus.closedToday'), tone: 'closed' };
-  if (isOpenNow(restaurant.hours, now)) return { text: t('restaurantStatus.openUntil', { time: formatClock(closeMs) }), tone: 'open' };
+  if (!ordersOpen(restaurant.hours, now))
+    return { text: t('restaurantStatus.closedToday'), tone: 'closed' };
+  if (isOpenNow(restaurant.hours, now))
+    return { text: t('restaurantStatus.openUntil', { time: formatClock(closeMs) }), tone: 'open' };
   return { text: t('restaurantStatus.opensAt', { time: formatClock(openMs) }), tone: 'soon' };
 }
 
@@ -30,7 +32,9 @@ export default function RestaurantCard({ restaurant, now }) {
           src={coverFor(restaurant)}
           alt=""
           aria-hidden="true"
-          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+          }}
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-black/70" />
@@ -49,7 +53,10 @@ export default function RestaurantCard({ restaurant, now }) {
         </div>
         <div className="flex flex-wrap gap-1.5 mt-2.5">
           {restaurant.cuisines.map((c) => (
-            <span key={c} className="text-xs bg-paper text-muted px-3 py-1 rounded-full font-medium">
+            <span
+              key={c}
+              className="text-xs bg-paper text-muted px-3 py-1 rounded-full font-medium"
+            >
               {CUISINE_LABELS[c] || c}
             </span>
           ))}

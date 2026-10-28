@@ -7,7 +7,11 @@ export default function LangSwitch() {
   const lang = useLangStore((s) => s.lang);
   const setLang = useLangStore((s) => s.setLang);
   return (
-    <div className="flex items-center gap-0.5 bg-card border border-line rounded-full p-0.5 text-xs font-bold" role="group" aria-label="Language">
+    <div
+      className="flex items-center gap-0.5 bg-card border border-line rounded-full p-0.5 text-xs font-bold"
+      role="group"
+      aria-label="Language"
+    >
       {LANGS.map((l) => (
         <button
           key={l}

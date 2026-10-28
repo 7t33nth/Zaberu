@@ -15,7 +15,11 @@ export default function ThemeToggle() {
       className="w-8 h-8 rounded-full bg-card border border-line flex items-center justify-center text-ink hover:border-ink/40 transition-colors shadow-sm"
     >
       <span aria-hidden="true">
-        {dark ? <SunIcon className="w-4 h-4 text-warn" /> : <MoonIcon className="w-4 h-4 text-muted" />}
+        {dark ? (
+          <SunIcon className="w-4 h-4 text-warn" />
+        ) : (
+          <MoonIcon className="w-4 h-4 text-muted" />
+        )}
       </span>
     </button>
   );

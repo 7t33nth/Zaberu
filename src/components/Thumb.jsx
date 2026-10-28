@@ -9,7 +9,10 @@ export default function Thumb({ src, alt = '', className = '', fit = 'cover' }) 
   const isLogo = fit === 'contain';
 
   return (
-    <div className={`relative bg-paper flex items-center justify-center overflow-hidden text-muted ${className}`} aria-hidden={alt ? undefined : true}>
+    <div
+      className={`relative bg-paper flex items-center justify-center overflow-hidden text-muted ${className}`}
+      aria-hidden={alt ? undefined : true}
+    >
       {showImage ? (
         <img
           src={src}
@@ -25,7 +28,9 @@ export default function Thumb({ src, alt = '', className = '', fit = 'cover' }) 
       ) : (
         <FoodPlaceholderIcon className="w-1/2 h-1/2 text-muted" />
       )}
-      {showImage && !loaded && <span className="absolute inset-0 animate-pulse bg-line" aria-hidden="true" />}
+      {showImage && !loaded && (
+        <span className="absolute inset-0 animate-pulse bg-line" aria-hidden="true" />
+      )}
     </div>
   );
 }

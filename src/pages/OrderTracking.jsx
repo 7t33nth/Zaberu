@@ -65,16 +65,18 @@ export default function OrderTracking() {
   }, [order, toast, t]);
 
   if (order === undefined) {
-    return <div className="flex items-center justify-center min-h-screen text-muted">{t('order.loading')}</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen text-muted">
+        {t('order.loading')}
+      </div>
+    );
   }
 
   if (order === null) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-8 text-center">
         <h1 className="font-extrabold text-xl text-ink">{t('order.notFoundHeading')}</h1>
-        <p className="text-muted text-sm mt-2">
-          {t('order.notFoundText')}
-        </p>
+        <p className="text-muted text-sm mt-2">{t('order.notFoundText')}</p>
         <Link to="/" className="mt-6 bg-brand text-white font-bold px-6 py-3 rounded-xl">
           {t('order.newOrder')}
         </Link>
@@ -113,7 +115,9 @@ export default function OrderTracking() {
     <div className="flex flex-col px-5 pt-10 pb-10 min-h-screen lg:max-w-[560px] lg:mx-auto lg:pt-16">
       {toastNode}
       <div className="text-center">
-        <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold ${status.tone}`}>{status.text}</span>
+        <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold ${status.tone}`}>
+          {status.text}
+        </span>
 
         <div className="text-sm text-muted mt-8">{t('order.numberLabel')}</div>
         <div className="text-7xl font-extrabold text-ink leading-none mt-2">{order.code}</div>
@@ -152,7 +156,11 @@ export default function OrderTracking() {
             }`}
           >
             <ClockIcon className="w-5 h-5 shrink-0" />
-            <span>{msLeft >= 0 ? t('order.in', { time: formatLeft(msLeft, lang) }) : t('order.ago', { time: formatLeft(msLeft, lang) })}</span>
+            <span>
+              {msLeft >= 0
+                ? t('order.in', { time: formatLeft(msLeft, lang) })
+                : t('order.ago', { time: formatLeft(msLeft, lang) })}
+            </span>
           </div>
         )}
       </div>
@@ -185,7 +193,9 @@ export default function OrderTracking() {
           </li>
         ))}
         <li className="flex justify-between font-bold text-ink border-t border-line pt-2 mt-1">
-          <span>{order.pay === 'kaspi' ? t('order.totalPaidKaspi') : t('order.totalPaidOnline')}</span>
+          <span>
+            {order.pay === 'kaspi' ? t('order.totalPaidKaspi') : t('order.totalPaidOnline')}
+          </span>
           <span>{formatMoney(order.total)}</span>
         </li>
       </ul>
@@ -218,7 +228,10 @@ export default function OrderTracking() {
           </>
         )}
         {finished && (
-          <Link to="/" className="block text-center w-full bg-brand text-white font-bold py-4 rounded-xl">
+          <Link
+            to="/"
+            className="block text-center w-full bg-brand text-white font-bold py-4 rounded-xl"
+          >
             {t('order.newOrder')}
           </Link>
         )}

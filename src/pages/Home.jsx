@@ -56,8 +56,13 @@ export default function Home() {
 
   const searchBox = (id) => (
     <div className="relative">
-      <label className="sr-only" htmlFor={id}>{t('home.searchAria')}</label>
-      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true">
+      <label className="sr-only" htmlFor={id}>
+        {t('home.searchAria')}
+      </label>
+      <span
+        className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"
+        aria-hidden="true"
+      >
         <SearchIcon className="w-4 h-4 text-muted" />
       </span>
       <input
@@ -79,7 +84,9 @@ export default function Home() {
           onClick={() => setMinRating(value)}
           aria-pressed={minRating === value}
           className={`px-4 py-2 rounded-full text-xs font-semibold border ${
-            minRating === value ? 'bg-primary text-white border-primary' : 'bg-card text-muted border-line'
+            minRating === value
+              ? 'bg-primary text-white border-primary'
+              : 'bg-card text-muted border-line'
           }`}
         >
           {label}
@@ -119,7 +126,9 @@ export default function Home() {
           </div>
 
           <div className="hidden lg:block bg-card border border-line rounded-3xl p-6">
-            <div className="text-xs font-bold text-muted uppercase tracking-wide">{t('home.howItWorks')}</div>
+            <div className="text-xs font-bold text-muted uppercase tracking-wide">
+              {t('home.howItWorks')}
+            </div>
             <ol className="mt-4 flex flex-col gap-4">
               {HOW_IT_WORKS.map(([n, title, text]) => (
                 <li key={n} className="flex gap-3">
@@ -143,10 +152,15 @@ export default function Home() {
         <div className="lg:grid lg:grid-cols-[250px_1fr] lg:gap-10 lg:items-start lg:mt-8">
           <aside className="hidden lg:flex lg:flex-col lg:gap-4 lg:sticky lg:top-6">
             <div className="bg-card border border-line rounded-3xl p-4">
-              <div className="text-xs font-bold text-muted uppercase tracking-wide mb-3">{t('home.ratingLabel')}</div>
+              <div className="text-xs font-bold text-muted uppercase tracking-wide mb-3">
+                {t('home.ratingLabel')}
+              </div>
               <div className="flex flex-col gap-0.5">
                 {RATING_OPTIONS.map(([value, label]) => (
-                  <label key={value} className="flex items-center gap-2.5 text-sm py-1.5 cursor-pointer">
+                  <label
+                    key={value}
+                    className="flex items-center gap-2.5 text-sm py-1.5 cursor-pointer"
+                  >
                     <input
                       type="radio"
                       name="rating"
@@ -154,24 +168,33 @@ export default function Home() {
                       onChange={() => setMinRating(value)}
                       className="w-4 h-4 accent-[rgb(var(--color-brand))] shrink-0"
                     />
-                    <span className={minRating === value ? 'text-ink font-semibold' : 'text-muted'}>{label}</span>
+                    <span className={minRating === value ? 'text-ink font-semibold' : 'text-muted'}>
+                      {label}
+                    </span>
                   </label>
                 ))}
               </div>
             </div>
 
             <div className="bg-card border border-line rounded-3xl p-4">
-              <div className="text-xs font-bold text-muted uppercase tracking-wide mb-3">{t('home.cuisineLabel')}</div>
+              <div className="text-xs font-bold text-muted uppercase tracking-wide mb-3">
+                {t('home.cuisineLabel')}
+              </div>
               <div className="flex flex-col gap-0.5">
                 {CUISINE_GROUPS.map((g) => (
-                  <label key={g.id} className="flex items-center gap-2.5 text-sm py-1.5 cursor-pointer">
+                  <label
+                    key={g.id}
+                    className="flex items-center gap-2.5 text-sm py-1.5 cursor-pointer"
+                  >
                     <input
                       type="checkbox"
                       checked={cuisines.has(g.id)}
                       onChange={() => toggleCuisine(g.id)}
                       className="w-5 h-5 shrink-0 cursor-pointer appearance-none rounded-lg border border-line bg-card bg-center bg-no-repeat bg-[length:12px_12px] transition-colors checked:border-brand checked:bg-brand checked:bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2016%2016%27%20fill=%27none%27%20stroke=%27white%27%20stroke-width=%272.5%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpath%20d=%27M3%208.5l3.5%203.5L13%204.5%27/%3E%3C/svg%3E')] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-dark"
                     />
-                    <span className={cuisines.has(g.id) ? 'text-ink font-semibold' : 'text-muted'}>{t(`cuisineGroup.${g.id}`)}</span>
+                    <span className={cuisines.has(g.id) ? 'text-ink font-semibold' : 'text-muted'}>
+                      {t(`cuisineGroup.${g.id}`)}
+                    </span>
                   </label>
                 ))}
               </div>
@@ -190,7 +213,9 @@ export default function Home() {
           <div>
             <div className="lg:hidden px-4 pb-3 pt-3">{searchBox('search-mobile')}</div>
 
-            <div className="lg:hidden flex gap-2 px-4 pb-3 overflow-x-auto no-scrollbar">{ratingRow}</div>
+            <div className="lg:hidden flex gap-2 px-4 pb-3 overflow-x-auto no-scrollbar">
+              {ratingRow}
+            </div>
 
             <div className="lg:hidden flex gap-2 px-4 pb-4 overflow-x-auto no-scrollbar">
               <button
@@ -198,7 +223,9 @@ export default function Home() {
                 onClick={() => setCuisines(new Set())}
                 aria-pressed={cuisines.size === 0}
                 className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold border ${
-                  cuisines.size === 0 ? 'bg-primary text-white border-primary' : 'bg-card text-muted border-line'
+                  cuisines.size === 0
+                    ? 'bg-primary text-white border-primary'
+                    : 'bg-card text-muted border-line'
                 }`}
               >
                 {t('home.allChip')}
@@ -210,7 +237,9 @@ export default function Home() {
                   onClick={() => toggleCuisine(g.id)}
                   aria-pressed={cuisines.has(g.id)}
                   className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold border ${
-                    cuisines.has(g.id) ? 'bg-primary text-white border-primary' : 'bg-card text-muted border-line'
+                    cuisines.has(g.id)
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-card text-muted border-line'
                   }`}
                 >
                   {t(`cuisineGroup.${g.id}`)}

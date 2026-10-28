@@ -25,7 +25,9 @@ export default function DishCard({ dish, qty, disabled, onOpen, onAdd, onDecreme
       <div className="flex-1 min-w-0 flex flex-col justify-between">
         <button type="button" onClick={() => onOpen(dish)} className="text-left">
           <div className="font-bold text-ink text-[15px] leading-tight">{dish.name}</div>
-          {dish.description && <div className="text-xs text-muted mt-1 line-clamp-2">{dish.description}</div>}
+          {dish.description && (
+            <div className="text-xs text-muted mt-1 line-clamp-2">{dish.description}</div>
+          )}
         </button>
 
         <div className="flex items-center justify-between gap-2 mt-2">
@@ -35,14 +37,21 @@ export default function DishCard({ dish, qty, disabled, onOpen, onAdd, onDecreme
               {soldOut ? (
                 <span className="text-danger font-semibold">{t('dish.soldOut')}</span>
               ) : (
-                [dish.weight, t('dish.prepShort', { min: dish.prepMinutes })].filter(Boolean).join(' · ')
+                [dish.weight, t('dish.prepShort', { min: dish.prepMinutes })]
+                  .filter(Boolean)
+                  .join(' · ')
               )}
             </div>
           </div>
 
           {!soldOut &&
             (qty > 0 ? (
-              <QtyControl qty={qty} onInc={() => onAdd(dish)} onDec={() => onDecrement(dish.id)} disabled={disabled} />
+              <QtyControl
+                qty={qty}
+                onInc={() => onAdd(dish)}
+                onDec={() => onDecrement(dish.id)}
+                disabled={disabled}
+              />
             ) : (
               <motion.button
                 type="button"

@@ -16,7 +16,10 @@ function FaqItem({ q, a, open, onToggle }) {
         className="w-full flex items-center justify-between gap-4 py-4 text-left"
       >
         <span className="font-bold text-ink">{q}</span>
-        <span className={`shrink-0 text-muted transition-transform duration-200 ${open ? 'rotate-180' : ''}`} aria-hidden="true">
+        <span
+          className={`shrink-0 text-muted transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          aria-hidden="true"
+        >
           <ChevronDownIcon className="w-5 h-5" />
         </span>
       </button>
@@ -44,7 +47,10 @@ export default function Footer() {
   return (
     <footer className="mt-14 lg:mt-20 lg:max-w-[1340px] lg:mx-auto lg:px-10">
       <div className="px-4 lg:px-0 grid gap-4 lg:grid-cols-[1.3fr_1fr] lg:items-start">
-        <section aria-labelledby="faq-heading" className="bg-card border border-line rounded-3xl p-5 lg:p-7">
+        <section
+          aria-labelledby="faq-heading"
+          className="bg-card border border-line rounded-3xl p-5 lg:p-7"
+        >
           <h2 id="faq-heading" className="font-extrabold text-lg lg:text-xl text-ink">
             {t('footer.faqHeading')}
           </h2>
@@ -63,7 +69,9 @@ export default function Footer() {
 
         <section className="bg-brand text-white rounded-3xl p-6 lg:p-7 flex flex-col lg:h-full lg:justify-center">
           <h2 className="font-extrabold text-lg lg:text-xl">{t('footer.cooperationHeading')}</h2>
-          <p className="text-sm text-white/80 mt-2 leading-relaxed">{t('footer.cooperationText')}</p>
+          <p className="text-sm text-white/80 mt-2 leading-relaxed">
+            {t('footer.cooperationText')}
+          </p>
           <a
             href={`mailto:${COOPERATION_EMAIL}`}
             className="mt-5 inline-flex items-center justify-center gap-2 bg-white text-brand font-bold px-5 py-3 rounded-xl hover:opacity-90 transition-opacity w-fit"

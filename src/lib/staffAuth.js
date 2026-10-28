@@ -3,12 +3,7 @@
 // заводится вручную в консоли Firebase (см. README): { restaurantIds: ["r01"] }
 // либо { restaurantIds: ["*"] } для доступа ко всем заведениям.
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
-import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut
-} from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { firebaseApp, firebaseEnabled } from './firebaseApp.js';
 
 const auth = firebaseEnabled ? getAuth(firebaseApp) : null;

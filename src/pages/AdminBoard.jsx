@@ -24,7 +24,9 @@ function formatWait(ms, lang = 'ru') {
   const s = Math.round(ms / 1000);
   const unitMin = lang === 'en' ? 'min' : 'мин';
   const unitSec = lang === 'en' ? 's' : 'с';
-  return s < 60 ? `${s} ${unitSec}` : `${Math.floor(s / 60)} ${unitMin} ${String(s % 60).padStart(2, '0')} ${unitSec}`;
+  return s < 60
+    ? `${s} ${unitSec}`
+    : `${Math.floor(s / 60)} ${unitMin} ${String(s % 60).padStart(2, '0')} ${unitSec}`;
 }
 
 function beep() {
@@ -63,7 +65,9 @@ function LoginGate() {
 
   return (
     <div className="min-h-screen bg-paper text-ink flex items-center justify-center p-6">
-      <div className="absolute top-4 right-4"><LangSwitch /></div>
+      <div className="absolute top-4 right-4">
+        <LangSwitch />
+      </div>
       <form onSubmit={submit} className="w-full max-w-xs">
         <h1 className="font-extrabold text-2xl">{t('admin.title')}</h1>
         <p className="text-muted text-sm mt-1">{t('admin.loginSubtitle')}</p>
@@ -72,7 +76,10 @@ function LoginGate() {
           autoComplete="username"
           autoFocus
           value={email}
-          onChange={(e) => { setEmail(e.target.value); setError(''); }}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setError('');
+          }}
           placeholder="Email"
           disabled={busy}
           className="mt-4 w-full bg-card border border-line rounded-xl px-4 py-3 text-base outline-none focus:ring-2 focus:ring-accent-dark"
@@ -81,16 +88,29 @@ function LoginGate() {
           type="password"
           autoComplete="current-password"
           value={password}
-          onChange={(e) => { setPassword(e.target.value); setError(''); }}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setError('');
+          }}
           placeholder={t('admin.passwordPlaceholder')}
           disabled={busy}
           className="mt-3 w-full bg-card border border-line rounded-xl px-4 py-3 text-base outline-none focus:ring-2 focus:ring-accent-dark"
         />
-        {error && <p role="alert" className="text-danger text-sm mt-2">{error}</p>}
-        <button type="submit" disabled={busy || !email.trim() || !password} className="mt-4 w-full bg-accent text-primary font-bold py-3 rounded-xl disabled:opacity-50">
+        {error && (
+          <p role="alert" className="text-danger text-sm mt-2">
+            {error}
+          </p>
+        )}
+        <button
+          type="submit"
+          disabled={busy || !email.trim() || !password}
+          className="mt-4 w-full bg-accent text-primary font-bold py-3 rounded-xl disabled:opacity-50"
+        >
           {busy ? t('admin.checking') : t('admin.signIn')}
         </button>
-        <Link to="/" className="block text-center text-muted text-sm mt-6">{t('admin.backToClient')}</Link>
+        <Link to="/" className="block text-center text-muted text-sm mt-6">
+          {t('admin.backToClient')}
+        </Link>
       </form>
     </div>
   );
@@ -102,13 +122,17 @@ function NoAccessGate({ email }) {
     <div className="min-h-screen bg-paper text-ink flex items-center justify-center p-6">
       <div className="w-full max-w-xs text-center">
         <h1 className="font-extrabold text-2xl">{t('admin.noAccessHeading')}</h1>
-        <p className="text-muted text-sm mt-2">
-          {t('admin.noAccessText', { email })}
-        </p>
-        <button type="button" onClick={signOutStaff} className="mt-6 w-full bg-card border border-line rounded-xl px-4 py-3 font-semibold">
+        <p className="text-muted text-sm mt-2">{t('admin.noAccessText', { email })}</p>
+        <button
+          type="button"
+          onClick={signOutStaff}
+          className="mt-6 w-full bg-card border border-line rounded-xl px-4 py-3 font-semibold"
+        >
           {t('admin.signOutTryAnother')}
         </button>
-        <Link to="/" className="block text-center text-muted text-sm mt-6">{t('admin.backToClient')}</Link>
+        <Link to="/" className="block text-center text-muted text-sm mt-6">
+          {t('admin.backToClient')}
+        </Link>
       </div>
     </div>
   );
@@ -131,24 +155,35 @@ function OrderCard({ order, now, onReady, onDone, t }) {
   return (
     <div
       className={`rounded-2xl p-4 border flex flex-col gap-3 ${
-        order.arrivedAt ? 'border-accent bg-accent-soft' : urgent ? 'border-danger bg-danger-soft' : 'border-line bg-card'
+        order.arrivedAt
+          ? 'border-accent bg-accent-soft'
+          : urgent
+            ? 'border-danger bg-danger-soft'
+            : 'border-line bg-card'
       }`}
     >
       <div className="flex justify-between items-start">
         <div>
           <div className="text-3xl font-extrabold">{order.code}</div>
           <div className="text-xs text-muted mt-0.5">
-            {order.name || t('admin.noName')} · {order.pay === 'kaspi' ? t('admin.paidKaspi') : t('admin.paidOnline')}
+            {order.name || t('admin.noName')} ·{' '}
+            {order.pay === 'kaspi' ? t('admin.paidKaspi') : t('admin.paidOnline')}
           </div>
         </div>
         <div className="text-right">
-          <div className="text-xs text-muted">{t('admin.pickupAt', { time: formatClock(order.pickupAt) })}</div>
-          <div className={`text-lg font-bold ${msLeft < 0 ? 'text-danger' : urgent ? 'text-warn' : 'text-ink'}`}>
+          <div className="text-xs text-muted">
+            {t('admin.pickupAt', { time: formatClock(order.pickupAt) })}
+          </div>
+          <div
+            className={`text-lg font-bold ${msLeft < 0 ? 'text-danger' : urgent ? 'text-warn' : 'text-ink'}`}
+          >
             {formatCountdown(msLeft)}
           </div>
         </div>
       </div>
-      {order.arrivedAt && <div className="text-xs font-bold text-accent-dark">{t('admin.customerHere')}</div>}
+      {order.arrivedAt && (
+        <div className="text-xs font-bold text-accent-dark">{t('admin.customerHere')}</div>
+      )}
       <ul className="text-sm text-muted flex flex-col gap-0.5">
         {order.items.map((it) => (
           <li key={it.id}>
@@ -163,11 +198,19 @@ function OrderCard({ order, now, onReady, onDone, t }) {
         </div>
       )}
       {ready ? (
-        <button type="button" onClick={() => onDone(order.id)} className="bg-accent text-primary font-bold py-3 rounded-xl hover:opacity-90 transition-opacity">
+        <button
+          type="button"
+          onClick={() => onDone(order.id)}
+          className="bg-accent text-primary font-bold py-3 rounded-xl hover:opacity-90 transition-opacity"
+        >
           {t('admin.markDoneBtn')}
         </button>
       ) : (
-        <button type="button" onClick={() => onReady(order.id)} className="bg-primary text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity">
+        <button
+          type="button"
+          onClick={() => onReady(order.id)}
+          className="bg-primary text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity"
+        >
           {t('item.done')}
         </button>
       )}
@@ -181,9 +224,12 @@ function Board({ staff }) {
   const t = useT();
   const lang = useLang();
   const allowAll = staff.restaurantIds.includes('*');
-  const allowedRestaurants = allowAll ? restaurants : restaurants.filter((r) => staff.restaurantIds.includes(r.id));
+  const allowedRestaurants = allowAll
+    ? restaurants
+    : restaurants.filter((r) => staff.restaurantIds.includes(r.id));
   const allowedId = (id) => allowAll || staff.restaurantIds.includes(id);
-  const restaurantId = allowedId(paramId) && restaurantById[paramId] ? paramId : allowedRestaurants[0].id;
+  const restaurantId =
+    allowedId(paramId) && restaurantById[paramId] ? paramId : allowedRestaurants[0].id;
 
   // неизвестный/пустой/чужой :restaurantId в адресе — подставляем первое разрешённое заведение и чиним ссылку
   useEffect(() => {
@@ -218,7 +264,10 @@ function Board({ staff }) {
 
   const restaurant = restaurantById[restaurantId];
   // только заказы ВЫБРАННОГО заведения — метрики, слоты и все три колонки строятся от этого фильтра
-  const mine = useMemo(() => orders.filter((o) => o.restaurantId === restaurantId), [orders, restaurantId]);
+  const mine = useMemo(
+    () => orders.filter((o) => o.restaurantId === restaurantId),
+    [orders, restaurantId]
+  );
   const metrics = useMemo(
     () => computeMetrics(mine, { capacity: restaurant.slotCapacity, now }),
     // пересчёт раз в 15 с достаточно
@@ -229,16 +278,23 @@ function Board({ staff }) {
   const q = query.trim().toLowerCase();
   const matchesQuery = (o) => !q || o.code.toLowerCase().includes(q);
 
-  const cooking = mine.filter((o) => o.status === 'pending' && matchesQuery(o)).sort((a, b) => a.pickupAt - b.pickupAt);
-  const ready = mine.filter((o) => o.status === 'ready' && matchesQuery(o)).sort((a, b) => a.pickupAt - b.pickupAt);
-  const done = mine.filter((o) => o.status === 'done').sort((a, b) => b.issuedAt - a.issuedAt).slice(0, 6);
+  const cooking = mine
+    .filter((o) => o.status === 'pending' && matchesQuery(o))
+    .sort((a, b) => a.pickupAt - b.pickupAt);
+  const ready = mine
+    .filter((o) => o.status === 'ready' && matchesQuery(o))
+    .sort((a, b) => a.pickupAt - b.pickupAt);
+  const done = mine
+    .filter((o) => o.status === 'done')
+    .sort((a, b) => b.issuedAt - a.issuedAt)
+    .slice(0, 6);
 
   const waitTone =
     metrics.avgWaitMs == null
       ? ''
       : metrics.avgWaitMs <= TARGET_WAIT_MIN * 60000
         ? 'text-accent-dark'
-        : metrics.avgWaitMs <= BASELINE_WAIT_MIN * 60000 / 2
+        : metrics.avgWaitMs <= (BASELINE_WAIT_MIN * 60000) / 2
           ? 'text-warn'
           : 'text-danger';
 
@@ -304,20 +360,28 @@ function Board({ staff }) {
             <span className="w-2 h-2 rounded-full bg-accent" />
             {backendName === 'firebase' ? t('admin.sharedDb') : t('admin.localMode')}
           </span>
-          <Link to="/" className="hover:text-ink">{t('admin.clientSide')}</Link>
+          <Link to="/" className="hover:text-ink">
+            {t('admin.clientSide')}
+          </Link>
           <LangSwitch />
           <ThemeToggle />
           {staff.email && (
             <span className="flex items-center gap-2">
               <span className="text-muted">{staff.email}</span>
-              <button type="button" onClick={signOutStaff} className="hover:text-ink">{t('admin.signOut')}</button>
+              <button type="button" onClick={signOutStaff} className="hover:text-ink">
+                {t('admin.signOut')}
+              </button>
             </span>
           )}
         </div>
       </header>
 
       <main className="p-6 flex flex-col gap-6">
-        <section aria-label={t('admin.metricsAria')} className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))' }}>
+        <section
+          aria-label={t('admin.metricsAria')}
+          className="grid gap-3"
+          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))' }}
+        >
           <Metric
             label={t('admin.avgWait')}
             value={formatWait(metrics.avgWaitMs, lang)}
@@ -326,10 +390,16 @@ function Board({ staff }) {
           />
           <Metric
             label={t('admin.onTarget')}
-            value={metrics.onTargetShare == null ? '—' : `${Math.round(metrics.onTargetShare * 100)}%`}
+            value={
+              metrics.onTargetShare == null ? '—' : `${Math.round(metrics.onTargetShare * 100)}%`
+            }
             hint={t('admin.onTargetHint', { count: metrics.doneCount })}
           />
-          <Metric label={t('admin.issuedLastHour')} value={metrics.issuedLastHour} hint={t('admin.ordersUnit')} />
+          <Metric
+            label={t('admin.issuedLastHour')}
+            value={metrics.issuedLastHour}
+            hint={t('admin.ordersUnit')}
+          />
           <Metric
             label={t('admin.peakLoad')}
             value={`${Math.round(metrics.peakLoad * 100)}%`}
@@ -337,11 +407,17 @@ function Board({ staff }) {
           />
         </section>
 
-        <section aria-label={t('admin.slotsAria')} className="rounded-2xl bg-card border border-line p-4">
+        <section
+          aria-label={t('admin.slotsAria')}
+          className="rounded-2xl bg-card border border-line p-4"
+        >
           <div className="text-xs text-muted mb-3">{t('admin.slotsHeading')}</div>
           <div className="flex items-end gap-2 h-24">
             {metrics.slots.map((s) => (
-              <div key={s.start} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+              <div
+                key={s.start}
+                className="flex-1 flex flex-col items-center gap-1 h-full justify-end"
+              >
                 <div
                   title={`${formatClock(s.start)}: ${s.used}/${restaurant.slotCapacity}`}
                   className={`w-full rounded-t ${s.load >= 1 ? 'bg-danger' : s.load >= 0.7 ? 'bg-warn' : 'bg-accent'}`}
@@ -355,20 +431,44 @@ function Board({ staff }) {
 
         <div className="grid gap-6 lg:grid-cols-2">
           <section aria-label={t('admin.cookingAria')}>
-            <h2 className="font-bold mb-3">{t('admin.cooking')} · {cooking.length}</h2>
-            <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
+            <h2 className="font-bold mb-3">
+              {t('admin.cooking')} · {cooking.length}
+            </h2>
+            <div
+              className="grid gap-3"
+              style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}
+            >
               {cooking.map((o) => (
-                <OrderCard key={o.id} order={o} now={now} onReady={markReady} onDone={markDone} t={t} />
+                <OrderCard
+                  key={o.id}
+                  order={o}
+                  now={now}
+                  onReady={markReady}
+                  onDone={markDone}
+                  t={t}
+                />
               ))}
             </div>
             {cooking.length === 0 && <p className="text-muted text-sm">{t('admin.noCooking')}</p>}
           </section>
 
           <section aria-label={t('admin.readyAria')}>
-            <h2 className="font-bold mb-3">{t('admin.waitingClient')} · {ready.length}</h2>
-            <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
+            <h2 className="font-bold mb-3">
+              {t('admin.waitingClient')} · {ready.length}
+            </h2>
+            <div
+              className="grid gap-3"
+              style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}
+            >
               {ready.map((o) => (
-                <OrderCard key={o.id} order={o} now={now} onReady={markReady} onDone={markDone} t={t} />
+                <OrderCard
+                  key={o.id}
+                  order={o}
+                  now={now}
+                  onReady={markReady}
+                  onDone={markDone}
+                  t={t}
+                />
               ))}
             </div>
             {ready.length === 0 && <p className="text-muted text-sm">{t('admin.noReady')}</p>}
@@ -381,7 +481,10 @@ function Board({ staff }) {
             <ul className="text-sm text-muted flex flex-wrap gap-x-6 gap-y-1">
               {done.map((o) => (
                 <li key={o.id}>
-                  {o.code} · {t('admin.waitLabel', { time: formatWait(Math.max(0, o.issuedAt - (o.arrivedAt ?? o.pickupAt)), lang) })}
+                  {o.code} ·{' '}
+                  {t('admin.waitLabel', {
+                    time: formatWait(Math.max(0, o.issuedAt - (o.arrivedAt ?? o.pickupAt)), lang)
+                  })}
                 </li>
               ))}
             </ul>
@@ -398,7 +501,11 @@ function Board({ staff }) {
           </button>
           {canReset && (
             <>
-              <button type="button" onClick={clearStats} className="px-4 py-2 rounded-lg bg-card border border-line hover:bg-line">
+              <button
+                type="button"
+                onClick={clearStats}
+                className="px-4 py-2 rounded-lg bg-card border border-line hover:bg-line"
+              >
                 {t('admin.clearStats')}
               </button>
               <button

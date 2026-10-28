@@ -49,7 +49,10 @@ export default function Sheet({ open, onClose, label, children }) {
       )}
       {open &&
         (isDesktop ? (
-          <div key="panel-wrap-desktop" className="fixed inset-0 z-40 flex items-center justify-center p-6 pointer-events-none">
+          <div
+            key="panel-wrap-desktop"
+            className="fixed inset-0 z-40 flex items-center justify-center p-6 pointer-events-none"
+          >
             <motion.div
               key="panel-desktop"
               role="dialog"

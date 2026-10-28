@@ -3,7 +3,9 @@ import { menu, restaurantById } from '../data/index.js';
 import { SLOT_MS, ceilToSlot } from './time.js';
 
 const useFirebase = Boolean(import.meta.env.VITE_FIREBASE_PROJECT_ID);
-const backendPromise = useFirebase ? import('./backends/firebase.js') : import('./backends/local.js');
+const backendPromise = useFirebase
+  ? import('./backends/firebase.js')
+  : import('./backends/local.js');
 
 export const backendName = useFirebase ? 'firebase' : 'local';
 export const canReset = !useFirebase;
@@ -29,7 +31,12 @@ export const subscribeSlots = lazySubscribe('subscribeSlots');
 
 export async function placeOrder({ restaurant, lines, pickupAt, name = '', comment = '', pay }) {
   const b = await backendPromise;
-  const items = lines.map(({ dish, qty }) => ({ id: dish.id, name: dish.name, qty, price: dish.price }));
+  const items = lines.map(({ dish, qty }) => ({
+    id: dish.id,
+    name: dish.name,
+    qty,
+    price: dish.price
+  }));
   const order = {
     restaurantId: restaurant.id,
     items,
@@ -50,7 +57,8 @@ export const markArrived = (id) => patch(id, { arrivedAt: Date.now() });
 export const markDone = (id) => patch(id, { status: 'done', issuedAt: Date.now() });
 export const cancelOrder = (id) => backendPromise.then((b) => b.cancelOrder(id));
 export const resetAll = () => backendPromise.then((b) => b.resetAll());
-export const clearDoneOrders = (restaurantId) => backendPromise.then((b) => b.clearDoneOrders(restaurantId));
+export const clearDoneOrders = (restaurantId) =>
+  backendPromise.then((b) => b.clearDoneOrders(restaurantId));
 
 // Демо-заказы для показа кухни и загрузки слотов (тот же путь, что и у настоящих заказов).
 export async function seedDemoOrders(restaurantId, now = Date.now()) {

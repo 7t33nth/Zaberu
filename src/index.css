@@ -68,7 +68,9 @@
   --color-backdrop: 10 10 12;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   min-height: 100%;
   background-color: rgb(var(--color-paper));
   color: rgb(var(--color-ink));
@@ -90,10 +92,17 @@ button {
   -webkit-user-select: none;
   user-select: none;
 }
-button:disabled { cursor: not-allowed; }
+button:disabled {
+  cursor: not-allowed;
+}
 
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
 .shell {
   max-width: 480px;
@@ -104,14 +113,23 @@ button:disabled { cursor: not-allowed; }
 }
 
 @media (min-width: 640px) {
-  html { font-size: 18px; }
-  .shell { max-width: 640px; }
+  html {
+    font-size: 18px;
+  }
+  .shell {
+    max-width: 640px;
+  }
 }
 
 @media (min-width: 1024px) {
-  .shell { max-width: none; }
+  .shell {
+    max-width: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

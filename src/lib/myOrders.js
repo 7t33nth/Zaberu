@@ -12,7 +12,10 @@ export function getMyOrderIds() {
 
 export function addMyOrderId(id) {
   try {
-    localStorage.setItem(KEY, JSON.stringify([id, ...getMyOrderIds().filter((x) => x !== id)].slice(0, 5)));
+    localStorage.setItem(
+      KEY,
+      JSON.stringify([id, ...getMyOrderIds().filter((x) => x !== id)].slice(0, 5))
+    );
   } catch {
     /* приватный режим: не критично */
   }

@@ -110,7 +110,9 @@ export function formatLeft(ms, lang = 'ru') {
   const abs = Math.abs(ms);
   const unitMin = lang === 'en' ? 'min' : 'мин';
   const unitSec = lang === 'en' ? 's' : 'с';
-  return abs >= 60000 ? `${Math.floor(abs / 60000)} ${unitMin}` : `${Math.max(1, Math.floor(abs / 1000))} ${unitSec}`;
+  return abs >= 60000
+    ? `${Math.floor(abs / 60000)} ${unitMin}`
+    : `${Math.max(1, Math.floor(abs / 1000))} ${unitSec}`;
 }
 
 export function formatMinutes(ms, lang = 'ru') {

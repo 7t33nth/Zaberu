@@ -21,7 +21,12 @@ export default function CartSidebar({ lines, total, units, onInc, onDec, onCheck
                   <div className="text-sm font-semibold text-ink truncate">{dish.name}</div>
                   <div className="text-xs text-muted">{formatMoney(dish.price)}</div>
                 </div>
-                <QtyControl qty={qty} onInc={() => onInc(dish)} onDec={() => onDec(dish.id)} disabled={disabled} />
+                <QtyControl
+                  qty={qty}
+                  onInc={() => onInc(dish)}
+                  onDec={() => onDec(dish.id)}
+                  disabled={disabled}
+                />
               </li>
             ))}
           </ul>

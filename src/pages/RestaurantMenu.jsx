@@ -48,7 +48,9 @@ export default function RestaurantMenu() {
     return (
       <div className="p-8 text-center">
         <p className="text-muted">Такого заведения нет.</p>
-        <Link to="/" className="inline-block mt-4 font-bold text-accent-dark">К списку заведений</Link>
+        <Link to="/" className="inline-block mt-4 font-bold text-accent-dark">
+          К списку заведений
+        </Link>
       </div>
     );
   }
@@ -79,7 +81,9 @@ export default function RestaurantMenu() {
           src={`/images/${restaurant.id}/flash.webp`}
           alt=""
           aria-hidden="true"
-          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+          }}
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-black/70" />
@@ -93,7 +97,9 @@ export default function RestaurantMenu() {
             <ArrowLeftIcon className="w-4 h-4" />
           </button>
           <div className="mt-3 lg:mt-4">
-            <h1 className="font-extrabold text-xl lg:text-3xl text-white leading-tight">{restaurant.name}</h1>
+            <h1 className="font-extrabold text-xl lg:text-3xl text-white leading-tight">
+              {restaurant.name}
+            </h1>
             <div className="flex items-center gap-2 text-sm lg:text-base text-white/70 mt-0.5">
               <span className="inline-flex items-center gap-1 font-bold text-white">
                 <StarIcon className="w-3.5 h-3.5 text-warn" />
@@ -118,7 +124,10 @@ export default function RestaurantMenu() {
 
       <div className="lg:max-w-[1200px] lg:mx-auto lg:px-10">
         {!open && (
-          <div role="status" className="mx-4 lg:mx-0 mb-3 rounded-xl bg-warn-soft text-warn text-sm font-semibold px-4 py-3 border border-warn/20">
+          <div
+            role="status"
+            className="mx-4 lg:mx-0 mb-3 rounded-xl bg-warn-soft text-warn text-sm font-semibold px-4 py-3 border border-warn/20"
+          >
             {t('menu.closedNotice', { time: formatClock(closeMs) })}
           </div>
         )}
@@ -136,7 +145,9 @@ export default function RestaurantMenu() {
               <button
                 key={cat}
                 type="button"
-                onClick={() => sectionRefs.current[cat]?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                onClick={() =>
+                  sectionRefs.current[cat]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }
                 className="shrink-0 px-4 py-2 rounded-full text-sm font-semibold bg-card border border-line text-ink hover:border-ink/40 transition-colors shadow-sm"
               >
                 {t(`category.${cat}`)}
@@ -146,7 +157,11 @@ export default function RestaurantMenu() {
 
           <div className="px-4 lg:px-0 flex flex-col gap-6 mt-4">
             {categories.map((cat) => (
-              <section key={cat} ref={(el) => (sectionRefs.current[cat] = el)} className="scroll-mt-16">
+              <section
+                key={cat}
+                ref={(el) => (sectionRefs.current[cat] = el)}
+                className="scroll-mt-16"
+              >
                 <h2 className="font-extrabold text-ink mb-2">{t(`category.${cat}`)}</h2>
                 <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-3">
                   {dishes
@@ -193,18 +208,34 @@ export default function RestaurantMenu() {
       <div className="lg:hidden">
         <CartBar restaurantId={id} onNext={() => setCheckoutOpen(true)} />
       </div>
-      <CheckoutSheet open={checkoutOpen} onClose={() => setCheckoutOpen(false)} restaurant={restaurant} />
+      <CheckoutSheet
+        open={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        restaurant={restaurant}
+      />
 
-      <Sheet open={Boolean(conflictDish)} onClose={() => setConflictDish(null)} label={t('menu.conflictHeading')}>
+      <Sheet
+        open={Boolean(conflictDish)}
+        onClose={() => setConflictDish(null)}
+        label={t('menu.conflictHeading')}
+      >
         <h2 className="font-extrabold text-lg text-ink">{t('menu.conflictHeading')}</h2>
         <p className="text-sm text-muted mt-2">
           {t('menu.conflictText', { name: restaurantById[cartRestaurant]?.name })}
         </p>
         <div className="grid grid-cols-2 gap-2 mt-5">
-          <button type="button" onClick={() => setConflictDish(null)} className="py-3 rounded-xl border border-line font-bold text-ink">
+          <button
+            type="button"
+            onClick={() => setConflictDish(null)}
+            className="py-3 rounded-xl border border-line font-bold text-ink"
+          >
             {t('menu.conflictKeep')}
           </button>
-          <button type="button" onClick={switchRestaurant} className="py-3 rounded-xl bg-brand text-white font-bold">
+          <button
+            type="button"
+            onClick={switchRestaurant}
+            className="py-3 rounded-xl bg-brand text-white font-bold"
+          >
             {t('menu.conflictSwitch')}
           </button>
         </div>

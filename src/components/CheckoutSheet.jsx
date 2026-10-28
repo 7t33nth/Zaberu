@@ -6,7 +6,16 @@ import { useCart, useCartSummary } from '../store/useCart.js';
 import { placeOrder, subscribeSlots } from '../lib/api.js';
 import { SlotFullError } from '../lib/errors.js';
 import { addMyOrderId, getSavedName, saveName } from '../lib/myOrders.js';
-import { HORIZON_MIN, buildSlots, ceilToSlot, formatClock, formatMinutes, formatMoney, hoursForDay, startOfDay } from '../lib/time.js';
+import {
+  HORIZON_MIN,
+  buildSlots,
+  ceilToSlot,
+  formatClock,
+  formatMinutes,
+  formatMoney,
+  hoursForDay,
+  startOfDay
+} from '../lib/time.js';
 import { LocationIcon, CloseIcon } from './Icons.jsx';
 import { useLang, useT } from '../lib/i18n/store.js';
 
@@ -36,10 +45,18 @@ function SlotChip({ slot, capacity, selected, onSelect, t }) {
             : 'bg-paper text-muted border-line/40 cursor-not-allowed'
       }`}
     >
-      <div className={`font-bold text-[15px] ${slot.available ? '' : 'line-through text-muted'}`}>{formatClock(slot.start)}</div>
+      <div className={`font-bold text-[15px] ${slot.available ? '' : 'line-through text-muted'}`}>
+        {formatClock(slot.start)}
+      </div>
       <div
         className={`text-[10px] mt-0.5 font-semibold ${
-          selected ? 'text-white/80' : tone === 'full' ? 'text-danger' : tone === 'busy' ? 'text-warn' : 'text-muted'
+          selected
+            ? 'text-white/80'
+            : tone === 'full'
+              ? 'text-danger'
+              : tone === 'busy'
+                ? 'text-warn'
+                : 'text-muted'
         }`}
       >
         {slot.available ? `${slot.used}/${capacity}` : t('checkout.slotTaken')}
@@ -50,7 +67,13 @@ function SlotChip({ slot, capacity, selected, onSelect, t }) {
       >
         <span
           className={`block h-full rounded-full ${
-            selected ? 'bg-white' : tone === 'full' ? 'bg-danger' : tone === 'busy' ? 'bg-warn' : 'bg-accent'
+            selected
+              ? 'bg-white'
+              : tone === 'full'
+                ? 'bg-danger'
+                : tone === 'busy'
+                  ? 'bg-warn'
+                  : 'bg-accent'
           }`}
           style={{ width: `${slot.used > 0 ? Math.max(6, Math.round(slot.load * 100)) : 0}%` }}
         />
@@ -123,7 +146,10 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
     if (selected !== null) {
       setNotice(
         firstAvailable
-          ? t('checkout.slotJustTaken', { time: formatClock(selected), next: formatClock(firstAvailable.start) })
+          ? t('checkout.slotJustTaken', {
+              time: formatClock(selected),
+              next: formatClock(firstAvailable.start)
+            })
           : t('checkout.noSlotsToday')
       );
       setStep(2);
@@ -158,7 +184,9 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
       if (selected != null) setTimeText(formatClock(selected));
       return;
     }
-    const typedMs = ceilToSlot(startOfDay(now) + (Number(match[1]) * 60 + Number(match[2])) * 60000);
+    const typedMs = ceilToSlot(
+      startOfDay(now) + (Number(match[1]) * 60 + Number(match[2])) * 60000
+    );
 
     const exact = slots.find((s) => s.start === typedMs);
     if (exact?.available) {
@@ -242,7 +270,10 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
       </div>
 
       {notice && (
-        <div role="alert" className="bg-warn-soft text-warn text-sm font-semibold rounded-xl px-4 py-3 mb-4 border border-warn/20">
+        <div
+          role="alert"
+          className="bg-warn-soft text-warn text-sm font-semibold rounded-xl px-4 py-3 mb-4 border border-warn/20"
+        >
           {notice}
         </div>
       )}
@@ -251,7 +282,9 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
         <>
           <div className="flex items-center gap-1.5 text-xs text-muted">
             <LocationIcon className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{restaurant.name} · {restaurant.address}</span>
+            <span className="truncate">
+              {restaurant.name} · {restaurant.address}
+            </span>
           </div>
 
           <h2 className="font-extrabold text-xl text-ink mt-2">{t('checkout.whenPickup')}</h2>
@@ -279,14 +312,23 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
                     className="mt-1 block w-full bg-transparent text-5xl font-extrabold text-ink leading-none outline-none placeholder:text-muted/50 caret-[rgb(var(--color-ink))]"
                   />
                 </label>
-                {waitMin && <div className="text-sm text-muted pb-1 shrink-0">{t('checkout.waitIn', { time: waitMin })}</div>}
+                {waitMin && (
+                  <div className="text-sm text-muted pb-1 shrink-0">
+                    {t('checkout.waitIn', { time: waitMin })}
+                  </div>
+                )}
               </div>
               <p className="text-xs text-muted mt-2">
-                {t('checkout.prepHint', { prep: formatMinutes(summary.prepMinutes * 60000, lang), close: formatClock(closeMs) })}
+                {t('checkout.prepHint', {
+                  prep: formatMinutes(summary.prepMinutes * 60000, lang),
+                  close: formatClock(closeMs)
+                })}
               </p>
 
               <div className="mt-5">
-                <div className="text-xs font-semibold text-muted mb-2">{t('checkout.quickPick')}</div>
+                <div className="text-xs font-semibold text-muted mb-2">
+                  {t('checkout.quickPick')}
+                </div>
                 <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
                   {slots.map((s) => (
                     <div key={s.start} className="w-[72px] shrink-0">
@@ -325,14 +367,20 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
             className="w-full mt-4 flex items-center justify-between bg-accent-soft rounded-xl px-4 py-3 text-left border border-accent/20 transition-colors hover:border-accent"
           >
             <span>
-              <span className="block text-xs text-accent-dark font-medium">{restaurant.name}: {t('checkout.pickupAtLabel').toLowerCase()}</span>
-              <span className="block text-2xl font-extrabold text-ink">{formatClock(selected)}</span>
+              <span className="block text-xs text-accent-dark font-medium">
+                {restaurant.name}: {t('checkout.pickupAtLabel').toLowerCase()}
+              </span>
+              <span className="block text-2xl font-extrabold text-ink">
+                {formatClock(selected)}
+              </span>
               <span className="inline-flex items-center gap-1 text-xs text-accent-dark mt-0.5 font-medium">
                 <LocationIcon className="w-3.5 h-3.5 text-accent-dark shrink-0" />
                 <span>{restaurant.address}</span>
               </span>
             </span>
-            <span className="text-sm font-semibold text-accent-dark shrink-0 underline-offset-2 hover:underline">{t('checkout.changeTime')}</span>
+            <span className="text-sm font-semibold text-accent-dark shrink-0 underline-offset-2 hover:underline">
+              {t('checkout.changeTime')}
+            </span>
           </button>
 
           <ul className="mt-4 flex flex-col gap-2 max-h-40 overflow-y-auto">
@@ -383,10 +431,19 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
               <label
                 key={value}
                 className={`cursor-pointer rounded-xl border px-3 py-2.5 transition-colors ${
-                  pay === value ? 'border-brand bg-brand-soft font-bold' : 'border-line bg-paper text-ink hover:border-ink/30'
+                  pay === value
+                    ? 'border-brand bg-brand-soft font-bold'
+                    : 'border-line bg-paper text-ink hover:border-ink/30'
                 }`}
               >
-                <input type="radio" name="pay" value={value} checked={pay === value} onChange={() => setPay(value)} className="sr-only" />
+                <input
+                  type="radio"
+                  name="pay"
+                  value={value}
+                  checked={pay === value}
+                  onChange={() => setPay(value)}
+                  className="sr-only"
+                />
                 <span className="block text-sm font-bold text-ink">{title}</span>
                 {hint && <span className="block text-xs text-muted font-normal">{hint}</span>}
               </label>
