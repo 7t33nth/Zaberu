@@ -164,19 +164,15 @@ export async function cancelOrder(id, { allowReady = false } = {}) {
     const ref = dayRef(order.restaurantId, order.pickupAt);
     const daySnap = await tx.get(ref);
     const slotKey = String(order.pickupAt);
-    const used = daySnap.exists() ? daySnap.data().slots?.[slotKey] || 0 : 0;
 
     tx.update(orderRef, { status: 'cancelled' });
-    tx.set(
-      ref,
-      // Если документа дня ещё нет (например, его чистили вручную), seq нужно задать
-      // явно: правила требуют целочисленный seq в любом запросе к days.
-      {
-        ...(daySnap.exists() ? {} : { seq: 0 }),
-        slots: { [slotKey]: Math.max(0, used - order.units) }
-      },
-      { merge: true }
-    );
+    // Если документа дня нет (например, его почистили вручную), писать в days нечего:
+    // создать его здесь нельзя — правила разрешают create только с seq = 1 и одним слотом
+    // (то есть первого заказа дня). Слота тоже нет, так что и освобождать нечего.
+    if (daySnap.exists()) {
+      const used = daySnap.data().slots?.[slotKey] || 0;
+      tx.set(ref, { slots: { [slotKey]: Math.max(0, used - order.units) } }, { merge: true });
+    }
   });
 }
 

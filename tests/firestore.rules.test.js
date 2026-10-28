@@ -3,6 +3,7 @@
 // эмулятор через `firebase emulators:exec`); в обычный `npm test` не входит, так как
 // требует запущенного эмулятора (Java) и работает заметно медленнее.
 import { after, before, beforeEach, test } from 'node:test';
+import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {
   initializeTestEnvironment,
@@ -11,10 +12,12 @@ import {
 } from '@firebase/rules-unit-testing';
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
   query,
+  runTransaction,
   setDoc,
   updateDoc,
   where
@@ -261,9 +264,22 @@ test('clients can never write to the staff collection, even their own doc', asyn
 
 // --- days/{dayId} ---
 
-test('anyone can write a well-shaped days doc', async () => {
+// Первый заказ дня: seq = 1 и ровно один слот.
+test('the first order of the day creates a day doc with seq 1 and one slot', async () => {
   const db = testEnv.unauthenticatedContext().firestore();
   await assertSucceeds(setDoc(doc(db, 'days', 'r01_20260101'), { seq: 1, slots: { 123: 2 } }));
+});
+
+test('day create is rejected when seq is not 1', async () => {
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertFails(setDoc(doc(db, 'days', 'r01_20260104'), { seq: 0, slots: { 123: 2 } }));
+  await assertFails(setDoc(doc(db, 'days', 'r01_20260105'), { seq: 2, slots: { 123: 2 } }));
+});
+
+test('day create is rejected with zero or several slots', async () => {
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertFails(setDoc(doc(db, 'days', 'r01_20260106'), { seq: 1, slots: {} }));
+  await assertFails(setDoc(doc(db, 'days', 'r01_20260107'), { seq: 1, slots: { 111: 1, 222: 1 } }));
 });
 
 test('days doc write rejects unexpected fields', async () => {
@@ -279,21 +295,129 @@ test('days doc write rejects a negative seq', async () => {
 // Так cancelOrder освобождает слот: merge-запись только своего ключа, seq берётся из
 // существующего документа.
 test('slot decrement merges into an existing day doc and keeps seq', async () => {
-  await seed(async (db) =>
-    setDoc(doc(db, 'days', 'r01_20260501'), { seq: 3, slots: { '111': 2 } })
-  );
+  await seed(async (db) => setDoc(doc(db, 'days', 'r01_20260501'), { seq: 3, slots: { 111: 2 } }));
   const db = testEnv.unauthenticatedContext().firestore();
   await assertSucceeds(
-    setDoc(doc(db, 'days', 'r01_20260501'), { slots: { '111': 1 } }, { merge: true })
+    setDoc(doc(db, 'days', 'r01_20260501'), { slots: { 111: 1 } }, { merge: true })
   );
 });
 
-test('slot decrement over a missing day doc needs an explicit seq', async () => {
+// Так placeOrder добавляет второй заказ дня: seq + 1 и ровно один новый слот.
+test('a new order bumps seq by one and adds one slot', async () => {
+  await seed(async (db) => setDoc(doc(db, 'days', 'r01_20260502'), { seq: 5, slots: { 111: 1 } }));
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertSucceeds(
+    setDoc(doc(db, 'days', 'r01_20260502'), { seq: 6, slots: { 222: 1 } }, { merge: true })
+  );
+});
+
+test('day update cannot reset or skip seq', async () => {
+  await seed(async (db) => setDoc(doc(db, 'days', 'r01_20260503'), { seq: 5, slots: { 111: 1 } }));
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertFails(setDoc(doc(db, 'days', 'r01_20260503'), { seq: 4 }, { merge: true }));
+  await assertFails(setDoc(doc(db, 'days', 'r01_20260503'), { seq: 7 }, { merge: true }));
+});
+
+test('day update cannot remove a slot key', async () => {
+  await seed(async (db) =>
+    setDoc(doc(db, 'days', 'r01_20260504'), { seq: 5, slots: { 111: 1, 222: 1 } })
+  );
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertFails(setDoc(doc(db, 'days', 'r01_20260504'), { seq: 5, slots: { 111: 1 } }));
+});
+
+test('day update cannot wipe the whole slots map', async () => {
+  await seed(async (db) =>
+    setDoc(doc(db, 'days', 'r01_20260505'), { seq: 5, slots: { 111: 1, 222: 1 } })
+  );
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertFails(setDoc(doc(db, 'days', 'r01_20260505'), { seq: 5, slots: {} }));
+});
+
+test('day update cannot change two slots in one write', async () => {
+  await seed(async (db) =>
+    setDoc(doc(db, 'days', 'r01_20260506'), { seq: 5, slots: { 111: 1, 222: 1 } })
+  );
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertFails(setDoc(doc(db, 'days', 'r01_20260506'), { seq: 6, slots: { 111: 0, 222: 0 } }));
+});
+
+test('day doc cannot be deleted', async () => {
+  await seed(async (db) => setDoc(doc(db, 'days', 'r01_20260507'), { seq: 1, slots: { 111: 1 } }));
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertFails(deleteDoc(doc(db, 'days', 'r01_20260507')));
+});
+
+// Отмена заказа по недостающему документу дня больше не создаёт его: seq = 0 запрещён,
+// поэтому cancelOrder просто пропускает запись в days.
+test('cancel over a missing day doc cannot create one', async () => {
   const db = testEnv.unauthenticatedContext().firestore();
   await assertFails(
-    setDoc(doc(db, 'days', 'r01_20260502'), { slots: { '111': 0 } }, { merge: true })
+    setDoc(doc(db, 'days', 'r01_20260508'), { slots: { 111: 0 } }, { merge: true })
   );
-  await assertSucceeds(
-    setDoc(doc(db, 'days', 'r01_20260502'), { seq: 0, slots: { '111': 0 } }, { merge: true })
+  await assertFails(
+    setDoc(doc(db, 'days', 'r01_20260509'), { seq: 0, slots: { 111: 0 } }, { merge: true })
   );
+});
+
+test('staff of the day restaurant can write its slots', async () => {
+  const db = ctxFor('staffA@example.com');
+  await assertSucceeds(setDoc(doc(db, 'days', 'r01_20260510'), { seq: 1, slots: { 111: 1 } }));
+});
+
+test('staff cannot write the days of another restaurant', async () => {
+  const db = ctxFor('staffA@example.com');
+  await assertFails(setDoc(doc(db, 'days', 'r02_20260510'), { seq: 1, slots: { 111: 1 } }));
+});
+
+test('wildcard staff can write any day doc', async () => {
+  const db = ctxFor('admin@example.com');
+  await assertSucceeds(setDoc(doc(db, 'days', 'r02_20260511'), { seq: 1, slots: { 111: 1 } }));
+});
+
+// Самый важный тест раздела: правила проверяются не по отдельности, а на тех же двух
+// транзакциях, что делает приложение (placeOrder и cancelOrder из backends/firebase.js).
+test('two orders and a cancel pass the rules end to end', async () => {
+  const db = testEnv.unauthenticatedContext().firestore();
+  const dayRef = doc(db, 'days', 'r01_20260512');
+  const slotA = 1793000000000;
+  const slotB = slotA + 300000;
+
+  const place = (pickupAt, units, code) =>
+    runTransaction(db, async (tx) => {
+      const daySnap = await tx.get(dayRef);
+      const data = daySnap.exists() ? daySnap.data() : {};
+      const used = data.slots?.[String(pickupAt)] || 0;
+      const seq = (data.seq || 0) + 1;
+      const orderRef = doc(collection(db, 'orders'));
+      tx.set(orderRef, {
+        restaurantId: 'r01',
+        status: 'pending',
+        units,
+        pickupAt,
+        createdAt: Date.now(),
+        code
+      });
+      tx.set(dayRef, { seq, slots: { [String(pickupAt)]: used + units } }, { merge: true });
+      return orderRef.id;
+    });
+
+  const firstId = await place(slotA, 2, 'A-001');
+  await place(slotB, 1, 'A-002');
+
+  await runTransaction(db, async (tx) => {
+    const orderSnap = await tx.get(doc(db, 'orders', firstId));
+    const daySnap = await tx.get(dayRef);
+    const used = daySnap.data().slots?.[String(slotA)] || 0;
+    tx.update(doc(db, 'orders', firstId), { status: 'cancelled' });
+    tx.set(
+      dayRef,
+      { slots: { [String(slotA)]: Math.max(0, used - orderSnap.data().units) } },
+      { merge: true }
+    );
+  });
+
+  const day = (await getDoc(dayRef)).data();
+  assert.equal(day.seq, 2);
+  assert.deepEqual(day.slots, { [String(slotA)]: 0, [String(slotB)]: 1 });
 });

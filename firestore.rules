@@ -16,6 +16,20 @@ service cloud.firestore {
              && staffDoc().data.restaurantIds.hasAny([restaurantId, '*']);
     }
 
+    // Документ дня называется days/{restaurantId}_{yyyymmdd} (см. dayRef в
+    // lib/backends/firebase.js), причём ни id заведения, ни дата не содержат "_" —
+    // поэтому заведение дня однозначно восстанавливается из id до первого подчёркивания.
+    function dayRestaurantId(dayId) {
+      return dayId.split('_')[0];
+    }
+    // Оформить заказ умеет анонимный клиент, поэтому и запись в days открыта без входа.
+    // Вошедшему сотруднику — только в дни своего заведения: счётчик чужой кухни он не
+    // сломает даже случайно. Побочный эффект: если в том же браузере открыта кухня, заказ
+    // из клиентской части пройдёт только в своём заведении (для демо это приемлемо).
+    function isDayWriter(dayId) {
+      return request.auth == null || isStaffFor(dayRestaurantId(dayId));
+    }
+
     // Заказы: клиент создаёт заказ и читает его по id (без входа),
     // кухня (авторизованный сотрудник СВОЕГО заведения) видит список и меняет статус.
     match /orders/{orderId} {
@@ -53,15 +67,43 @@ service cloud.firestore {
     }
 
     // Занятость слотов и счётчик номеров: меняется транзакцией из приложения при
-    // оформлении заказа (клиент без входа), поэтому запись остаётся открытой без
-    // входа — но хотя бы ограничена по форме (только эти два поля, seq — неотрицательное
-    // целое). Полная защита от порчи данных потребовала бы переноса оформления заказа
-    // на серверную Cloud Function — вне рамок этого демо на чистом клиенте.
+    // оформлении заказа (клиент без входа) и при отмене. Закрыть запись совсем нельзя —
+    // заказ оформляет анонимный клиент, а счётчик слотов лежит в том же документе, — поэтому
+    // правила ограничивают форму и масштаб записи, а не личность:
+    //
+    //  * создать документ дня можно только с seq = 1 и ровно одним слотом (первый заказ);
+    //  * при обновлении seq не меняется или растёт ровно на 1 (так его двигает placeOrder),
+    //    а в слотах за одну запись добавляется/меняется не больше одного ключа и ни один
+    //    не удаляется — «обнулить все слоты» или переписать карту целиком уже нельзя;
+    //  * удалить документ дня нельзя;
+    //  * вошедший сотрудник пишет только в дни своего заведения.
+    //
+    // Остаточный риск: правила не умеют перебирать ключи карты, поэтому подменить значение
+    // ОДНОГО слота (или положить туда мусор вместо числа) по-прежнему можно — по одной
+    // записи за раз, и это не исправить на клиенте: нужна серверная проверка (Cloud
+    // Function), вне рамок демо.
     match /days/{dayId} {
       allow read: if true;
-      allow write: if request.resource.data.keys().hasOnly(['seq', 'slots'])
-                   && request.resource.data.seq is int
-                   && request.resource.data.seq >= 0;
+
+      allow create: if isDayWriter(dayId)
+                    && request.resource.data.keys().hasOnly(['seq', 'slots'])
+                    && request.resource.data.seq == 1
+                    && request.resource.data.slots is map
+                    && request.resource.data.slots.keys().size() == 1;
+
+      allow update: if isDayWriter(dayId)
+                    && request.resource.data.keys().hasOnly(['seq', 'slots'])
+                    && request.resource.data.seq is int
+                    && (request.resource.data.seq == resource.data.seq
+                        || request.resource.data.seq == resource.data.seq + 1)
+                    && request.resource.data.slots is map
+                    && resource.data.slots is map
+                    // removedKeys() пуст — ни один слот нельзя удалить; affectedKeys() —
+                    // это добавленные + изменённые + удалённые, значит меняется максимум один.
+                    && request.resource.data.slots.diff(resource.data.slots).removedKeys().size() == 0
+                    && request.resource.data.slots.diff(resource.data.slots).affectedKeys().size() <= 1;
+
+      allow delete: if false;
     }
 
     // Привязка сотрудника (по email из Firebase Auth) к заведению(-ям).
