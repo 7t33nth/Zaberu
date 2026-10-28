@@ -263,7 +263,7 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
           onClick={onClose}
           disabled={busy}
           aria-label={t('checkout.close')}
-          className="w-8 h-8 rounded-full bg-paper border border-line text-muted hover:text-ink hover:border-ink/40 flex items-center justify-center transition-colors shadow-sm"
+          className="w-10 h-10 rounded-full bg-paper border border-line text-muted hover:text-ink hover:border-ink/40 flex items-center justify-center transition-colors shadow-sm"
         >
           <CloseIcon className="w-4 h-4" />
         </button>
@@ -406,7 +406,7 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
               maxLength={40}
               autoComplete="given-name"
               placeholder={t('checkout.namePlaceholder')}
-              className="mt-1 w-full bg-paper border border-line rounded-xl px-4 py-3 text-sm text-ink placeholder:text-muted outline-none focus:ring-2 focus:ring-accent-dark"
+              className="mt-1 w-full bg-paper border border-line rounded-xl px-4 py-3 text-base lg:text-sm text-ink placeholder:text-muted outline-none focus:ring-2 focus:ring-accent-dark"
             />
           </label>
 
@@ -418,7 +418,7 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
               maxLength={140}
               rows={2}
               placeholder={t('checkout.commentPlaceholder')}
-              className="mt-1 w-full bg-paper border border-line rounded-xl px-4 py-3 text-sm text-ink placeholder:text-muted outline-none focus:ring-2 focus:ring-accent-dark resize-none"
+              className="mt-1 w-full bg-paper border border-line rounded-xl px-4 py-3 text-base lg:text-sm text-ink placeholder:text-muted outline-none focus:ring-2 focus:ring-accent-dark resize-none"
             />
           </label>
 

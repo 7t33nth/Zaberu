@@ -66,7 +66,7 @@ export default function OrderTracking() {
 
   if (order === undefined) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-muted">
+      <div className="flex items-center justify-center min-h-dvh text-muted">
         {t('order.loading')}
       </div>
     );
@@ -74,7 +74,7 @@ export default function OrderTracking() {
 
   if (order === null) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-8 text-center">
+      <div className="flex flex-col items-center justify-center min-h-dvh px-8 text-center">
         <h1 className="font-extrabold text-xl text-ink">{t('order.notFoundHeading')}</h1>
         <p className="text-muted text-sm mt-2">{t('order.notFoundText')}</p>
         <Link to="/" className="mt-6 bg-brand text-white font-bold px-6 py-3 rounded-xl">
@@ -118,7 +118,7 @@ export default function OrderTracking() {
   }
 
   return (
-    <div className="flex flex-col px-5 pt-10 pb-10 min-h-screen lg:max-w-[560px] lg:mx-auto lg:pt-16">
+    <div className="flex flex-col px-5 pt-10 pb-10 min-h-dvh lg:max-w-[560px] lg:mx-auto lg:pt-16">
       {toastNode}
       <div className="text-center">
         <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold ${status.tone}`}>

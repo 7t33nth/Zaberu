@@ -21,7 +21,7 @@ export default function CitySelect() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="shrink-0 inline-flex items-center gap-1.5 bg-card border border-line rounded-full pl-3 pr-2.5 py-1.5 text-sm font-semibold text-ink mt-1 hover:border-ink/40 transition-colors shadow-sm"
+        className="shrink-0 inline-flex min-h-[40px] items-center gap-1.5 bg-card border border-line rounded-full pl-3 pr-2.5 py-1.5 text-sm font-semibold text-ink mt-1 hover:border-ink/40 transition-colors shadow-sm"
       >
         <LocationIcon className="w-3.5 h-3.5 text-brand shrink-0" />
         <span>{t(current.key)}</span>

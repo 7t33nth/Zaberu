@@ -30,12 +30,12 @@ export default function MyOrders() {
   const list = ids.map((id) => orders[id]).filter(Boolean);
 
   return (
-    <div className="px-4 pt-4 pb-10 min-h-screen lg:max-w-[560px] lg:mx-auto lg:pt-10">
+    <div className="px-4 pt-4 pb-10 min-h-dvh lg:max-w-[560px] lg:mx-auto lg:pt-10">
       <button
         type="button"
         onClick={() => navigate('/')}
         aria-label={t('menu.back')}
-        className="w-9 h-9 rounded-full bg-paper flex items-center justify-center font-bold"
+        className="w-11 h-11 rounded-full bg-paper flex items-center justify-center font-bold"
       >
         ←
       </button>

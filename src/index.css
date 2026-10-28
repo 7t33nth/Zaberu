@@ -76,9 +76,19 @@ body,
   color: rgb(var(--color-ink));
 }
 
+html {
+  /* iOS в ландшафте сам «увеличивает» текст, если этого не запретить, — вёрстка едет. */
+  -webkit-text-size-adjust: 100%;
+  /* Серая вспышка при тапе: в нативном приложении её нет. */
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   -webkit-font-smoothing: antialiased;
   font-variant-numeric: tabular-nums;
+  /* Не даём браузеру «потянуть вниз» и обновить страницу: в установленном приложении
+     это выглядит как сбой, а корзина и так сохраняется. */
+  overscroll-behavior-y: contain;
 }
 
 :focus-visible {
@@ -107,7 +117,18 @@ button:disabled {
 .shell {
   max-width: 480px;
   margin: 0 auto;
+  /* 100dvh вместо 100vh: в мобильном Safari 100vh считается по высоте с показанной
+     адресной строкой, и контент «уезжает» под неё при скролле. dvh учитывает реальную
+     видимую высоту, а vh оставлен запасным вариантом для старых браузеров. */
   min-height: 100vh;
+  min-height: 100dvh;
+  /* Вырез/скругления по бокам в ландшафте (iPhone): контент не заезжает под них.
+     В портретной ориентации эти значения равны нулю. */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  /* Нижний отступ — для домашнего индикатора iPhone: последний текст на странице
+     не должен оказаться под ним. На устройствах без выреза значение равно нулю. */
+  padding-bottom: env(safe-area-inset-bottom);
   background-color: rgb(var(--color-paper));
   position: relative;
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useT } from '../lib/i18n/store.js';
 import { MailIcon, ChevronDownIcon } from './Icons.jsx';
+import { InstallLink } from './InstallBanner.jsx';
 
 const COOPERATION_EMAIL = 'dilanabkanov@gmail.com';
 const FAQ_IDS = [1, 2, 3, 4, 5, 6];
@@ -82,7 +83,8 @@ export default function Footer() {
         </section>
       </div>
 
-      <p className="px-4 lg:px-0 text-center text-xs text-muted mt-8 pb-8">{t('footer.rights')}</p>
+      <InstallLink />
+      <p className="px-4 lg:px-0 text-center text-xs text-muted mt-6 pb-8">{t('footer.rights')}</p>
     </footer>
   );
 }

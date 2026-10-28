@@ -8,7 +8,7 @@ export default function LangSwitch() {
   const setLang = useLangStore((s) => s.setLang);
   return (
     <div
-      className="flex items-center gap-0.5 bg-card border border-line rounded-full p-0.5 text-xs font-bold"
+      className="flex shrink-0 items-center gap-0.5 bg-card border border-line rounded-full p-0.5 text-xs font-bold"
       role="group"
       aria-label="Language"
     >
@@ -18,7 +18,7 @@ export default function LangSwitch() {
           type="button"
           onClick={() => setLang(l)}
           aria-pressed={lang === l}
-          className={`px-2 py-1 rounded-full transition-colors ${
+          className={`inline-flex min-h-[40px] items-center px-2.5 rounded-full transition-colors ${
             lang === l ? 'bg-primary text-white' : 'text-muted hover:text-ink'
           }`}
         >

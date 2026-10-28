@@ -59,7 +59,7 @@ export default function DishCard({ dish, qty, disabled, onOpen, onAdd, onDecreme
                 disabled={disabled}
                 whileTap={{ scale: 0.85 }}
                 aria-label={t('dish.addAria', { name: dish.name })}
-                className="w-9 h-9 rounded-full bg-brand text-white text-xl font-bold flex items-center justify-center hover:opacity-90 transition-opacity"
+                className="w-10 h-10 rounded-full bg-brand text-white text-xl font-bold flex items-center justify-center hover:opacity-90 transition-opacity"
               >
                 +
               </motion.button>

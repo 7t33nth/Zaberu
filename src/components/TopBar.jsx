@@ -8,8 +8,11 @@ export default function TopBar() {
   const t = useT();
   return (
     <div className="bg-paper border-b border-line">
-      <div className="flex items-center justify-end gap-3 px-4 py-2 text-xs lg:hidden">
-        <Link to="/my-orders" className="font-semibold text-muted hover:text-ink transition-colors">
+      <div className="flex items-center justify-end gap-2 px-3 py-1.5 text-xs lg:hidden">
+        <Link
+          to="/my-orders"
+          className="inline-flex min-h-[40px] shrink-0 items-center whitespace-nowrap px-1 font-semibold text-muted hover:text-ink transition-colors"
+        >
           {t('topbar.myOrders')}
         </Link>
         <LangSwitch />

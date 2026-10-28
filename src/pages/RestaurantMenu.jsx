@@ -92,7 +92,7 @@ export default function RestaurantMenu() {
             type="button"
             onClick={() => navigate('/')}
             aria-label={t('menu.back')}
-            className="w-9 h-9 rounded-full bg-black/40 border border-white/20 flex items-center justify-center font-bold text-white hover:border-white/50 transition-colors shadow-sm"
+            className="w-11 h-11 rounded-full bg-black/40 border border-white/20 flex items-center justify-center font-bold text-white hover:border-white/50 transition-colors shadow-sm"
           >
             <ArrowLeftIcon className="w-4 h-4" />
           </button>
@@ -148,7 +148,7 @@ export default function RestaurantMenu() {
                 onClick={() =>
                   sectionRefs.current[cat]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }
-                className="shrink-0 px-4 py-2 rounded-full text-sm font-semibold bg-card border border-line text-ink hover:border-ink/40 transition-colors shadow-sm"
+                className="shrink-0 inline-flex min-h-[40px] items-center px-4 rounded-full text-sm font-semibold bg-card border border-line text-ink hover:border-ink/40 transition-colors shadow-sm"
               >
                 {t(`category.${cat}`)}
               </button>

@@ -297,6 +297,48 @@ export function ChevronDownIcon({ className = 'w-4 h-4', ...props }) {
   );
 }
 
+// iOS «Поделиться»: квадрат со стрелкой вверх — тот самый значок в панели Safari,
+// который просят найти в инструкции по установке.
+export function ShareIcon({ className = 'w-4 h-4', ...props }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M12 3v12" />
+      <path d="m8 7 4-4 4 4" />
+      <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+    </svg>
+  );
+}
+
+export function DownloadIcon({ className = 'w-4 h-4', ...props }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M12 3v12" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M5 21h14" />
+    </svg>
+  );
+}
+
 export function FoodPlaceholderIcon({ className = 'w-8 h-8', ...props }) {
   return (
     <svg

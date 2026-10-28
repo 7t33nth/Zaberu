@@ -67,7 +67,7 @@ function LoginGate() {
   }
 
   return (
-    <div className="min-h-screen bg-paper text-ink flex items-center justify-center p-6">
+    <div className="min-h-dvh bg-paper text-ink flex items-center justify-center p-6">
       <div className="absolute top-4 right-4">
         <LangSwitch />
       </div>
@@ -122,7 +122,7 @@ function LoginGate() {
 function NoAccessGate({ email }) {
   const t = useT();
   return (
-    <div className="min-h-screen bg-paper text-ink flex items-center justify-center p-6">
+    <div className="min-h-dvh bg-paper text-ink flex items-center justify-center p-6">
       <div className="w-full max-w-xs text-center">
         <h1 className="font-extrabold text-2xl">{t('admin.noAccessHeading')}</h1>
         <p className="text-muted text-sm mt-2">{t('admin.noAccessText', { email })}</p>
@@ -220,7 +220,7 @@ function OrderCard({ order, now, onReady, onDone, onCancel, t }) {
       <button
         type="button"
         onClick={() => onCancel(order.id)}
-        className="self-start text-xs font-semibold text-muted hover:text-danger transition-colors"
+        className="self-start inline-flex min-h-[36px] items-center px-2 -mx-2 rounded-lg text-xs font-semibold text-muted hover:text-danger transition-colors"
       >
         {t('admin.cancelOrder')}
       </button>
@@ -342,7 +342,7 @@ function Board({ staff, allowedRestaurants }) {
   const doneOrder = (id) => run(() => markDone(id));
 
   return (
-    <div className="min-h-screen bg-paper text-ink">
+    <div className="min-h-dvh bg-paper text-ink">
       {toastNode}
       <header className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-line">
         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
@@ -353,7 +353,7 @@ function Board({ staff, allowedRestaurants }) {
               <select
                 value={restaurantId}
                 onChange={(e) => setRestaurantId(e.target.value)}
-                className="bg-card border border-line text-ink font-semibold text-sm rounded-lg px-3 py-1.5 outline-none max-w-[55vw] sm:max-w-none focus:ring-2 focus:ring-accent-dark"
+                className="bg-card border border-line text-ink font-semibold text-base sm:text-sm rounded-lg px-3 py-1.5 outline-none max-w-[55vw] sm:max-w-none focus:ring-2 focus:ring-accent-dark"
               >
                 {allowedRestaurants.map((r) => (
                   <option key={r.id} value={r.id}>
@@ -375,7 +375,7 @@ function Board({ staff, allowedRestaurants }) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('admin.searchByCodePlaceholder')}
-              className="bg-card border border-line rounded-lg px-3 py-1.5 text-sm text-ink placeholder:text-muted outline-none focus:ring-2 focus:ring-accent-dark w-44"
+              className="bg-card border border-line rounded-lg px-3 py-1.5 text-base sm:text-sm text-ink placeholder:text-muted outline-none focus:ring-2 focus:ring-accent-dark w-44"
             />
           </label>
           <button
@@ -385,7 +385,7 @@ function Board({ staff, allowedRestaurants }) {
               if (!sound) beep();
             }}
             aria-pressed={sound}
-            className={sound ? 'text-accent-dark font-semibold' : ''}
+            className={`inline-flex min-h-[40px] items-center ${sound ? 'text-accent-dark font-semibold' : ''}`}
           >
             {sound ? t('admin.soundOn') : t('admin.soundOff')}
           </button>
@@ -393,7 +393,7 @@ function Board({ staff, allowedRestaurants }) {
             <span className="w-2 h-2 rounded-full bg-accent" />
             {backendName === 'firebase' ? t('admin.sharedDb') : t('admin.localMode')}
           </span>
-          <Link to="/" className="hover:text-ink">
+          <Link to="/" className="inline-flex min-h-[40px] items-center hover:text-ink">
             {t('admin.clientSide')}
           </Link>
           <LangSwitch />
@@ -445,11 +445,11 @@ function Board({ staff, allowedRestaurants }) {
           className="rounded-2xl bg-card border border-line p-4"
         >
           <div className="text-xs text-muted mb-3">{t('admin.slotsHeading')}</div>
-          <div className="flex items-end gap-2 h-24">
+          <div className="flex items-end gap-2 h-24 overflow-x-auto no-scrollbar pb-1">
             {metrics.slots.map((s) => (
               <div
                 key={s.start}
-                className="flex-1 flex flex-col items-center gap-1 h-full justify-end"
+                className="flex-1 min-w-[24px] flex flex-col items-center gap-1 h-full justify-end"
               >
                 <div
                   title={`${formatClock(s.start)}: ${s.used}/${restaurant.slotCapacity}`}

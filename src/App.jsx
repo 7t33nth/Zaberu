@@ -23,7 +23,7 @@ function Shell({ children }) {
 
 function PageFallback() {
   return (
-    <div className="min-h-screen bg-paper flex items-center justify-center">
+    <div className="min-h-dvh bg-paper flex items-center justify-center">
       <span
         className="w-8 h-8 border-2 border-line border-t-brand rounded-full animate-spin"
         aria-hidden="true"

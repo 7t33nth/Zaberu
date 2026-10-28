@@ -12,7 +12,7 @@ export default function ThemeToggle() {
       onClick={toggle}
       aria-label={dark ? t('theme.lightOn') : t('theme.darkOn')}
       aria-pressed={dark}
-      className="w-8 h-8 rounded-full bg-card border border-line flex items-center justify-center text-ink hover:border-ink/40 transition-colors shadow-sm"
+      className="w-10 h-10 shrink-0 rounded-full bg-card border border-line flex items-center justify-center text-ink hover:border-ink/40 transition-colors shadow-sm"
     >
       <span aria-hidden="true">
         {dark ? (

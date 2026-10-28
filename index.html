@@ -2,12 +2,30 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <meta name="description" content="Заберу! — предзаказ еды к точному времени: без очереди, без звонков и ожидания." />
+
+    <!-- Статус-бар Android/Chrome: тёмно-зелёный, как шапка и иконка. В тёмной теме — почти чёрный. -->
     <meta name="theme-color" content="#15201C" />
-    <meta name="description" content="Express Pick-Up: закажите заранее и заберите еду в точное время без очереди" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#101114" />
+
+    <!-- iOS: полноэкранный запуск с домашнего экрана. Статус-бар оставляем системным
+         (black), чтобы белые иконки не попадали на светлый фон в светлой теме; сверху
+         ничего не подкладываем — контент и так начинается под баром. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="Заберу!" />
+    <!-- Номера телефонов в адресах и описаниях — не ссылки: iOS иначе превращает их в
+         синие «позвонить», что в карточках заведений выглядит случайным. -->
+    <meta name="format-detection" content="telephone=no" />
+
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
-    <title>Express Pick-Up</title>
+    <title>Заберу! — предзаказ еды к точному времени</title>
   </head>
   <body class="bg-paper text-ink font-sans">
     <div id="root"></div>

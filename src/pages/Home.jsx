@@ -5,6 +5,7 @@ import ActiveOrderBanner from '../components/ActiveOrderBanner.jsx';
 import CitySelect from '../components/CitySelect.jsx';
 import Steps from '../components/Steps.jsx';
 import Footer from '../components/Footer.jsx';
+import InstallBanner from '../components/InstallBanner.jsx';
 import { SearchIcon } from '../components/Icons.jsx';
 import { useT } from '../lib/i18n/store.js';
 
@@ -70,7 +71,7 @@ export default function Home() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder={t('home.searchPlaceholder')}
-        className="w-full bg-card border border-line rounded-full pl-10 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-accent-dark shadow-sm placeholder:text-muted"
+        className="w-full bg-card border border-line rounded-full pl-10 pr-4 py-3 text-base lg:text-sm outline-none focus:ring-2 focus:ring-accent-dark shadow-sm placeholder:text-muted"
       />
     </div>
   );
@@ -83,7 +84,7 @@ export default function Home() {
           type="button"
           onClick={() => setMinRating(value)}
           aria-pressed={minRating === value}
-          className={`px-4 py-2 rounded-full text-xs font-semibold border ${
+          className={`inline-flex min-h-[40px] items-center px-4 rounded-full text-xs font-semibold border ${
             minRating === value
               ? 'bg-primary text-white border-primary'
               : 'bg-card text-muted border-line'
@@ -222,7 +223,7 @@ export default function Home() {
                 type="button"
                 onClick={() => setCuisines(new Set())}
                 aria-pressed={cuisines.size === 0}
-                className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold border ${
+                className={`shrink-0 inline-flex min-h-[40px] items-center px-4 rounded-full text-sm font-semibold border ${
                   cuisines.size === 0
                     ? 'bg-primary text-white border-primary'
                     : 'bg-card text-muted border-line'
@@ -236,7 +237,7 @@ export default function Home() {
                   type="button"
                   onClick={() => toggleCuisine(g.id)}
                   aria-pressed={cuisines.has(g.id)}
-                  className={`shrink-0 px-4 py-2 rounded-full text-sm font-semibold border ${
+                  className={`shrink-0 inline-flex min-h-[40px] items-center px-4 rounded-full text-sm font-semibold border ${
                     cuisines.has(g.id)
                       ? 'bg-primary text-white border-primary'
                       : 'bg-card text-muted border-line'
@@ -262,6 +263,7 @@ export default function Home() {
       </div>
 
       <Footer />
+      <InstallBanner />
     </div>
   );
 }

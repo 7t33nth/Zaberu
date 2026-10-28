@@ -3,7 +3,7 @@ import { useT } from '../lib/i18n/store.js';
 
 export default function QtyControl({ qty, onInc, onDec, disabled, size = 'md' }) {
   const t = useT();
-  const dim = size === 'lg' ? 'w-11 h-11 text-xl' : 'w-9 h-9 text-lg';
+  const dim = size === 'lg' ? 'w-11 h-11 text-xl' : 'w-10 h-10 text-lg';
   return (
     <div className="flex items-center gap-2">
       <button
