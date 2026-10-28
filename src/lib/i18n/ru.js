@@ -171,6 +171,7 @@ export default {
   'order.backToRestaurants': 'Вернуться к заведениям',
   'order.cancelOrder': 'Отменить заказ · осталось {seconds} с',
   'order.cancelConfirm': 'Отменить заказ? Это действие необратимо.',
+  'order.actionFailed': 'Не получилось. Проверьте соединение и попробуйте ещё раз.',
   'order.toastSoon': 'Ваш заказ скоро будет готов',
   'order.toastReady': 'Заказ готов, подходите!',
 
@@ -220,6 +221,7 @@ export default {
   'admin.markDoneBtn': 'Выдано',
   'admin.cancelOrder': 'Отменить заказ',
   'admin.cancelConfirm': 'Отменить заказ и освободить слот?',
+  'admin.actionFailed': 'Не получилось. Проверьте соединение и попробуйте ещё раз.',
   'admin.restaurantLabel': 'Заведение',
   'admin.searchByCodeAria': 'Найти заказ по номеру',
   'admin.searchByCodePlaceholder': 'Номер заказа (скан/ввод)',

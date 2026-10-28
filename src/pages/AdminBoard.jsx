@@ -17,6 +17,7 @@ import { formatClock, formatCountdown } from '../lib/time.js';
 import ThemeToggle from '../components/ThemeToggle.jsx';
 import LangSwitch from '../components/LangSwitch.jsx';
 import { ChatIcon } from '../components/Icons.jsx';
+import { useToast } from '../components/Toast.jsx';
 import { onStaffAuthChange, signInStaff, signOutStaff } from '../lib/staffAuth.js';
 import { allowedRestaurantsFor, isRestaurantAllowed } from '../lib/staffAccess.js';
 import { useLang, useT } from '../lib/i18n/store.js';
@@ -232,6 +233,7 @@ function Board({ staff, allowedRestaurants }) {
   const navigate = useNavigate();
   const t = useT();
   const lang = useLang();
+  const [toast, toastNode] = useToast();
   const allowedId = (id) => isRestaurantAllowed(staff.restaurantIds, id);
   // allowedRestaurants не пуст: AdminBoard не пускает сюда, если доступа нет ни к одному
   // заведению каталога (например, в staff/{email} опечатка в id).
@@ -305,24 +307,43 @@ function Board({ staff, allowedRestaurants }) {
           ? 'text-warn'
           : 'text-danger';
 
+  // Ошибки записи раньше уходили в никуда: кнопка выглядела «мёртвой», причина — только
+  // в консоли. Показываем короткое сообщение, детали оставляем в консоли.
+  async function run(action) {
+    try {
+      await action();
+    } catch (err) {
+      console.error(err);
+      toast(t('admin.actionFailed'));
+    }
+  }
+
   async function clearStats() {
     if (!window.confirm(t('admin.clearStatsConfirm', { name: restaurant.name }))) return;
-    await clearDoneOrders(restaurantId);
+    run(() => clearDoneOrders(restaurantId));
   }
 
   async function prepForDemo() {
     if (!window.confirm(t('admin.prepDemoConfirm', { name: restaurant.name }))) return;
-    await resetAll();
-    await seedDemoOrders(restaurantId);
+    run(async () => {
+      await resetAll();
+      await seedDemoOrders(restaurantId);
+    });
   }
 
-  async function cancelWithConfirm(id) {
+  function cancelWithConfirm(id) {
     if (!window.confirm(t('admin.cancelConfirm'))) return;
-    await cancelOrderByStaff(id);
+    run(() => cancelOrderByStaff(id));
   }
+
+  // markReady/markDone раньше вызывались из карточки напрямую: отказ Firestore (например,
+  // заказ уже отменён) давал необработанный reject, и кнопка просто не реагировала.
+  const readyOrder = (id) => run(() => markReady(id));
+  const doneOrder = (id) => run(() => markDone(id));
 
   return (
     <div className="min-h-screen bg-paper text-ink">
+      {toastNode}
       <header className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-line">
         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           <h1 className="font-extrabold text-xl shrink-0">{t('admin.title')}</h1>
@@ -455,8 +476,8 @@ function Board({ staff, allowedRestaurants }) {
                   key={o.id}
                   order={o}
                   now={now}
-                  onReady={markReady}
-                  onDone={markDone}
+                  onReady={readyOrder}
+                  onDone={doneOrder}
                   onCancel={cancelWithConfirm}
                   t={t}
                 />
@@ -478,8 +499,8 @@ function Board({ staff, allowedRestaurants }) {
                   key={o.id}
                   order={o}
                   now={now}
-                  onReady={markReady}
-                  onDone={markDone}
+                  onReady={readyOrder}
+                  onDone={doneOrder}
                   onCancel={cancelWithConfirm}
                   t={t}
                 />
@@ -505,40 +526,43 @@ function Board({ staff, allowedRestaurants }) {
           </section>
         )}
 
-        <footer className="flex flex-wrap gap-3 pt-4 border-t border-line text-sm">
-          <button
-            type="button"
-            onClick={() => seedDemoOrders(restaurantId)}
-            className="px-4 py-2 rounded-lg bg-card border border-line hover:bg-line"
-          >
-            {t('admin.addDemoOrders')}
-          </button>
-          {canReset && (
-            <>
-              <button
-                type="button"
-                onClick={clearStats}
-                className="px-4 py-2 rounded-lg bg-card border border-line hover:bg-line"
-              >
-                {t('admin.clearStats')}
-              </button>
-              <button
-                type="button"
-                onClick={prepForDemo}
-                className="px-4 py-2 rounded-lg bg-brand text-white font-semibold hover:opacity-90"
-              >
-                {t('admin.prepDemo')}
-              </button>
-              <button
-                type="button"
-                onClick={() => window.confirm(t('admin.clearDataConfirm')) && resetAll()}
-                className="px-4 py-2 rounded-lg text-muted hover:text-ink"
-              >
-                {t('admin.clearData')}
-              </button>
-            </>
-          )}
-        </footer>
+        {/* Демо- и сброс-кнопки имеют смысл только на локальном бэкенде: в общей базе
+            «добавить демо-заказы» писало бы фейковые заказы в прод, а resetAll там
+            намеренно недоступен. */}
+        {canReset && (
+          <footer className="flex flex-wrap gap-3 pt-4 border-t border-line text-sm">
+            <button
+              type="button"
+              onClick={() => run(() => seedDemoOrders(restaurantId))}
+              className="px-4 py-2 rounded-lg bg-card border border-line hover:bg-line"
+            >
+              {t('admin.addDemoOrders')}
+            </button>
+            <button
+              type="button"
+              onClick={clearStats}
+              className="px-4 py-2 rounded-lg bg-card border border-line hover:bg-line"
+            >
+              {t('admin.clearStats')}
+            </button>
+            <button
+              type="button"
+              onClick={prepForDemo}
+              className="px-4 py-2 rounded-lg bg-brand text-white font-semibold hover:opacity-90"
+            >
+              {t('admin.prepDemo')}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm(t('admin.clearDataConfirm'))) run(() => resetAll());
+              }}
+              className="px-4 py-2 rounded-lg text-muted hover:text-ink"
+            >
+              {t('admin.clearData')}
+            </button>
+          </footer>
+        )}
       </main>
     </div>
   );

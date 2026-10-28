@@ -45,7 +45,14 @@ export async function signInStaff(email, password) {
 }
 
 export async function signOutStaff() {
-  if (firebaseEnabled) await signOut(auth);
+  if (!firebaseEnabled) return;
+  try {
+    await signOut(auth);
+  } catch (err) {
+    // Кнопка «Выйти» не должна давать необработанный reject: останемся в сессии,
+    // пользователь просто нажмёт ещё раз.
+    console.error('sign out failed', err);
+  }
 }
 
 function mapAuthError(code) {

@@ -172,6 +172,7 @@ export default {
   'order.backToRestaurants': 'Back to restaurants',
   'order.cancelOrder': 'Cancel order · {seconds}s left',
   'order.cancelConfirm': "Cancel the order? This can't be undone.",
+  'order.actionFailed': 'Something went wrong. Check your connection and try again.',
   'order.toastSoon': 'Your order will be ready soon',
   'order.toastReady': "Order's ready, come on over!",
 
@@ -220,6 +221,7 @@ export default {
   'admin.markDoneBtn': 'Picked up',
   'admin.cancelOrder': 'Cancel order',
   'admin.cancelConfirm': 'Cancel this order and free up the slot?',
+  'admin.actionFailed': 'Something went wrong. Check your connection and try again.',
   'admin.restaurantLabel': 'Restaurant',
   'admin.searchByCodeAria': 'Find order by number',
   'admin.searchByCodePlaceholder': 'Order number (scan/type)',

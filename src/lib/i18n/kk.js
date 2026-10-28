@@ -172,6 +172,7 @@ export default {
   'order.backToRestaurants': 'Мекемелерге оралу',
   'order.cancelOrder': 'Тапсырыстан бас тарту · {seconds} с қалды',
   'order.cancelConfirm': 'Тапсырыстан бас тартасыз ба? Бұл әрекетті кері қайтару мүмкін емес.',
+  'order.actionFailed': 'Болмады. Байланысты тексеріп, қайта көріңіз.',
   'order.toastSoon': 'Тапсырысыңыз жақында дайын болады',
   'order.toastReady': 'Тапсырыс дайын, келіңіз!',
 
@@ -221,6 +222,7 @@ export default {
   'admin.markDoneBtn': 'Берілді',
   'admin.cancelOrder': 'Тапсырысты болдырмау',
   'admin.cancelConfirm': 'Тапсырысты болдырмай, слотты босату керек пе?',
+  'admin.actionFailed': 'Болмады. Байланысты тексеріп, қайта көріңіз.',
   'admin.restaurantLabel': 'Мекеме',
   'admin.searchByCodeAria': 'Тапсырысты нөмірі бойынша табу',
   'admin.searchByCodePlaceholder': 'Тапсырыс нөмірі (сканер/енгізу)',

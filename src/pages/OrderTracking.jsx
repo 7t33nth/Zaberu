@@ -96,6 +96,9 @@ export default function OrderTracking() {
     setBusy(true);
     try {
       await markArrived(order.id);
+    } catch (err) {
+      console.error(err);
+      toast(t('order.actionFailed'));
     } finally {
       setBusy(false);
     }
@@ -106,6 +109,9 @@ export default function OrderTracking() {
     setBusy(true);
     try {
       await cancelOrder(order.id);
+    } catch (err) {
+      console.error(err);
+      toast(t('order.actionFailed'));
     } finally {
       setBusy(false);
     }
