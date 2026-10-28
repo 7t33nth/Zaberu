@@ -129,7 +129,7 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
       setStep(2);
     }
     setSelected(firstAvailable ? firstAvailable.start : null);
-  }, [open, busy, slots, selected, firstAvailable]);
+  }, [open, busy, slots, selected, firstAvailable, t]);
 
   // текстовое поле всегда отражает актуально выбранный слот (клик по чипу, автокоррекция и т.д.)
   useEffect(() => {

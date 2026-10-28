@@ -8,8 +8,14 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.{js,jsx,css,json}\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,css,json}\"",
     "test": "node --test tests/backend.test.js tests/time.test.js",
     "test:rules": "firebase emulators:exec --only firestore \"node --test tests/firestore.rules.test.js\""
+  },
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "@fontsource-variable/manrope": "^5.0.0",
@@ -22,10 +28,18 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@firebase/rules-unit-testing": "^3.0.4",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "firebase-tools": "^15.34.1",
+    "globals": "^17.13.0",
     "postcss": "^8.4.38",
+    "prettier": "^3.9.10",
     "tailwindcss": "^3.4.4",
     "vite": "^5.3.1",
     "vite-plugin-pwa": "^0.20.0"

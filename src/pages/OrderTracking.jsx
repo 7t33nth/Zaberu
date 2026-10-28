@@ -52,7 +52,7 @@ export default function OrderTracking() {
       notifyIfHidden(t('order.toastSoon'), order.code);
     }, delay);
     return () => clearTimeout(timer);
-  }, [order?.id, order?.pickupAt, order?.status, toast, t]);
+  }, [order, toast, t]);
 
   // кухня отметила заказ готовым — реальный статус, а не таймер по времени выдачи
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function OrderTracking() {
       notifyIfHidden(t('order.toastReady'), order.code);
     }
     prevStatusRef.current = order.status;
-  }, [order?.status, toast, t]);
+  }, [order, toast, t]);
 
   if (order === undefined) {
     return <div className="flex items-center justify-center min-h-screen text-muted">{t('order.loading')}</div>;

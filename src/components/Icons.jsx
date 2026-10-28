@@ -1,5 +1,3 @@
-import React from 'react';
-
 export function LocationIcon({ className = 'w-4 h-4', ...props }) {
   return (
     <svg className={className} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" {...props}>

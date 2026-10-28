@@ -138,13 +138,3 @@ export const CATEGORY_LABELS = {
 
 // Порядок категорий в меню заведения.
 export const CATEGORY_ORDER = Object.keys(CATEGORY_LABELS);
-
-export const ALLERGEN_LABELS = {
-  gluten: 'глютен',
-  milk: 'молоко',
-  eggs: 'яйца',
-  fish: 'рыба',
-  shellfish: 'моллюски',
-  soy: 'соя',
-  sesame: 'кунжут'
-};

@@ -1,5 +1,3 @@
-@import './design-tokens.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -79,32 +77,6 @@ html, body, #root {
 body {
   -webkit-font-smoothing: antialiased;
   font-variant-numeric: tabular-nums;
-}
-
-/* Сплошные непрозрачные фоны для карточек, модалок и диалогов */
-.bg-card,
-[role="dialog"],
-.modal-solid {
-  background-color: rgb(var(--color-card)) !important;
-  opacity: 1 !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-}
-
-.bg-paper {
-  background-color: rgb(var(--color-paper)) !important;
-}
-
-.text-ink {
-  color: rgb(var(--color-ink)) !important;
-}
-
-.text-muted {
-  color: rgb(var(--color-muted)) !important;
-}
-
-.border-line {
-  border-color: rgb(var(--color-line)) !important;
 }
 
 :focus-visible {
