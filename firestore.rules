@@ -48,21 +48,32 @@ service cloud.firestore {
                     // выставляет только кухня/клиент отдельными разрешёнными update-ами.
                     && !('readyAt' in request.resource.data)
                     && !('arrivedAt' in request.resource.data)
+                    && !('receivedAt' in request.resource.data)
                     && !('issuedAt' in request.resource.data);
       // Клиент без входа может: 1) отметить своё прибытие (arrivedAt, таймстамп);
-      // 2) отменить СВЕЖИЙ (ещё 'pending') заказ в течение 1 минуты после создания —
-      // окно намеренно короткое, чтобы это не превращалось в лазейку для отмены уже
-      // готовящихся заказов. Статус заказа (готово/выдано) меняет только вошедший
-      // сотрудник СВОЕГО заведения.
+      // 2) подтвердить получение готового заказа (receivedAt) — без этого кухня не может
+      // закрыть заказ в одностороннем порядке; 3) отменить СВЕЖИЙ (ещё 'pending') заказ
+      // в течение 1 минуты после создания — окно намеренно короткое, чтобы это не
+      // превращалось в лазейку для отмены уже готовящихся заказов. Статус заказа
+      // (готово/выдано) меняет только вошедший сотрудник СВОЕГО заведения.
       allow update: if (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['arrivedAt'])
                          && request.resource.data.arrivedAt is int)
+                    || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['receivedAt'])
+                        && request.resource.data.receivedAt is int
+                        && resource.data.status == 'ready')
                     || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
                         && request.resource.data.status == 'cancelled'
                         && resource.data.status == 'pending'
                         && request.time.toMillis() < resource.data.createdAt + 60000)
+                    // «Выдано» — только после подтверждения клиента. Если клиент не
+                    // ответил за 3 часа после заявленного времени, подтверждение
+                    // считается автоматическим (10800000 = RECEIVE_GRACE_MS в lib/time.js).
                     || (isStaffFor(resource.data.restaurantId)
                         && request.resource.data.diff(resource.data).affectedKeys()
-                             .hasOnly(['status', 'readyAt', 'arrivedAt', 'issuedAt']));
+                             .hasOnly(['status', 'readyAt', 'arrivedAt', 'issuedAt'])
+                        && (request.resource.data.status != 'done'
+                            || resource.data.receivedAt != null
+                            || request.time.toMillis() >= resource.data.pickupAt + 10800000));
       allow delete: if false;
     }
 

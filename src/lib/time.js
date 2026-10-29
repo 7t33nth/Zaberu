@@ -8,6 +8,10 @@ export const FREE_UNITS = 2; // первые 2 порции без надбав�
 // Значение задублировано в firestore.rules (Firestore-правила не умеют импортировать JS) —
 // меняя одно, меняйте и другое.
 export const CANCEL_WINDOW_MS = 60000;
+// Сколько ждём подтверждения получения от клиента, прежде чем кухня сможет закрыть
+// заказ сама. Значение задублировано в firestore.rules (10800000) — меняя одно,
+// меняйте и другое.
+export const RECEIVE_GRACE_MS = 3 * 60 * 60 * 1000;
 
 export const ceilToSlot = (ms) => Math.ceil(ms / SLOT_MS) * SLOT_MS;
 

@@ -58,6 +58,10 @@ export const markReady = (id) =>
   transition(id, 'pending', { status: 'ready', readyAt: Date.now() });
 export const markDone = (id) => transition(id, 'ready', { status: 'done', issuedAt: Date.now() });
 export const markArrived = (id) => patch(id, { arrivedAt: Date.now() });
+// Клиент подтверждает, что забрал заказ. Только из 'ready' и только этот флаг:
+// статус по-прежнему меняет кухня, но уже после подтверждения (или авто-подтверждения
+// через RECEIVE_GRACE_MS — см. AdminBoard и firestore.rules).
+export const markReceived = (id) => transition(id, 'ready', { receivedAt: Date.now() });
 export const cancelOrder = (id) => backendPromise.then((b) => b.cancelOrder(id));
 // Кухня может отменить и готовый заказ (гость не пришёл) — клиенту это запрещено правилами.
 export const cancelOrderByStaff = (id) =>

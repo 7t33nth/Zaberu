@@ -13,7 +13,7 @@ import {
   backendName
 } from '../lib/api.js';
 import { BASELINE_WAIT_MIN, TARGET_WAIT_MIN, computeMetrics } from '../lib/metrics.js';
-import { formatClock, formatCountdown } from '../lib/time.js';
+import { formatClock, formatCountdown, RECEIVE_GRACE_MS } from '../lib/time.js';
 import ThemeToggle from '../components/ThemeToggle.jsx';
 import LangSwitch from '../components/LangSwitch.jsx';
 import { ChatIcon } from '../components/Icons.jsx';
@@ -155,6 +155,13 @@ function OrderCard({ order, now, onReady, onDone, onCancel, t }) {
   const msLeft = order.pickupAt - now;
   const ready = order.status === 'ready';
   const urgent = !ready && msLeft < 3 * 60000;
+  // «Выдано» доступно только после подтверждения клиента (кнопка на странице заказа).
+  // Если клиент так и не ответил, через RECEIVE_GRACE_MS после заявленного времени
+  // подтверждение считается автоматическим — иначе очередь из «мёртвых» заказов
+  // никогда не закрыть без Cloud Functions.
+  const autoConfirmAt = order.pickupAt + RECEIVE_GRACE_MS;
+  const autoConfirmed = !order.receivedAt && now >= autoConfirmAt;
+  const canIssue = Boolean(order.receivedAt) || autoConfirmed;
   return (
     <div
       className={`rounded-2xl p-4 border flex flex-col gap-3 ${
@@ -187,6 +194,16 @@ function OrderCard({ order, now, onReady, onDone, onCancel, t }) {
       {order.arrivedAt && (
         <div className="text-xs font-bold text-accent-dark">{t('admin.customerHere')}</div>
       )}
+      {ready && order.receivedAt && (
+        <div className="text-xs font-bold text-accent-dark">{t('admin.receivedByClient')}</div>
+      )}
+      {ready && !order.receivedAt && (
+        <div className={`text-xs font-semibold ${autoConfirmed ? 'text-warn' : 'text-muted'}`}>
+          {autoConfirmed
+            ? t('admin.receivedAuto')
+            : t('admin.awaitingReceived', { time: formatClock(autoConfirmAt) })}
+        </div>
+      )}
       <ul className="text-sm text-muted flex flex-col gap-0.5">
         {order.items.map((it) => (
           <li key={it.id}>
@@ -204,7 +221,9 @@ function OrderCard({ order, now, onReady, onDone, onCancel, t }) {
         <button
           type="button"
           onClick={() => onDone(order.id)}
-          className="bg-accent text-primary font-bold py-3 rounded-xl hover:opacity-90 transition-opacity"
+          disabled={!canIssue}
+          title={canIssue ? undefined : t('admin.receivedLocked')}
+          className="bg-accent text-primary font-bold py-3 rounded-xl transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {t('admin.markDoneBtn')}
         </button>

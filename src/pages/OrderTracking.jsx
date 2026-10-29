@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { cancelOrder, markArrived, subscribeOrder } from '../lib/api.js';
+import { cancelOrder, markArrived, markReceived, subscribeOrder } from '../lib/api.js';
 import { restaurantById } from '../data/index.js';
 import { CANCEL_WINDOW_MS, formatClock, formatLeft, formatMoney } from '../lib/time.js';
 import { useToast } from '../components/Toast.jsx';
@@ -133,6 +133,21 @@ export default function OrderTracking() {
     }
   }
 
+  // Подтверждение получения: единственный способ разблокировать кухне кнопку «Выдано».
+  // Если заказ уже закрыли (или отменили), переход не сработает — объясняем почему.
+  async function confirmReceived() {
+    setBusy(true);
+    try {
+      const ok = await markReceived(order.id);
+      if (!ok) toast(t('order.receivedClosed'));
+    } catch (err) {
+      console.error(err);
+      toast(t('order.actionFailed'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="flex flex-col px-5 pt-10 pb-10 min-h-dvh lg:max-w-[560px] lg:mx-auto lg:pt-16">
       {toastNode}
@@ -152,6 +167,29 @@ export default function OrderTracking() {
           <QRCodeSVG value={order.code} size={160} bgColor="#FFFFFF" fgColor="#15201C" level="M" />
         </div>
         <div className="text-xs text-muted mt-2">{t('order.qrHint')}</div>
+
+        {/* Подтверждение получения: пока клиент не нажал «Да», кухня не может закрыть
+            заказ в одностороннем порядке. Через 3 часа после выдачи это право появляется
+            само — см. AdminBoard и RECEIVE_GRACE_MS. */}
+        {order.status === 'ready' && !order.receivedAt && (
+          <div className="mx-auto mt-5 max-w-[380px] rounded-xl2 border border-accent bg-accent-soft p-4 text-left">
+            <div className="font-extrabold text-ink">{t('order.receivedQuestion')}</div>
+            <p className="mt-1 text-xs text-muted">{t('order.receivedHint')}</p>
+            <button
+              type="button"
+              onClick={confirmReceived}
+              disabled={busy}
+              className="mt-3 w-full rounded-xl bg-accent py-3 font-bold text-primary transition-opacity hover:opacity-90 disabled:opacity-40"
+            >
+              {t('order.receivedYes')}
+            </button>
+          </div>
+        )}
+        {order.status === 'ready' && order.receivedAt && (
+          <div className="mx-auto mt-5 max-w-[380px] rounded-xl2 border border-accent bg-accent-soft px-4 py-3 text-sm font-bold text-accent-dark">
+            {t('order.receivedThanks')}
+          </div>
+        )}
 
         {canCancel && (
           <button

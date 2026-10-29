@@ -207,6 +207,77 @@ test('unauthenticated cannot change status directly to ready/done', async () => 
   await assertFails(updateDoc(doc(db, 'orders', 'o1'), { status: 'done' }));
 });
 
+// --- orders: подтверждение получения и запрет «выдано» в одностороннем порядке ---
+
+const readyOrder = (overrides = {}) => ({
+  restaurantId: 'r01',
+  status: 'ready',
+  units: 1,
+  pickupAt: soon(),
+  readyAt: Date.now(),
+  createdAt: Date.now(),
+  ...overrides
+});
+
+test('unauthenticated can confirm receipt of a ready order', async () => {
+  await seed(async (db) => setDoc(doc(db, 'orders', 'rc1'), readyOrder()));
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertSucceeds(updateDoc(doc(db, 'orders', 'rc1'), { receivedAt: Date.now() }));
+});
+
+test('unauthenticated cannot confirm receipt of an order that is not ready yet', async () => {
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertFails(updateDoc(doc(db, 'orders', 'o1'), { receivedAt: Date.now() }));
+});
+
+test('confirming receipt cannot also change the status', async () => {
+  await seed(async (db) => setDoc(doc(db, 'orders', 'rc2'), readyOrder()));
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertFails(
+    updateDoc(doc(db, 'orders', 'rc2'), { receivedAt: Date.now(), status: 'done' })
+  );
+});
+
+test('staff cannot mark an order done before the customer confirms', async () => {
+  await seed(async (db) => setDoc(doc(db, 'orders', 'rc3'), readyOrder()));
+  const db = ctxFor('staffA@example.com');
+  await assertFails(updateDoc(doc(db, 'orders', 'rc3'), { status: 'done', issuedAt: Date.now() }));
+});
+
+test('staff can mark an order done once the customer confirmed', async () => {
+  await seed(async (db) =>
+    setDoc(doc(db, 'orders', 'rc4'), readyOrder({ receivedAt: Date.now() }))
+  );
+  const db = ctxFor('staffA@example.com');
+  await assertSucceeds(
+    updateDoc(doc(db, 'orders', 'rc4'), { status: 'done', issuedAt: Date.now() })
+  );
+});
+
+test('staff can close an unconfirmed order 3 hours after the pickup time', async () => {
+  await seed(async (db) =>
+    setDoc(doc(db, 'orders', 'rc5'), readyOrder({ pickupAt: Date.now() - 4 * 60 * 60 * 1000 }))
+  );
+  const db = ctxFor('staffA@example.com');
+  await assertSucceeds(
+    updateDoc(doc(db, 'orders', 'rc5'), { status: 'done', issuedAt: Date.now() })
+  );
+});
+
+test('cannot create an order with receivedAt pre-set', async () => {
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertFails(
+    setDoc(doc(db, 'orders', 'rc6'), {
+      restaurantId: 'r01',
+      status: 'pending',
+      units: 1,
+      pickupAt: soon(),
+      createdAt: Date.now(),
+      receivedAt: Date.now()
+    })
+  );
+});
+
 test('unauthenticated can self-cancel a fresh pending order', async () => {
   const db = testEnv.unauthenticatedContext().firestore();
   await assertSucceeds(updateDoc(doc(db, 'orders', 'o1'), { status: 'cancelled' }));
