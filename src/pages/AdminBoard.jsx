@@ -409,6 +409,12 @@ function Board({ staff, allowedRestaurants }) {
         </div>
       </header>
 
+      {backendName !== 'firebase' && (
+        <div className="bg-warn-soft text-warn text-sm font-semibold px-6 py-2.5 border-b border-warn/20">
+          {t('admin.localModeHint')}
+        </div>
+      )}
+
       <main className="p-6 flex flex-col gap-6">
         <section
           aria-label={t('admin.metricsAria')}

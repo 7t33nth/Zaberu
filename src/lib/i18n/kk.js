@@ -3,6 +3,7 @@ export default {
   'theme.darkOn': 'Күңгірт тақырыпты қосу',
 
   'topbar.myOrders': 'Тапсырыстар',
+  'offline.text': 'Желі жоқ — сақталған деректерді көрсетеміз',
 
   'home.title': 'Күтусіз түскі ас',
   'home.subtitle':
@@ -141,6 +142,10 @@ export default {
   'myorders.empty': 'Тапсырыстар әлі жоқ.',
   'myorders.toRestaurants': 'Мекемелерге',
   'myorders.pickupAt': '{time} алу',
+  'myorders.repeat': 'Тапсырысты қайталау',
+  'myorders.repeatEmpty': 'Бұл тапсырыстағы тағамдар енді қолжетімсіз',
+  'myorders.repeatConfirm':
+    'Себетте басқа мекеменің тағамдары бар. Оларды осы тапсырыспен ауыстырасыз ба?',
 
   'orderStatus.pending': 'Дайындалуда',
   'orderStatus.ready': 'Дайын',
@@ -173,8 +178,10 @@ export default {
   'order.cancelOrder': 'Тапсырыстан бас тарту · {seconds} с қалды',
   'order.cancelConfirm': 'Тапсырыстан бас тартасыз ба? Бұл әрекетті кері қайтару мүмкін емес.',
   'order.actionFailed': 'Болмады. Байланысты тексеріп, қайта көріңіз.',
-  'order.toastSoon': 'Тапсырысыңыз жақында дайын болады',
+  'order.toastLeave': 'Шығуға уақыт: тапсырыс {time}-де дайын болады',
+  'order.toastWaiting': 'Беру уақыты өтті — тапсырыс сізді кассада күтіп тұр',
   'order.toastReady': 'Тапсырыс дайын, келіңіз!',
+  'order.qrHint': 'QR-кодты кассада көрсетіңіз',
 
   'banner.yourOrder': 'Сіздің тапсырысыңыз',
   'banner.ready': 'Дайын, алуға болады',
@@ -251,6 +258,8 @@ export default {
   'admin.soundOff': 'Дыбысты қосу',
   'admin.sharedDb': 'ортақ база',
   'admin.localMode': 'жергілікті режим',
+  'admin.localModeHint':
+    'Жергілікті режим: тапсырыстар тек осы браузерде көрінеді. Басқа құрылғыдағы ас үй тапсырыстарды алуы үшін VITE_FIREBASE_* айнымалыларын орнатып, сайтты қайта жинаңыз.',
   'admin.clientSide': 'Клиенттік бөлім',
   'admin.signOut': 'Шығу',
   'admin.metricsAria': 'Көрсеткіштер',

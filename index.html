@@ -23,8 +23,12 @@
          синие «позвонить», что в карточках заведений выглядит случайным. -->
     <meta name="format-detection" content="telephone=no" />
 
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <!-- Иконки: .ico для вкладки (16/32/48 внутри), PNG для современных браузеров
+         и отдельный apple-touch-icon — iOS не умеет SVG и прозрачность, поэтому там
+         непрозрачный кремовый квадрат с логотипом. -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Заберу! — предзаказ еды к точному времени</title>
   </head>
   <body class="bg-paper text-ink font-sans">

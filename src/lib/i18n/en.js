@@ -3,6 +3,7 @@ export default {
   'theme.darkOn': 'Turn on dark theme',
 
   'topbar.myOrders': 'My orders',
+  'offline.text': 'No connection — showing saved data',
 
   'home.title': 'Lunch without the wait',
   'home.subtitle':
@@ -141,6 +142,10 @@ export default {
   'myorders.empty': 'No orders yet.',
   'myorders.toRestaurants': 'To restaurants',
   'myorders.pickupAt': 'Pick up at {time}',
+  'myorders.repeat': 'Order again',
+  'myorders.repeatEmpty': 'The dishes from this order are no longer available',
+  'myorders.repeatConfirm':
+    'Your cart has dishes from another restaurant. Replace them with this order?',
 
   'orderStatus.pending': 'Preparing',
   'orderStatus.ready': 'Ready',
@@ -173,8 +178,10 @@ export default {
   'order.cancelOrder': 'Cancel order · {seconds}s left',
   'order.cancelConfirm': "Cancel the order? This can't be undone.",
   'order.actionFailed': 'Something went wrong. Check your connection and try again.',
-  'order.toastSoon': 'Your order will be ready soon',
+  'order.toastLeave': 'Time to head out: your order will be ready at {time}',
+  'order.toastWaiting': 'Your pickup time has passed — the order is waiting at the counter',
   'order.toastReady': "Order's ready, come on over!",
+  'order.qrHint': 'Show the QR code at the counter',
 
   'banner.yourOrder': 'Your order',
   'banner.ready': 'Ready for pickup',
@@ -249,6 +256,8 @@ export default {
   'admin.soundOff': 'Turn on sound',
   'admin.sharedDb': 'shared database',
   'admin.localMode': 'local mode',
+  'admin.localModeHint':
+    'Local mode: orders are visible only in this browser. To let the kitchen on another device receive orders, set the VITE_FIREBASE_* variables and rebuild the site.',
   'admin.clientSide': 'Customer side',
   'admin.signOut': 'Sign out',
   'admin.metricsAria': 'Metrics',

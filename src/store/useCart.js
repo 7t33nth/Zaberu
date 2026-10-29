@@ -37,7 +37,27 @@ export const useCart = create(
       },
 
       startNew: (dish) => set({ restaurantId: dish.restaurantId, lines: { [dish.id]: 1 } }),
-      clear: () => set({ restaurantId: null, lines: {} })
+      clear: () => set({ restaurantId: null, lines: {} }),
+
+      // «Повторить заказ»: переносим состав из истории в корзину. Меню могло измениться,
+      // поэтому берём только доступные блюда этого заведения, не больше лимита на позицию
+      // и не больше вместимости слота. Возвращаем число восстановленных порций (0 — нечего).
+      repeat: (restaurantId, items) => {
+        const capacity = restaurantById[restaurantId]?.slotCapacity || 0;
+        const lines = {};
+        let units = 0;
+        for (const { id, qty } of items || []) {
+          const dish = dishById[id];
+          if (!dish || !dish.available || dish.restaurantId !== restaurantId) continue;
+          const want = Math.min(qty || 0, MAX_PER_DISH, capacity - units);
+          if (want <= 0) continue;
+          lines[id] = want;
+          units += want;
+        }
+        if (!units) return 0;
+        set({ restaurantId, lines });
+        return units;
+      }
     }),
     { name: 'express-pickup-cart', version: 1 }
   )

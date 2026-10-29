@@ -10,7 +10,8 @@ import { useLang, useT } from '../lib/i18n/store.js';
 import { ensureNotifyPermission, notifyIfHidden } from '../lib/notify.js';
 
 const ARRIVE_WINDOW_MS = 15 * 60000;
-const SOON_WINDOW_MS = 5 * 60000; // за сколько до выдачи предупреждаем «скоро будет готово»
+const LEAVE_WINDOW_MS = 10 * 60000; // за сколько до выдачи напоминаем «пора выходить»
+const OVERDUE_WINDOW_MS = 5 * 60000; // через сколько после выдачи напоминаем, что заказ ждёт
 
 export default function OrderTracking() {
   const { orderId } = useParams();
@@ -41,15 +42,30 @@ export default function OrderTracking() {
     if (order?.status === 'pending') ensureNotifyPermission();
   }, [order?.id, order?.status]);
 
-  // разовое напоминание за SOON_WINDOW_MS до выдачи — toast, если вкладка открыта,
+  // Напоминание «пора выходить» за LEAVE_WINDOW_MS до выдачи — toast, если вкладка открыта,
   // плюс системное уведомление, если она свёрнута/в фоне (см. lib/notify.js).
   useEffect(() => {
     if (!order || order.status !== 'pending') return undefined;
-    const delay = order.pickupAt - SOON_WINDOW_MS - Date.now();
-    if (delay <= 0) return undefined; // уже в окне «скоро» или время прошло — не шлём задним числом
+    const delay = order.pickupAt - LEAVE_WINDOW_MS - Date.now();
+    if (delay <= 0) return undefined; // уже в окне «пора» или время прошло — не шлём задним числом
     const timer = setTimeout(() => {
-      toast(t('order.toastSoon'));
-      notifyIfHidden(t('order.toastSoon'), order.code);
+      const text = t('order.toastLeave', { time: formatClock(order.pickupAt) });
+      toast(text);
+      notifyIfHidden(text, order.code);
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [order, toast, t]);
+
+  // Время выдачи прошло, а человек ещё не отметился «я на месте» — напоминаем один раз.
+  // Это не спам по таймеру: срабатывает ровно через OVERDUE_WINDOW_MS, и только пока
+  // заказ не выдан, не отменён и не отмечен как «пришёл».
+  useEffect(() => {
+    if (!order || order.status !== 'pending' || order.arrivedAt) return undefined;
+    const delay = order.pickupAt + OVERDUE_WINDOW_MS - Date.now();
+    if (delay <= 0) return undefined;
+    const timer = setTimeout(() => {
+      toast(t('order.toastWaiting'));
+      notifyIfHidden(t('order.toastWaiting'), order.code);
     }, delay);
     return () => clearTimeout(timer);
   }, [order, toast, t]);
@@ -133,8 +149,9 @@ export default function OrderTracking() {
 
         {/* QR всегда чёрным по белому — его должна уметь прочитать камера/сканер независимо от темы */}
         <div className="inline-block bg-white p-3 rounded-xl2 mt-4">
-          <QRCodeSVG value={order.code} size={128} bgColor="#FFFFFF" fgColor="#15201C" level="M" />
+          <QRCodeSVG value={order.code} size={160} bgColor="#FFFFFF" fgColor="#15201C" level="M" />
         </div>
+        <div className="text-xs text-muted mt-2">{t('order.qrHint')}</div>
 
         {canCancel && (
           <button

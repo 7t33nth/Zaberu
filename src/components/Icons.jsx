@@ -339,6 +339,52 @@ export function DownloadIcon({ className = 'w-4 h-4', ...props }) {
   );
 }
 
+// «Повторить заказ»: две стрелки по кругу.
+export function RepeatIcon({ className = 'w-4 h-4', ...props }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="m17 2 4 4-4 4" />
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+      <path d="m7 22-4-4 4-4" />
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+    </svg>
+  );
+}
+
+export function WifiOffIcon({ className = 'w-4 h-4', ...props }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M2 2l20 20" />
+      <path d="M8.5 16.5a5 5 0 0 1 7 0" />
+      <path d="M5 12.9a10 10 0 0 1 3.5-2.4" />
+      <path d="M14.5 10.4A10 10 0 0 1 19 12.9" />
+      <path d="M2 8.8a15 15 0 0 1 4.2-2.6" />
+      <path d="M17.8 6.2A15 15 0 0 1 22 8.8" />
+      <path d="M12 20h.01" />
+    </svg>
+  );
+}
+
 export function FoodPlaceholderIcon({ className = 'w-8 h-8', ...props }) {
   return (
     <svg

@@ -2,6 +2,8 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import TopBar from './components/TopBar.jsx';
+import OfflineBanner from './components/OfflineBanner.jsx';
+import { useOrderBadge } from './lib/useOrderBadge.js';
 import { restaurants } from './data/index.js';
 
 // Не на каждой посадке нужны: страница ресторана/чекаута, отслеживание заказа, «Мои заказы»
@@ -33,47 +35,52 @@ function PageFallback() {
 }
 
 export default function App() {
+  useOrderBadge();
+
   return (
-    <Suspense fallback={<PageFallback />}>
-      <Routes>
-        <Route path="/staff/:restaurantId" element={<AdminBoard />} />
-        <Route path="/staff" element={<Navigate to={`/staff/${restaurants[0].id}`} replace />} />
-        {/* старый путь: не ломаем ссылки, которые уже могли раздать сотрудникам */}
-        <Route path="/admin" element={<Navigate to={`/staff/${restaurants[0].id}`} replace />} />
-        <Route
-          path="/"
-          element={
-            <Shell>
-              <Home />
-            </Shell>
-          }
-        />
-        <Route
-          path="/restaurant/:id"
-          element={
-            <Shell>
-              <RestaurantMenu />
-            </Shell>
-          }
-        />
-        <Route
-          path="/order/:orderId"
-          element={
-            <Shell>
-              <OrderTracking />
-            </Shell>
-          }
-        />
-        <Route
-          path="/my-orders"
-          element={
-            <Shell>
-              <MyOrders />
-            </Shell>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Suspense>
+    <>
+      <OfflineBanner />
+      <Suspense fallback={<PageFallback />}>
+        <Routes>
+          <Route path="/staff/:restaurantId" element={<AdminBoard />} />
+          <Route path="/staff" element={<Navigate to={`/staff/${restaurants[0].id}`} replace />} />
+          {/* старый путь: не ломаем ссылки, которые уже могли раздать сотрудникам */}
+          <Route path="/admin" element={<Navigate to={`/staff/${restaurants[0].id}`} replace />} />
+          <Route
+            path="/"
+            element={
+              <Shell>
+                <Home />
+              </Shell>
+            }
+          />
+          <Route
+            path="/restaurant/:id"
+            element={
+              <Shell>
+                <RestaurantMenu />
+              </Shell>
+            }
+          />
+          <Route
+            path="/order/:orderId"
+            element={
+              <Shell>
+                <OrderTracking />
+              </Shell>
+            }
+          />
+          <Route
+            path="/my-orders"
+            element={
+              <Shell>
+                <MyOrders />
+              </Shell>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </>
   );
 }

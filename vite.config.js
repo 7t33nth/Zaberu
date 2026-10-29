@@ -7,7 +7,15 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'symbol.png', 'icon-192.png', 'icon-512.png'],
+      includeAssets: [
+        'favicon.ico',
+        'favicon-32.png',
+        'apple-touch-icon.png',
+        'symbol.png',
+        'icon-192.png',
+        'icon-512.png',
+        'icon-512-maskable.png'
+      ],
       workbox: {
         globIgnores: ['**/firebase-*.js'], // Firebase грузится только если настроен
         // Шрифт Manrope лежит в /assets (woff2) — без него установленное приложение в
@@ -46,9 +54,14 @@ export default defineConfig({
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
-          // Тот же файл, но помечен maskable: значок часов занимает ~55% полотна,
-          // то есть целиком помещается в безопасный круг маски Android.
-          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+          // Отдельный maskable-файл: Android обрезает иконку по маске, поэтому логотип
+          // там лежит на брендовой подложке и занимает только безопасную зону.
+          {
+            src: 'icon-512-maskable.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          }
         ],
         // Долгое нажатие на иконку: сразу к заказам, минуя главную.
         shortcuts: [

@@ -3,6 +3,7 @@ export default {
   'theme.darkOn': 'Включить тёмную тему',
 
   'topbar.myOrders': 'Мои заказы',
+  'offline.text': 'Нет сети — показываем сохранённые данные',
 
   'home.title': 'Обед без ожидания',
   'home.subtitle':
@@ -140,6 +141,9 @@ export default {
   'myorders.empty': 'Заказов пока нет.',
   'myorders.toRestaurants': 'К заведениям',
   'myorders.pickupAt': 'Забрать в {time}',
+  'myorders.repeat': 'Повторить заказ',
+  'myorders.repeatEmpty': 'Блюда из этого заказа больше недоступны',
+  'myorders.repeatConfirm': 'В корзине блюда из другого заведения. Заменить их на этот заказ?',
 
   'orderStatus.pending': 'Готовится',
   'orderStatus.ready': 'Готово',
@@ -172,8 +176,10 @@ export default {
   'order.cancelOrder': 'Отменить заказ · осталось {seconds} с',
   'order.cancelConfirm': 'Отменить заказ? Это действие необратимо.',
   'order.actionFailed': 'Не получилось. Проверьте соединение и попробуйте ещё раз.',
-  'order.toastSoon': 'Ваш заказ скоро будет готов',
+  'order.toastLeave': 'Пора выходить: заказ будет готов в {time}',
+  'order.toastWaiting': 'Время выдачи прошло — заказ ждёт вас на кассе',
   'order.toastReady': 'Заказ готов, подходите!',
+  'order.qrHint': 'Покажите QR-код на кассе',
 
   'banner.yourOrder': 'Ваш заказ',
   'banner.ready': 'Готов, можно забирать',
@@ -250,6 +256,8 @@ export default {
   'admin.soundOff': 'Включить звук',
   'admin.sharedDb': 'общая база',
   'admin.localMode': 'локальный режим',
+  'admin.localModeHint':
+    'Локальный режим: заказы видны только в этом браузере. Чтобы кухня на другом устройстве получала заказы, задайте переменные VITE_FIREBASE_* и пересоберите сайт.',
   'admin.clientSide': 'Клиентская часть',
   'admin.signOut': 'Выйти',
   'admin.metricsAria': 'Показатели',

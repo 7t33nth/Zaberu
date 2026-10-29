@@ -4,7 +4,7 @@ import { useT } from '../lib/i18n/store.js';
 import { MailIcon, ChevronDownIcon } from './Icons.jsx';
 import { InstallLink } from './InstallBanner.jsx';
 
-const COOPERATION_EMAIL = 'dilanabkanov@gmail.com';
+const COOPERATION_EMAIL = 'mikola.3akolkin@gmail.com';
 const FAQ_IDS = [1, 2, 3, 4, 5, 6];
 
 function FaqItem({ q, a, open, onToggle }) {
