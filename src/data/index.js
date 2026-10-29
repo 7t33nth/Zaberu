@@ -3,6 +3,7 @@
 // hours в виде "HH:MM-HH:MM", slotCapacity, code для номера заказа, координаты, эмодзи-заглушки.
 import rawRestaurants from './restaurants.json';
 import rawMenu from './menu.json';
+import { locationsOf as locationsOfIn } from '../lib/locations.js';
 
 export const DEFAULT_SLOT_CAPACITY = 4;
 
@@ -98,6 +99,11 @@ export const menu = rawMenu.map((d) => ({
 
 export const restaurantById = Object.fromEntries(restaurants.map((r) => [r.id, r]));
 export const dishById = Object.fromEntries(menu.map((d) => [d.id, d]));
+
+// Одна сеть может быть представлена несколькими точками: в датасете это отдельные
+// заведения с одинаковым названием. Пока в базе по одной точке на сеть — список из
+// одного адреса, но логика уже готова к расширению.
+export const locationsOf = (restaurantId) => locationsOfIn(restaurantId, restaurants);
 
 // Кухни в датасете уже на русском; карта оставлена для обратной совместимости со slug-ами.
 export const CUISINE_LABELS = {

@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { CATEGORY_ORDER, menu, restaurantById } from '../data/index.js';
+import { CATEGORY_ORDER, locationsOf, menu, restaurantById } from '../data/index.js';
 import DishCard from '../components/DishCard.jsx';
 import ItemSheet from '../components/ItemSheet.jsx';
 import CartBar from '../components/CartBar.jsx';
@@ -12,7 +12,13 @@ import ActiveOrderBanner from '../components/ActiveOrderBanner.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { useCart, useCartSummary } from '../store/useCart.js';
 import { hoursForDay, formatClock, ordersOpen, pluralPortions } from '../lib/time.js';
-import { LocationIcon, StarIcon, ArrowLeftIcon } from '../components/Icons.jsx';
+import {
+  LocationIcon,
+  StarIcon,
+  ArrowLeftIcon,
+  ChevronDownIcon,
+  CheckIcon
+} from '../components/Icons.jsx';
 import { useLang, useT } from '../lib/i18n/store.js';
 
 export default function RestaurantMenu() {
@@ -41,8 +47,10 @@ export default function RestaurantMenu() {
   const sectionRefs = useRef({});
   const [activeDish, setActiveDish] = useState(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [addressOpen, setAddressOpen] = useState(false);
   const [conflictDish, setConflictDish] = useState(null);
   const [toast, toastNode] = useToast();
+  const locations = locationsOf(id);
 
   if (!restaurant) {
     return (
@@ -69,6 +77,21 @@ export default function RestaurantMenu() {
   function switchRestaurant() {
     startNew(conflictDish);
     setConflictDish(null);
+  }
+
+  // Смена адреса внутри сети: у каждой точки своё меню и своя корзина (блюда привязаны
+  // к id заведения), поэтому с непустой корзиной сначала честно спрашиваем.
+  function chooseLocation(next) {
+    if (next.id === id) {
+      setAddressOpen(false);
+      return;
+    }
+    const cart = useCart.getState();
+    const hasCurrentCart = cart.restaurantId === id && Object.keys(cart.lines).length > 0;
+    if (hasCurrentCart && !window.confirm(t('address.cartClear'))) return;
+    if (hasCurrentCart) cart.clear();
+    setAddressOpen(false);
+    navigate(`/restaurant/${next.id}`);
   }
 
   const otherCart = cartRestaurant && cartRestaurant !== id && Object.keys(lines).length > 0;
@@ -100,16 +123,25 @@ export default function RestaurantMenu() {
             <h1 className="font-extrabold text-xl lg:text-3xl text-white leading-tight">
               {restaurant.name}
             </h1>
-            <div className="flex items-center gap-2 text-sm lg:text-base text-white/70 mt-0.5">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm lg:text-base text-white/70 mt-0.5">
               <span className="inline-flex items-center gap-1 font-bold text-white">
                 <StarIcon className="w-3.5 h-3.5 text-warn" />
                 <span>{restaurant.rating}</span>
               </span>
-              <span>·</span>
-              <span className="inline-flex items-center gap-1">
-                <LocationIcon className="w-3.5 h-3.5 shrink-0" />
-                <span>{restaurant.address}</span>
-              </span>
+              <span aria-hidden="true">·</span>
+              {/* Адрес — кнопка: у сети может быть несколько точек, и менять адрес
+                  удобнее прямо здесь, не возвращаясь на главную. */}
+              <button
+                type="button"
+                onClick={() => setAddressOpen(true)}
+                aria-haspopup="dialog"
+                aria-label={`${restaurant.address} — ${t('address.openAria')}`}
+                className="inline-flex min-w-0 items-start gap-1 text-left underline decoration-white/30 underline-offset-4 transition-colors hover:text-white hover:decoration-white/60"
+              >
+                <LocationIcon className="mt-0.5 w-3.5 h-3.5 shrink-0" />
+                <span className="min-w-0">{restaurant.address}</span>
+                <ChevronDownIcon className="mt-0.5 w-3.5 h-3.5 shrink-0" />
+              </button>
             </div>
           </div>
           <div className="mt-4 lg:mt-6">
@@ -139,7 +171,7 @@ export default function RestaurantMenu() {
       </div>
 
       <div className="lg:max-w-[1200px] lg:mx-auto lg:px-10 lg:grid lg:grid-cols-[1fr_340px] lg:gap-10 lg:items-start">
-        <div>
+        <div className="min-w-0">
           <div className="sticky top-0 z-10 bg-paper flex gap-2 px-4 lg:px-0 py-3 overflow-x-auto no-scrollbar border-b border-line lg:rounded-none">
             {categories.map((cat) => (
               <button
@@ -239,6 +271,55 @@ export default function RestaurantMenu() {
             {t('menu.conflictSwitch')}
           </button>
         </div>
+      </Sheet>
+
+      <Sheet
+        open={addressOpen}
+        onClose={() => setAddressOpen(false)}
+        label={t('address.title', { name: restaurant.name })}
+      >
+        <h2 className="font-extrabold text-lg text-ink">
+          {t('address.title', { name: restaurant.name })}
+        </h2>
+        <p className="text-sm text-muted mt-1">{t('address.hint')}</p>
+        <div className="mt-4 flex flex-col gap-2">
+          {locations.map((loc) => {
+            const selected = loc.id === id;
+            return (
+              <button
+                key={loc.id}
+                type="button"
+                onClick={() => chooseLocation(loc)}
+                aria-pressed={selected}
+                className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition-colors ${
+                  selected
+                    ? 'border-accent bg-accent-soft'
+                    : 'border-line bg-paper hover:border-ink/30'
+                }`}
+              >
+                <span
+                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                    selected ? 'border-accent-dark bg-accent text-primary' : 'border-line bg-card'
+                  }`}
+                >
+                  {selected && <CheckIcon className="w-3 h-3" />}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-bold text-ink">{loc.address}</span>
+                  <span className="mt-0.5 block text-xs text-muted">
+                    ★ {loc.rating} · {loc.hours}
+                  </span>
+                </span>
+                {selected && (
+                  <span className="ml-auto shrink-0 self-center text-xs font-semibold text-accent-dark">
+                    {t('address.selected')}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        {locations.length < 2 && <p className="mt-3 text-xs text-muted">{t('address.onlyOne')}</p>}
       </Sheet>
     </div>
   );

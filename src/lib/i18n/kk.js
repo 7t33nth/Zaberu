@@ -57,6 +57,13 @@ export default {
   'menu.conflictKeep': 'Қалдыру',
   'menu.conflictSwitch': 'Тазалап қосу',
   'menu.limitToast': 'Ас үй бір мезгілде {portions} көп дайындай алмайды',
+  'address.title': '{name} мекенжайлары',
+  'address.hint': 'Тапсырысты алуға ыңғайлы нүктені таңдаңыз.',
+  'address.selected': 'Таңдалды',
+  'address.onlyOne':
+    'Бұл мекеменің әзірге бір мекенжайы бар. Басқа нүктелер пайда болса, олар осында көрінеді.',
+  'address.cartClear': 'Мекенжайды ауыстырғанда себет тазаланады. Жалғастырасыз ба?',
+  'address.openAria': 'Мекеменің мекенжайын таңдау',
 
   'category.breakfast': 'Таңғы ас',
   'category.boxes': 'Жинақтар мен бокстар',

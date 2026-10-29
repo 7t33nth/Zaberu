@@ -56,6 +56,13 @@ export default {
   'menu.conflictKeep': 'Оставить',
   'menu.conflictSwitch': 'Очистить и добавить',
   'menu.limitToast': 'Кухня успевает не больше {portions} за раз',
+  'address.title': 'Адреса {name}',
+  'address.hint': 'Выберите точку, куда удобнее забрать заказ.',
+  'address.selected': 'Выбрано',
+  'address.onlyOne':
+    'У этого заведения пока один адрес. Если появятся другие точки, они будут здесь.',
+  'address.cartClear': 'При смене адреса корзина очистится. Продолжить?',
+  'address.openAria': 'Выбрать адрес заведения',
 
   'category.breakfast': 'Завтраки',
   'category.boxes': 'Сеты и боксы',

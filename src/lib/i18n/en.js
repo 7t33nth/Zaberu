@@ -56,6 +56,12 @@ export default {
   'menu.conflictKeep': 'Keep it',
   'menu.conflictSwitch': 'Clear and add',
   'menu.limitToast': "The kitchen can't handle more than {portions} at once",
+  'address.title': '{name} locations',
+  'address.hint': 'Pick the location that is easiest for you to collect from.',
+  'address.selected': 'Selected',
+  'address.onlyOne': 'This place has a single location so far. New ones will show up here.',
+  'address.cartClear': 'Switching the location will clear your cart. Continue?',
+  'address.openAria': 'Choose a location',
 
   'category.breakfast': 'Breakfast',
   'category.boxes': 'Sets & boxes',
