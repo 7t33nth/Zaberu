@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle.jsx';
 import LangSwitch from './LangSwitch.jsx';
+import { PwaInstallButton } from './InstallBanner.jsx';
 import { useT } from '../lib/i18n/store.js';
 
 // Ниже 1024px — тонкая полоска утилитных ссылок. От 1024px — полноценная шапка с логотипом.
@@ -15,6 +16,7 @@ export default function TopBar() {
         >
           {t('topbar.myOrders')}
         </Link>
+        <PwaInstallButton />
         <LangSwitch />
         <ThemeToggle />
       </div>
@@ -28,6 +30,7 @@ export default function TopBar() {
           <span>Заберу!</span>
         </Link>
         <div className="flex items-center gap-6">
+          <PwaInstallButton />
           <Link
             to="/my-orders"
             className="font-semibold text-sm text-muted hover:text-ink transition-colors"

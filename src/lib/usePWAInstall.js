@@ -5,7 +5,7 @@
 //  * iOS такого API не даёт вообще, поэтому там показываем инструкцию
 //    «Поделиться → На экран „Домой“».
 // Событие приходит один раз и рано — иногда до монтирования React, поэтому перехватываем
-// его на уровне модуля, а не в компоненте.
+// его на уровне модуля, а хук usePWAInstall подписывается на изменения этого хранилища.
 import { useEffect, useState } from 'react';
 
 const HIDE_KEY = 'ep_install_hidden_at';
@@ -79,20 +79,20 @@ export async function promptInstall() {
   return choice.outcome === 'accepted';
 }
 
-export function useInstall() {
-  const [state, setState] = useState(() => ({
+function snapshot() {
+  return {
     installed: isStandalone() || installedInSession,
     canPrompt: Boolean(deferredPrompt),
     ios: isIOS()
-  }));
+  };
+}
+
+// Хук для кнопок/баннеров установки. Возвращает актуальное состояние и действие prompt().
+export function usePWAInstall() {
+  const [state, setState] = useState(snapshot);
 
   useEffect(() => {
-    const update = () =>
-      setState({
-        installed: isStandalone() || installedInSession,
-        canPrompt: Boolean(deferredPrompt),
-        ios: isIOS()
-      });
+    const update = () => setState(snapshot());
     listeners.add(update);
     const mq = window.matchMedia('(display-mode: standalone)');
     mq.addEventListener?.('change', update);
@@ -103,5 +103,9 @@ export function useInstall() {
     };
   }, []);
 
-  return state;
+  return {
+    ...state,
+    canInstall: !state.installed && (state.canPrompt || state.ios),
+    promptInstall
+  };
 }

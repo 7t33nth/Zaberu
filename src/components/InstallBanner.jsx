@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Sheet from './Sheet.jsx';
 import { CloseIcon, DownloadIcon, ShareIcon } from './Icons.jsx';
 import { useT } from '../lib/i18n/store.js';
-import { hideInstallHint, installHintHidden, promptInstall, useInstall } from '../lib/install.js';
+import { hideInstallHint, installHintHidden, usePWAInstall } from '../lib/usePWAInstall.js';
 
 // Баннер показываем только там, где есть тач: на десктопе он выглядит навязчиво,
 // и установка из браузера там — редкий сценарий (для неё остаётся ссылка в футере).
@@ -36,7 +36,7 @@ function useShownLater(active, delay = 1600) {
 
 function InstallSheet({ open, onClose }) {
   const t = useT();
-  const { canPrompt, ios } = useInstall();
+  const { canPrompt, ios, promptInstall } = usePWAInstall();
 
   const steps = ios
     ? [
@@ -110,7 +110,7 @@ function InstallSheet({ open, onClose }) {
 
 export default function InstallBanner() {
   const t = useT();
-  const { installed, canPrompt, ios } = useInstall();
+  const { installed, canPrompt, ios, promptInstall } = usePWAInstall();
   const coarse = useCoarsePointer();
   const [hidden, setHidden] = useState(installHintHidden);
   const [open, setOpen] = useState(false);
@@ -196,7 +196,7 @@ export default function InstallBanner() {
 // показать системное окно — показываем его сразу, иначе открываем инструкцию.
 export function InstallLink() {
   const t = useT();
-  const { installed, canPrompt } = useInstall();
+  const { installed, canPrompt, promptInstall } = usePWAInstall();
   const [open, setOpen] = useState(false);
 
   if (installed) return null;
@@ -221,6 +221,42 @@ export function InstallLink() {
           {t('install.footerCta')}
         </button>
       </div>
+      <InstallSheet open={open} onClose={() => setOpen(false)} />
+    </>
+  );
+}
+
+// Постоянная точка входа для установки: баннер можно закрыть «Позже», footer далеко,
+// а эта кнопка остаётся в шапке, пока приложение не установлено. На iOS открывает
+// инструкцию, на Android/Chrome — системное окно установки.
+export function PwaInstallButton() {
+  const t = useT();
+  const { installed, canPrompt, ios, promptInstall } = usePWAInstall();
+  const [open, setOpen] = useState(false);
+
+  if (installed || (!canPrompt && !ios)) return null;
+
+  const onClick = async () => {
+    if (canPrompt) {
+      await promptInstall();
+      return;
+    }
+    setOpen(true);
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={t('install.footerCta')}
+        aria-haspopup={ios ? 'dialog' : undefined}
+        title={t('install.footerCta')}
+        className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full px-2 text-xs font-semibold text-muted transition-colors hover:text-ink"
+      >
+        <DownloadIcon className="h-4 w-4 text-brand" />
+        <span className="hidden xl:inline">{t('install.button')}</span>
+      </button>
       <InstallSheet open={open} onClose={() => setOpen(false)} />
     </>
   );

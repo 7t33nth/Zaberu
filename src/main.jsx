@@ -7,7 +7,7 @@ import App from './App.jsx';
 import './index.css';
 // Событие beforeinstallprompt приходит один раз и может случиться до того, как смонтируется
 // React. Регистрируем перехват на старте, даже если пользователь открыл не главную страницу.
-import './lib/install.js';
+import './lib/usePWAInstall.js';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
