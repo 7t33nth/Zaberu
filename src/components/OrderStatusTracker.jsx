@@ -81,20 +81,20 @@ function CheckIcon({ className = 'w-3.5 h-3.5' }) {
 const STEPS = [
   {
     key: 'pending',
-    label: 'Заказ принят',
-    subtitle: 'Передали информацию на кухню',
+    label: 'Заказ создан',
+    subtitle: 'Ожидает подтверждения кухней',
     Icon: ClipboardCheckIcon
   },
   {
     key: 'cooking',
-    label: 'Готовится на кухне',
-    subtitle: 'Ваш заказ готовится, осталось немного',
+    label: 'Принят кухней',
+    subtitle: 'Повар начнёт готовить ближе к указанному времени',
     Icon: ChefHatIcon
   },
   {
     key: 'ready',
     label: 'Готов к выдаче',
-    subtitle: 'Можно подходить к стойке выдачи',
+    subtitle: 'Можно подойти к стойке выдачи',
     Icon: BellRingIcon
   }
 ];

@@ -5,10 +5,13 @@ import {
   canReset,
   cancelOrderByStaff,
   clearDoneOrders,
+  markCooking,
   markDone,
   markReady,
   resetAll,
   seedDemoOrders,
+  startCooking,
+  acceptOrder,
   subscribeOrders,
   backendName
 } from '../lib/api.js';
@@ -151,10 +154,12 @@ function Metric({ label, value, hint, tone }) {
   );
 }
 
-function OrderCard({ order, now, onReady, onDone, onCancel, t }) {
+function OrderCard({ order, now, onAccept, onReady, onDone, onCancel, t }) {
   const msLeft = order.pickupAt - now;
-  const ready = order.status === 'ready';
-  const urgent = !ready && msLeft < 3 * 60000;
+  const isReady = order.status === 'ready';
+  const isCooking = order.status === 'cooking';
+  const isPending = order.status === 'pending';
+  const urgent = !isReady && msLeft < 3 * 60000;
   // «Выдано» доступно только после подтверждения клиента (кнопка на странице заказа).
   // Если клиент так и не ответил, через RECEIVE_GRACE_MS после заявленного времени
   // подтверждение считается автоматическим — иначе очередь из «мёртвых» заказов
@@ -194,10 +199,10 @@ function OrderCard({ order, now, onReady, onDone, onCancel, t }) {
       {order.arrivedAt && (
         <div className="text-xs font-bold text-accent-dark">{t('admin.customerHere')}</div>
       )}
-      {ready && order.receivedAt && (
+      {isReady && order.receivedAt && (
         <div className="text-xs font-bold text-accent-dark">{t('admin.receivedByClient')}</div>
       )}
-      {ready && !order.receivedAt && (
+      {isReady && !order.receivedAt && (
         <div className={`text-xs font-semibold ${autoConfirmed ? 'text-warn' : 'text-muted'}`}>
           {autoConfirmed
             ? t('admin.receivedAuto')
@@ -217,7 +222,7 @@ function OrderCard({ order, now, onReady, onDone, onCancel, t }) {
           <span>{order.comment}</span>
         </div>
       )}
-      {ready ? (
+      {isReady ? (
         <button
           type="button"
           onClick={() => onDone(order.id)}
@@ -227,13 +232,21 @@ function OrderCard({ order, now, onReady, onDone, onCancel, t }) {
         >
           {t('admin.markDoneBtn')}
         </button>
-      ) : (
+      ) : isCooking ? (
         <button
           type="button"
           onClick={() => onReady(order.id)}
           className="bg-primary text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity"
         >
-          {t('item.done')}
+          {t('admin.markReadyBtn') || 'Готов к выдаче'}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onAccept && onAccept(order.id)}
+          className="bg-accent text-primary font-bold py-3 rounded-xl transition-opacity hover:opacity-90"
+        >
+          {t('admin.acceptOrderBtn') || 'Принять в работу'}
         </button>
       )}
       <button
@@ -306,8 +319,11 @@ function Board({ staff, allowedRestaurants }) {
   const q = query.trim().toLowerCase();
   const matchesQuery = (o) => !q || o.code.toLowerCase().includes(q);
 
-  const cooking = mine
+  const pending = mine
     .filter((o) => o.status === 'pending' && matchesQuery(o))
+    .sort((a, b) => a.pickupAt - b.pickupAt);
+  const cooking = mine
+    .filter((o) => o.status === 'cooking' && matchesQuery(o))
     .sort((a, b) => a.pickupAt - b.pickupAt);
   const ready = mine
     .filter((o) => o.status === 'ready' && matchesQuery(o))
@@ -357,6 +373,7 @@ function Board({ staff, allowedRestaurants }) {
 
   // markReady/markDone раньше вызывались из карточки напрямую: отказ Firestore (например,
   // заказ уже отменён) давал необработанный reject, и кнопка просто не реагировала.
+  const acceptOrderFn = (id) => run(() => markCooking(id));
   const readyOrder = (id) => run(() => markReady(id));
   const doneOrder = (id) => run(() => markDone(id));
 
@@ -487,10 +504,34 @@ function Board({ staff, allowedRestaurants }) {
           </div>
         </section>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-3">
           <section aria-label={t('admin.cookingAria')}>
             <h2 className="font-bold mb-3">
-              {t('admin.cooking')} · {cooking.length}
+              {t('admin.cooking')} · {pending.length}
+            </h2>
+            <div
+              className="grid gap-3"
+              style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}
+            >
+              {pending.map((o) => (
+                <OrderCard
+                  key={o.id}
+                  order={o}
+                  now={now}
+                  onAccept={acceptOrderFn}
+                  onReady={readyOrder}
+                  onDone={doneOrder}
+                  onCancel={cancelWithConfirm}
+                  t={t}
+                />
+              ))}
+            </div>
+            {pending.length === 0 && <p className="text-muted text-sm">{t('admin.noCooking')}</p>}
+          </section>
+
+          <section aria-label={t('admin.inProgressAria') || 'В работе'}>
+            <h2 className="font-bold mb-3">
+              {t('admin.inProgress') || 'Принят кухней'} · {cooking.length}
             </h2>
             <div
               className="grid gap-3"
@@ -501,6 +542,7 @@ function Board({ staff, allowedRestaurants }) {
                   key={o.id}
                   order={o}
                   now={now}
+                  onAccept={acceptOrderFn}
                   onReady={readyOrder}
                   onDone={doneOrder}
                   onCancel={cancelWithConfirm}
@@ -508,7 +550,7 @@ function Board({ staff, allowedRestaurants }) {
                 />
               ))}
             </div>
-            {cooking.length === 0 && <p className="text-muted text-sm">{t('admin.noCooking')}</p>}
+            {cooking.length === 0 && <p className="text-muted text-sm">{t('admin.noInProgress') || 'Пока нет заказов в работе'}</p>}
           </section>
 
           <section aria-label={t('admin.readyAria')}>
@@ -524,6 +566,7 @@ function Board({ staff, allowedRestaurants }) {
                   key={o.id}
                   order={o}
                   now={now}
+                  onAccept={acceptOrderFn}
                   onReady={readyOrder}
                   onDone={doneOrder}
                   onCancel={cancelWithConfirm}

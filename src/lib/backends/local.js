@@ -67,7 +67,7 @@ export function subscribeOrders(restaurantIds, cb) {
             restaurantIds.includes(o.restaurantId) &&
             // Незавершённые заказы показываем всегда, даже если они оформлены вчера:
             // иначе в полночь они исчезают с экрана кухни, хотя ещё не выданы.
-            (isToday(o) || o.status === 'pending' || o.status === 'ready')
+            (isToday(o) || o.status === 'pending' || o.status === 'cooking' || o.status === 'ready')
         ),
       cb
     )

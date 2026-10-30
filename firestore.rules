@@ -70,7 +70,7 @@ service cloud.firestore {
                     // считается автоматическим (10800000 = RECEIVE_GRACE_MS в lib/time.js).
                     || (isStaffFor(resource.data.restaurantId)
                         && request.resource.data.diff(resource.data).affectedKeys()
-                             .hasOnly(['status', 'readyAt', 'arrivedAt', 'issuedAt'])
+                             .hasOnly(['status', 'readyAt', 'arrivedAt', 'issuedAt', 'acceptedAt'])
                         && (request.resource.data.status != 'done'
                             || resource.data.receivedAt != null
                             || request.time.toMillis() >= resource.data.pickupAt + 10800000));

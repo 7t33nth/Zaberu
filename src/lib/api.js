@@ -54,8 +54,14 @@ const patch = (id, fields) => backendPromise.then((b) => b.updateOrder(id, field
 const transition = (id, from, fields) =>
   backendPromise.then((b) => b.transitionOrder(id, from, fields));
 
+export const markCooking = (id) =>
+  transition(id, 'pending', { status: 'cooking', acceptedAt: Date.now() });
+export const startCooking = markCooking;
+export const acceptOrder = markCooking;
+
 export const markReady = (id) =>
-  transition(id, 'pending', { status: 'ready', readyAt: Date.now() });
+  transition(id, 'cooking', { status: 'ready', readyAt: Date.now() });
+
 export const markDone = (id) => transition(id, 'ready', { status: 'done', issuedAt: Date.now() });
 export const markArrived = (id) => patch(id, { arrivedAt: Date.now() });
 // Клиент подтверждает, что забрал заказ. Только из 'ready' и только этот флаг:

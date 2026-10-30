@@ -48,6 +48,11 @@ export function subscribeOrders(restaurantIds, cb) {
       query(
         collection(db, 'orders'),
         where('restaurantId', 'in', restaurantIds),
+        where('status', '==', 'cooking')
+      ),
+      query(
+        collection(db, 'orders'),
+        where('restaurantId', 'in', restaurantIds),
         where('status', '==', 'ready')
       )
     ];
