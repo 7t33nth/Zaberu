@@ -220,9 +220,11 @@ export default function OrderStatusTracker({ orderId, initialOrder = null }) {
 
       {/* Горизонтальная шкала с тремя шагами */}
       {!isCancelled && (
-        <div className="relative flex items-center justify-between px-3 sm:px-6">
-          {/* Линия соединения */}
-          <div className="absolute left-8 right-8 top-4 -translate-y-1/2 h-0.5 bg-line -z-0">
+        <div className="relative">
+          <div
+            className="absolute top-4 left-0 right-0 -translate-y-1/2 h-0.5 bg-line"
+            style={{ marginLeft: 'calc((100%/3)/2)', marginRight: 'calc((100%/3)/2)' }}
+          >
             <div
               className="h-full bg-accent-dark transition-all duration-500 ease-out"
               style={{
@@ -236,45 +238,47 @@ export default function OrderStatusTracker({ orderId, initialOrder = null }) {
               }}
             />
           </div>
+          <div className="relative grid grid-cols-3">
+            {STEPS.map((step, idx) => {
+              const isCompleted = isDone || idx < currentStepIdx;
+              const isCurrent = !isDone && idx === currentStepIdx;
+              const Icon = step.Icon;
 
-          {STEPS.map((step, idx) => {
-            const isCompleted = isDone || idx < currentStepIdx;
-            const isCurrent = !isDone && idx === currentStepIdx;
-            const Icon = step.Icon;
-
-            return (
-              <div key={step.key} className="relative z-10 flex flex-col items-center">
-                <div
-                  className={`relative flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-300 ${
-                    isCompleted
-                      ? 'border-accent-dark bg-accent-dark text-white'
-                      : isCurrent
-                        ? 'border-accent-dark bg-card text-accent-dark ring-4 ring-accent/30 animate-pulse'
-                        : 'border-line bg-paper text-muted'
-                  }`}
-                  aria-current={isCurrent ? 'step' : undefined}
-                >
-                  {isCompleted ? (
-                    <CheckIcon className="w-4 h-4 stroke-[2.5]" />
-                  ) : (
-                    <Icon className="w-4 h-4" />
-                  )}
+              return (
+                <div key={step.key} className="flex flex-col items-center">
+                  <div
+                    className={`relative z-10 flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-300 ${
+                      isCompleted
+                        ? 'border-accent-dark bg-accent-dark text-white'
+                        : isCurrent
+                          ? 'border-accent-dark bg-card text-accent-dark ring-4 ring-accent/30 animate-pulse'
+                          : 'border-line bg-paper text-muted'
+                    }`}
+                    aria-current={isCurrent ? 'step' : undefined}
+                  >
+                    {isCompleted ? (
+                      <CheckIcon className="w-4 h-4 stroke-[2.5] block" />
+                    ) : (
+                      <Icon className="w-4 h-4 block" />
+                    )}
+                  </div>
+                  <div className="mt-2 w-full flex justify-center px-1">
+                    <span
+                      className={`text-[11px] font-semibold leading-tight text-center ${
+                        isCurrent
+                          ? 'text-ink font-bold'
+                          : isCompleted
+                            ? 'text-accent-dark'
+                            : 'text-muted'
+                      }`}
+                    >
+                      {step.label}
+                    </span>
+                  </div>
                 </div>
-
-                <span
-                  className={`mt-2 text-[11px] font-semibold max-w-[80px] leading-tight text-center ${
-                    isCurrent
-                      ? 'text-ink font-bold'
-                      : isCompleted
-                        ? 'text-accent-dark'
-                        : 'text-muted'
-                  }`}
-                >
-                  {step.label}
-                </span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { QRCodeSVG } from 'qrcode.react';
 import { cancelOrder, markArrived, markReceived, subscribeOrder } from '../lib/api.js';
 import { restaurantById } from '../data/index.js';
 import { CANCEL_WINDOW_MS, formatClock, formatLeft, formatMoney } from '../lib/time.js';
@@ -152,12 +151,6 @@ export default function OrderTracking() {
         <div className="text-sm text-muted mt-2">
           {order.name ? t('order.showCodeNamed', { name: order.name }) : t('order.showCode')}
         </div>
-
-        {/* QR всегда чёрным по белому — его должна уметь прочитать камера/сканер независимо от темы */}
-        <div className="inline-block bg-white p-3 rounded-xl2 mt-4">
-          <QRCodeSVG value={order.code} size={160} bgColor="#FFFFFF" fgColor="#15201C" level="M" />
-        </div>
-        <div className="text-xs text-muted mt-2">{t('order.qrHint')}</div>
 
         {/* Подтверждение получения: пока клиент не нажал «Да», кухня не может закрыть
             заказ в одностороннем порядке. Через 3 часа после выдачи это право появляется
