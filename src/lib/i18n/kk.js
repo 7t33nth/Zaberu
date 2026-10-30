@@ -3,6 +3,7 @@ export default {
   'theme.darkOn': 'Күңгірт тақырыпты қосу',
 
   'topbar.myOrders': 'Тапсырыстар',
+  'topbar.home': 'Басты бетке',
   'offline.text': 'Желі жоқ — сақталған деректерді көрсетеміз',
 
   'home.title': 'Күтусіз түскі ас',

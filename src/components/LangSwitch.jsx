@@ -18,7 +18,7 @@ export default function LangSwitch() {
           type="button"
           onClick={() => setLang(l)}
           aria-pressed={lang === l}
-          className={`inline-flex min-h-[40px] items-center px-2.5 rounded-full transition-colors ${
+          className={`inline-flex min-h-[40px] items-center px-2 rounded-full transition-colors ${
             lang === l ? 'bg-primary text-white' : 'text-muted hover:text-ink'
           }`}
         >

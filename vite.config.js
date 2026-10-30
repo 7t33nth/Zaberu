@@ -14,6 +14,7 @@ export default defineConfig({
         'symbol.png',
         'icon-192.png',
         'icon-512.png',
+        'icon-192-maskable.png',
         'icon-512-maskable.png'
       ],
       workbox: {
@@ -51,11 +52,20 @@ export default defineConfig({
         start_url: '/',
         categories: ['food', 'shopping', 'lifestyle'],
         prefer_related_applications: false,
+        // any и maskable — разные исходники, это важно:
+        // • any — обычная иконка как есть: кремовая подложка и скруглённые края видны.
+        // • maskable — Android сам обрезает картинку по своей маске (круг, squircle и т.п.),
+        //   поэтому фон должен быть непрозрачным до самых краёв, без внутренней карточки,
+        //   а логотип — внутри центрального круга 80% (safe zone), иначе маска срежет края.
         icons: [
-          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
-          // Отдельный maskable-файл: Android обрезает иконку по маске, поэтому логотип
-          // там лежит на брендовой подложке и занимает только безопасную зону.
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          {
+            src: 'icon-192-maskable.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
           {
             src: 'icon-512-maskable.png',
             sizes: '512x512',

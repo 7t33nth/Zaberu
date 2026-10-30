@@ -3,6 +3,7 @@ export default {
   'theme.darkOn': 'Включить тёмную тему',
 
   'topbar.myOrders': 'Мои заказы',
+  'topbar.home': 'На главную',
   'offline.text': 'Нет сети — показываем сохранённые данные',
 
   'home.title': 'Обед без ожидания',

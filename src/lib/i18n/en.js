@@ -3,6 +3,7 @@ export default {
   'theme.darkOn': 'Turn on dark theme',
 
   'topbar.myOrders': 'My orders',
+  'topbar.home': 'Go home',
   'offline.text': 'No connection — showing saved data',
 
   'home.title': 'Lunch without the wait',
