@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{js,jsx,css,json}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,css,json}\"",
-    "test": "node --test tests/backend.test.js tests/time.test.js tests/dayRollover.test.js tests/staffAccess.test.js tests/i18n.test.js tests/locations.test.js",
+    "test": "node --test tests/backend.test.js tests/time.test.js tests/dayRollover.test.js tests/staffAccess.test.js tests/i18n.test.js tests/locations.test.js tests/geo.test.js",
     "test:rules": "firebase emulators:exec --only firestore \"node --test tests/firestore.rules.test.js\""
   },
   "engines": {
@@ -21,9 +21,11 @@
     "@fontsource-variable/manrope": "^5.0.0",
     "firebase": "^10.12.2",
     "framer-motion": "^11.2.10",
+    "leaflet": "^1.9.4",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.24.0",
     "zustand": "^4.5.2"
   },

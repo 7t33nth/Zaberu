@@ -148,6 +148,135 @@ button:disabled {
   }
 }
 
+/* Leaflet: карта должна жить внутри своего блока и не перекрывать шапку/шторки.
+   Свои пины рисуем CSS-ом, чтобы не тянуть картинки marker-icon.png из пакета. */
+.zaberu-map {
+  z-index: 0;
+  font-family: inherit;
+  background: rgb(var(--color-paper));
+}
+
+.leaflet-container {
+  font-family: inherit;
+}
+
+.zaberu-marker,
+.zaberu-user-icon {
+  background: transparent;
+  border: 0;
+}
+
+.zaberu-marker-pin {
+  display: flex;
+  width: 30px;
+  height: 30px;
+  margin: 4px auto 0;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  background: rgb(var(--color-brand));
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.3);
+  transform: rotate(-45deg);
+  transition: transform 150ms ease;
+}
+
+.zaberu-marker:hover .zaberu-marker-pin {
+  transform: rotate(-45deg) scale(1.08);
+}
+
+.zaberu-marker-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #fff;
+  transform: rotate(45deg);
+}
+
+.zaberu-user-icon {
+  overflow: visible;
+}
+
+.zaberu-user-dot,
+.zaberu-user-pulse {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+}
+
+.zaberu-user-dot {
+  width: 14px;
+  height: 14px;
+  border: 3px solid #fff;
+  background: #2563eb;
+  box-shadow: 0 2px 8px rgb(37 99 235 / 0.55);
+}
+
+.zaberu-user-pulse {
+  width: 34px;
+  height: 34px;
+  background: rgb(37 99 235 / 0.22);
+  animation: zaberu-pulse 1.8s ease-out infinite;
+}
+
+@keyframes zaberu-pulse {
+  0% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  70% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.leaflet-tooltip.zaberu-tooltip {
+  border: 0;
+  border-radius: 9999px;
+  background: #2563eb;
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
+}
+
+.leaflet-tooltip.zaberu-tooltip::before {
+  border-top-color: #2563eb;
+}
+
+/* Leaflet CSS подключается лениво вместе с картой и может оказаться в каскаде позже
+   нашего index.css, поэтому стили попапа усилены селектором .leaflet-container. */
+.leaflet-container .leaflet-popup-content-wrapper {
+  border-radius: 16px;
+  background: rgb(var(--color-card));
+  color: rgb(var(--color-ink));
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.2);
+}
+
+.leaflet-container .leaflet-popup-content {
+  margin: 14px 16px;
+}
+
+.leaflet-container .leaflet-popup-tip {
+  background: rgb(var(--color-card));
+}
+
+.leaflet-container .leaflet-popup-close-button {
+  color: rgb(var(--color-muted));
+}
+
+/* Leaflet красит все ссылки внутри карты в свой синий. Кнопка в попапе должна
+   оставаться белой на брендовом фоне. */
+.leaflet-container .leaflet-popup-content a.zaberu-popup-cta {
+  color: #fff;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

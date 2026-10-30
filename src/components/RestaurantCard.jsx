@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { CUISINE_LABELS } from '../data/index.js';
 import { hoursForDay, isOpenNow, ordersOpen, formatClock } from '../lib/time.js';
 import { LocationIcon, StarIcon } from './Icons.jsx';
+import DistanceBadge from './DistanceBadge.jsx';
 import { useT } from '../lib/i18n/store.js';
 
 function status(restaurant, now, t) {
@@ -18,7 +19,7 @@ function status(restaurant, now, t) {
 // Если файла нет — прячем <img>, остаются тёмная подложка и градиент.
 const coverFor = (restaurant) => `/images/${restaurant.id}/flash.webp`;
 
-export default function RestaurantCard({ restaurant, now }) {
+export default function RestaurantCard({ restaurant, now, distanceM }) {
   const t = useT();
   const st = status(restaurant, now, t);
   return (
@@ -51,6 +52,10 @@ export default function RestaurantCard({ restaurant, now }) {
           <LocationIcon className="w-3.5 h-3.5 shrink-0" />
           <span className="truncate">{restaurant.address}</span>
         </div>
+        <DistanceBadge
+          meters={distanceM}
+          className="mt-1 block text-xs font-semibold text-accent-dark"
+        />
         <div className="flex flex-wrap gap-1.5 mt-2.5">
           {restaurant.cuisines.map((c) => (
             <span

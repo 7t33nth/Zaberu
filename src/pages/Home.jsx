@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { restaurants, CUISINE_GROUPS } from '../data/index.js';
 import RestaurantCard from '../components/RestaurantCard.jsx';
 import ActiveOrderBanner from '../components/ActiveOrderBanner.jsx';
@@ -6,8 +6,12 @@ import CitySelect from '../components/CitySelect.jsx';
 import Steps from '../components/Steps.jsx';
 import Footer from '../components/Footer.jsx';
 import InstallBanner from '../components/InstallBanner.jsx';
-import { SearchIcon } from '../components/Icons.jsx';
+import { ListIcon, LocationIcon, MapIcon, SearchIcon } from '../components/Icons.jsx';
+import { NEAR_RADIUS_M, haversineMeters } from '../lib/geo.js';
 import { useT } from '../lib/i18n/store.js';
+
+// Leaflet тянет заметный кусок JS/CSS, поэтому грузим карту только когда её открыли.
+const MapView = lazy(() => import('../components/MapView.jsx'));
 
 export default function Home() {
   const t = useT();
@@ -27,12 +31,53 @@ export default function Home() {
   const [search, setSearch] = useState('');
   const [cuisines, setCuisines] = useState(() => new Set());
   const [minRating, setMinRating] = useState(0);
+  const [view, setView] = useState('list');
+  const [coords, setCoords] = useState(null);
+  const [geoState, setGeoState] = useState('idle');
+  const [nearMe, setNearMe] = useState(false);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(t);
   }, []);
+
+  // Геолокация нужна и карте, и фильтру «рядом со мной». Запрашиваем только по
+  // действию пользователя (открыл карту / включил фильтр), а не при загрузке главной.
+  const requestLocation = useCallback(() => {
+    if (geoState === 'locating') return;
+    if (!navigator.geolocation) {
+      setGeoState('unsupported');
+      setNearMe(false);
+      return;
+    }
+    setGeoState('locating');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+        setGeoState('ready');
+      },
+      (err) => {
+        setGeoState(err.code === 1 ? 'denied' : 'error');
+        setNearMe(false);
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+    );
+  }, [geoState]);
+
+  function showMap() {
+    setView('map');
+    if (!coords && geoState !== 'denied') requestLocation();
+  }
+
+  function toggleNearMe() {
+    if (nearMe) {
+      setNearMe(false);
+      return;
+    }
+    setNearMe(true);
+    if (!coords) requestLocation();
+  }
 
   function toggleCuisine(groupId) {
     setCuisines((prev) => {
@@ -48,12 +93,28 @@ export default function Home() {
     CUISINE_GROUPS.filter((g) => cuisines.has(g.id)).flatMap((g) => g.tags)
   );
 
-  const filtered = restaurants.filter(
-    (r) =>
-      r.name.toLowerCase().includes(search.trim().toLowerCase()) &&
-      r.rating >= minRating &&
-      (activeTags.size === 0 || r.cuisines.some((c) => activeTags.has(c)))
+  const located = useMemo(
+    () =>
+      restaurants.map((r) => ({
+        ...r,
+        distanceM:
+          coords && Number.isFinite(r.lat) && Number.isFinite(r.lon)
+            ? haversineMeters(coords, { lat: r.lat, lon: r.lon })
+            : null
+      })),
+    [coords]
   );
+
+  const nearActive = nearMe && Boolean(coords);
+  const filtered = located
+    .filter(
+      (r) =>
+        r.name.toLowerCase().includes(search.trim().toLowerCase()) &&
+        r.rating >= minRating &&
+        (activeTags.size === 0 || r.cuisines.some((c) => activeTags.has(c))) &&
+        (!nearActive || (r.distanceM != null && r.distanceM <= NEAR_RADIUS_M))
+    )
+    .sort((a, b) => (nearActive ? a.distanceM - b.distanceM : 0));
 
   const searchBox = (id) => (
     <div className="relative">
@@ -248,16 +309,107 @@ export default function Home() {
               ))}
             </div>
 
-            <div className="flex flex-col gap-3 px-4 lg:px-0 lg:grid lg:grid-cols-2 lg:gap-5">
-              {filtered.map((r) => (
-                <RestaurantCard key={r.id} restaurant={r} now={now} />
-              ))}
-              {filtered.length === 0 && (
-                <div className="lg:col-span-full text-center text-muted text-sm py-12">
-                  {t('home.emptyResults')}
-                </div>
-              )}
+            <div className="flex flex-wrap items-center justify-between gap-2 px-4 pb-3 lg:px-0 lg:pb-4">
+              <div
+                role="group"
+                aria-label={t('home.viewAria')}
+                className="inline-flex rounded-full border border-line bg-card p-1"
+              >
+                <button
+                  type="button"
+                  onClick={() => setView('list')}
+                  aria-pressed={view === 'list'}
+                  className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-colors ${
+                    view === 'list'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-muted hover:text-ink'
+                  }`}
+                >
+                  <ListIcon className="h-3.5 w-3.5" />
+                  {t('home.viewList')}
+                </button>
+                <button
+                  type="button"
+                  onClick={showMap}
+                  aria-pressed={view === 'map'}
+                  className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-colors ${
+                    view === 'map' ? 'bg-primary text-white shadow-sm' : 'text-muted hover:text-ink'
+                  }`}
+                >
+                  <MapIcon className="h-3.5 w-3.5" />
+                  {t('home.viewMap')}
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={toggleNearMe}
+                aria-pressed={nearMe}
+                title={t('home.nearMeHint')}
+                className={`inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-full border px-4 text-xs font-semibold transition-colors ${
+                  nearMe
+                    ? 'border-accent-dark bg-accent-soft text-accent-dark'
+                    : 'border-line bg-card text-muted hover:text-ink'
+                }`}
+              >
+                <LocationIcon className="h-3.5 w-3.5" />
+                {t('home.nearMe')}
+              </button>
             </div>
+
+            {geoState === 'locating' && (
+              <p role="status" className="px-4 pb-3 text-xs font-semibold text-muted lg:px-0">
+                {t('home.geoLocating')}
+              </p>
+            )}
+            {geoState === 'denied' && (
+              <p role="alert" className="px-4 pb-3 text-xs font-semibold text-danger lg:px-0">
+                {t('home.geoDenied')}
+              </p>
+            )}
+            {geoState === 'unsupported' && (
+              <p role="alert" className="px-4 pb-3 text-xs font-semibold text-danger lg:px-0">
+                {t('home.geoUnsupported')}
+              </p>
+            )}
+            {geoState === 'error' && (
+              <p role="alert" className="px-4 pb-3 text-xs font-semibold text-danger lg:px-0">
+                {t('home.geoError')}
+              </p>
+            )}
+
+            {view === 'list' ? (
+              <div className="flex flex-col gap-3 px-4 lg:px-0 lg:grid lg:grid-cols-2 lg:gap-5">
+                {filtered.map((r) => (
+                  <RestaurantCard key={r.id} restaurant={r} now={now} distanceM={r.distanceM} />
+                ))}
+                {filtered.length === 0 && (
+                  <div className="lg:col-span-full text-center text-muted text-sm py-12">
+                    {nearActive ? t('home.mapEmpty') : t('home.emptyResults')}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="px-4 lg:px-0">
+                <Suspense
+                  fallback={
+                    <div className="flex h-[540px] items-center justify-center rounded-3xl border border-line bg-card lg:h-[680px]">
+                      <span
+                        className="h-8 w-8 animate-spin rounded-full border-2 border-line border-t-brand"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  }
+                >
+                  <MapView
+                    restaurants={filtered}
+                    user={coords}
+                    onLocate={requestLocation}
+                    locating={geoState === 'locating'}
+                  />
+                </Suspense>
+              </div>
+            )}
           </div>
         </div>
       </div>
