@@ -2,15 +2,13 @@ import { Link } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle.jsx';
 import LangSwitch from './LangSwitch.jsx';
 import { PwaInstallButton } from './InstallBanner.jsx';
-import { ReceiptIcon, HeartIcon } from './Icons.jsx';
+import { ReceiptIcon } from './Icons.jsx';
 import { useT } from '../lib/i18n/store.js';
-import { useFavoritesCount } from '../store/useFavorites.js';
 
 // Ниже 1024px — тонкая полоска: слева логотип-ссылка на главную, справа утилиты.
 // От 1024px — полноценная шапка с логотипом и подписью.
 export default function TopBar() {
   const t = useT();
-  const favoritesCount = useFavoritesCount();
   return (
     <div className="bg-paper border-b border-line">
       <div className="flex items-center gap-1 px-3 py-1.5 text-xs lg:hidden">
@@ -21,17 +19,6 @@ export default function TopBar() {
           className="mr-auto inline-flex h-9 w-9 shrink-0 items-center justify-center transition-opacity hover:opacity-80"
         >
           <img src="/symbol.png" alt="" className="h-9 w-9 object-contain" />
-        </Link>
-        <Link
-          to="/?filter=favorites"
-          aria-label={t('topbar.favorites')}
-          title={t('topbar.favorites')}
-          className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:text-ink"
-        >
-          <HeartIcon
-            filled={favoritesCount > 0}
-            className={`h-4 w-4 ${favoritesCount > 0 ? 'text-danger fill-danger' : 'text-muted'}`}
-          />
         </Link>
         {/* На узком экране текст «Мои заказы» не помещается — оставляем иконку
             с подписью для скринридеров. */}
@@ -69,21 +56,6 @@ export default function TopBar() {
         </Link>
         <div className="flex items-center gap-6">
           <PwaInstallButton />
-          <Link
-            to="/?filter=favorites"
-            className="flex items-center gap-1.5 font-semibold text-sm text-muted hover:text-ink transition-colors"
-          >
-            <HeartIcon
-              filled={favoritesCount > 0}
-              className={`w-4 h-4 ${favoritesCount > 0 ? 'text-danger fill-danger' : 'text-muted'}`}
-            />
-            <span>{t('topbar.favorites')}</span>
-            {favoritesCount > 0 && (
-              <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand/10 px-1 text-[11px] font-bold text-brand">
-                {favoritesCount}
-              </span>
-            )}
-          </Link>
           <Link
             to="/my-orders"
             className="font-semibold text-sm text-muted hover:text-ink transition-colors"

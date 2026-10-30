@@ -238,7 +238,7 @@ function OrderCard({ order, now, onAccept, onReady, onDone, onCancel, t }) {
           onClick={() => onReady(order.id)}
           className="bg-primary text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity"
         >
-          {t('admin.markReadyBtn') || 'Готов к выдаче'}
+          Готов к выдаче
         </button>
       ) : (
         <button
@@ -246,7 +246,7 @@ function OrderCard({ order, now, onAccept, onReady, onDone, onCancel, t }) {
           onClick={() => onAccept && onAccept(order.id)}
           className="bg-accent text-primary font-bold py-3 rounded-xl transition-opacity hover:opacity-90"
         >
-          {t('admin.acceptOrderBtn') || 'Принять в работу'}
+          Принять в работу
         </button>
       )}
       <button
@@ -507,7 +507,7 @@ function Board({ staff, allowedRestaurants }) {
         <div className="grid gap-6 lg:grid-cols-3">
           <section aria-label={t('admin.cookingAria')}>
             <h2 className="font-bold mb-3">
-              {t('admin.cooking')} · {pending.length}
+              Готовятся · {pending.length}
             </h2>
             <div
               className="grid gap-3"
@@ -531,7 +531,7 @@ function Board({ staff, allowedRestaurants }) {
 
           <section aria-label={t('admin.inProgressAria') || 'В работе'}>
             <h2 className="font-bold mb-3">
-              {t('admin.inProgress') || 'Принят кухней'} · {cooking.length}
+              Принят кухней · {cooking.length}
             </h2>
             <div
               className="grid gap-3"
@@ -550,12 +550,12 @@ function Board({ staff, allowedRestaurants }) {
                 />
               ))}
             </div>
-            {cooking.length === 0 && <p className="text-muted text-sm">{t('admin.noInProgress') || 'Пока нет заказов в работе'}</p>}
+            {cooking.length === 0 && <p className="text-muted text-sm">{t('admin.noInProgress') || 'Пока нет заказов'}</p>}
           </section>
 
           <section aria-label={t('admin.readyAria')}>
             <h2 className="font-bold mb-3">
-              {t('admin.waitingClient')} · {ready.length}
+              Ждут клиента · {ready.length}
             </h2>
             <div
               className="grid gap-3"

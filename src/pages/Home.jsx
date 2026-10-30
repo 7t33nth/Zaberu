@@ -324,8 +324,36 @@ export default function Home() {
           <div>
             <div className="lg:hidden px-4 pb-3 pt-3">{searchBox('search-mobile')}</div>
 
-            <div className="lg:hidden flex gap-2 px-4 pb-3 overflow-x-auto no-scrollbar">
+            <div className="lg:hidden flex gap-2 px-4 pb-3 overflow-x-auto no-scrollbar items-center">
               {ratingRow}
+              <button
+                type="button"
+                onClick={() => setFavoritesOnly((prev) => !prev)}
+                aria-pressed={favoritesOnly}
+                title={t('home.favoritesHint')}
+                className={`inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-full border px-4 text-xs font-semibold transition-colors ${
+                  favoritesOnly
+                    ? 'border-accent-dark bg-accent-soft text-accent-dark'
+                    : 'border-line bg-card text-muted hover:text-ink'
+                }`}
+              >
+                <HeartIcon
+                  filled={favoritesOnly || favoriteRestaurantIds.length > 0}
+                  className={`h-3.5 w-3.5 ${
+                    favoritesOnly
+                      ? 'text-accent-dark fill-accent-dark'
+                      : favoriteRestaurantIds.length > 0
+                        ? 'text-danger fill-danger'
+                        : 'text-muted'
+                  }`}
+                />
+                <span>{t('home.favorites')}</span>
+                {favoriteRestaurantIds.length > 0 && (
+                  <span className="ml-0.5 rounded-full bg-brand/10 px-1.5 py-0.2 text-[11px] font-bold text-brand">
+                    {favoriteRestaurantIds.length}
+                  </span>
+                )}
+              </button>
             </div>
 
             <div className="lg:hidden flex gap-2 px-4 pb-4 overflow-x-auto no-scrollbar">
@@ -359,66 +387,37 @@ export default function Home() {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 px-4 pb-3 lg:px-0 lg:pb-4">
-              <div
-                role="group"
-                aria-label={t('home.viewAria')}
-                className="inline-flex rounded-full border border-line bg-card p-1"
-              >
-                <button
-                  type="button"
-                  onClick={() => setView('list')}
-                  aria-pressed={view === 'list'}
-                  className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-colors ${
-                    view === 'list'
-                      ? 'bg-primary text-white shadow-sm'
-                      : 'text-muted hover:text-ink'
-                  }`}
+              <div className="flex items-center gap-2 flex-wrap">
+                <div
+                  role="group"
+                  aria-label={t('home.viewAria')}
+                  className="inline-flex rounded-full border border-line bg-card p-1"
                 >
-                  <ListIcon className="h-3.5 w-3.5" />
-                  {t('home.viewList')}
-                </button>
-                <button
-                  type="button"
-                  onClick={showMap}
-                  aria-pressed={view === 'map'}
-                  className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-colors ${
-                    view === 'map' ? 'bg-primary text-white shadow-sm' : 'text-muted hover:text-ink'
-                  }`}
-                >
-                  <MapIcon className="h-3.5 w-3.5" />
-                  {t('home.viewMap')}
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setFavoritesOnly((prev) => !prev)}
-                  aria-pressed={favoritesOnly}
-                  title={t('home.favoritesHint')}
-                  className={`inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-full border px-4 text-xs font-semibold transition-colors ${
-                    favoritesOnly
-                      ? 'border-accent-dark bg-accent-soft text-accent-dark'
-                      : 'border-line bg-card text-muted hover:text-ink'
-                  }`}
-                >
-                  <HeartIcon
-                    filled={favoritesOnly || favoriteRestaurantIds.length > 0}
-                    className={`h-3.5 w-3.5 ${
-                      favoritesOnly
-                        ? 'text-accent-dark fill-accent-dark'
-                        : favoriteRestaurantIds.length > 0
-                          ? 'text-danger fill-danger'
-                          : 'text-muted'
+                  <button
+                    type="button"
+                    onClick={() => setView('list')}
+                    aria-pressed={view === 'list'}
+                    className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-colors ${
+                      view === 'list'
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'text-muted hover:text-ink'
                     }`}
-                  />
-                  <span>{t('home.favorites')}</span>
-                  {favoriteRestaurantIds.length > 0 && (
-                    <span className="ml-0.5 rounded-full bg-brand/10 px-1.5 py-0.2 text-[11px] font-bold text-brand">
-                      {favoriteRestaurantIds.length}
-                    </span>
-                  )}
-                </button>
+                  >
+                    <ListIcon className="h-3.5 w-3.5" />
+                    {t('home.viewList')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={showMap}
+                    aria-pressed={view === 'map'}
+                    className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-colors ${
+                      view === 'map' ? 'bg-primary text-white shadow-sm' : 'text-muted hover:text-ink'
+                    }`}
+                  >
+                    <MapIcon className="h-3.5 w-3.5" />
+                    {t('home.viewMap')}
+                  </button>
+                </div>
 
                 <button
                   type="button"
