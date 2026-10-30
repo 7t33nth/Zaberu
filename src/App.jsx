@@ -3,7 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import TopBar from './components/TopBar.jsx';
 import OfflineBanner from './components/OfflineBanner.jsx';
-import { useOrderBadge } from './lib/useOrderBadge.js';
+import { useToast } from './components/Toast.jsx';
+import { useOrderNotifications } from './lib/useOrderNotifications.js';
 import { restaurants } from './data/index.js';
 
 // Не на каждой посадке нужны: страница ресторана/чекаута, отслеживание заказа, «Мои заказы»
@@ -35,11 +36,13 @@ function PageFallback() {
 }
 
 export default function App() {
-  useOrderBadge();
+  const [toast, toastNode] = useToast();
+  useOrderNotifications(toast);
 
   return (
     <>
       <OfflineBanner />
+      {toastNode}
       <Suspense fallback={<PageFallback />}>
         <Routes>
           <Route path="/staff/:restaurantId" element={<AdminBoard />} />

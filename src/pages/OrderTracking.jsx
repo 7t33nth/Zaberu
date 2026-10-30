@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { cancelOrder, markArrived, markReceived, subscribeOrder } from '../lib/api.js';
@@ -27,7 +27,6 @@ export default function OrderTracking() {
   const [now, setNow] = useState(Date.now());
   const [busy, setBusy] = useState(false);
   const [toast, toastNode] = useToast();
-  const prevStatusRef = useRef();
 
   useEffect(() => subscribeOrder(orderId, setOrder), [orderId]);
 
@@ -70,15 +69,8 @@ export default function OrderTracking() {
     return () => clearTimeout(timer);
   }, [order, toast, t]);
 
-  // кухня отметила заказ готовым — реальный статус, а не таймер по времени выдачи
-  useEffect(() => {
-    if (!order) return;
-    if (prevStatusRef.current && prevStatusRef.current !== 'ready' && order.status === 'ready') {
-      toast(t('order.toastReady'));
-      notifyIfHidden(t('order.toastReady'), order.code);
-    }
-    prevStatusRef.current = order.status;
-  }, [order, toast, t]);
+  // Смену статуса на ready ловит глобальный useOrderNotifications в App: так toast
+  // и системное уведомление приходят на любом экране, а не только здесь.
 
   if (order === undefined) {
     return (
