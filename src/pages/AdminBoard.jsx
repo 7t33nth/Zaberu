@@ -550,7 +550,7 @@ function Board({ staff, allowedRestaurants }) {
                 />
               ))}
             </div>
-            {cooking.length === 0 && <p className="text-muted text-sm">{t('admin.noInProgress') || 'Пока нет заказов'}</p>}
+            {cooking.length === 0 && <p className="text-muted text-sm">Нет заказов в работе</p>}
           </section>
 
           <section aria-label={t('admin.readyAria')}>

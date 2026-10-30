@@ -52,7 +52,10 @@ export async function placeOrder({ restaurant, lines, pickupAt, name = '', comme
 
 const patch = (id, fields) => backendPromise.then((b) => b.updateOrder(id, fields));
 const transition = (id, from, fields) =>
-  backendPromise.then((b) => b.transitionOrder(id, from, fields));
+  backendPromise.then((b) => b.transitionOrder(id, from, fields)).then((ok) => {
+    if (ok === false) throw new Error('transition_failed');
+    return ok;
+  });
 
 export const markCooking = (id) =>
   transition(id, 'pending', { status: 'cooking', acceptedAt: Date.now() });
