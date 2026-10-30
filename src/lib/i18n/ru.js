@@ -7,8 +7,7 @@ export default {
   'offline.text': 'Нет сети — показываем сохранённые данные',
 
   'home.title': 'Обед без ожидания',
-  'home.subtitle':
-    'Выберите блюда и время. Заказ будет готов минута в минуту. Регистрация не нужна.',
+  'home.subtitle': 'Заказ будет готов минута в минуту',
   'home.searchPlaceholder': 'Найти заведение',
   'home.searchAria': 'Поиск заведений',
   'home.ratingAny': 'Любой рейтинг',
@@ -42,6 +41,7 @@ export default {
   'map.recenter': 'К моему местоположению',
   'map.locating': 'Определяем…',
   'map.openMenu': 'Перейти к меню',
+  'map.openGoogle': 'Google Карты',
   'map.aria': 'Карта заведений',
 
   'steps.dishes': 'Блюда',
@@ -192,7 +192,7 @@ export default {
   'order.showCode': 'Назовите или покажите номер на выдаче',
   'order.in': 'через {time}',
   'order.ago': 'прошло {time}',
-  'order.showOnMap': 'Показать на карте',
+  'order.showOnMap': 'Открыть на Google Картах',
   'order.totalPaidKaspi': 'Итого · оплачено Kaspi Pay',
   'order.totalPaidOnline': 'Итого · оплачено онлайн',
   'order.commentLabel': 'Комментарий к заказу',

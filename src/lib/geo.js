@@ -33,3 +33,9 @@ export function distanceParts(meters) {
 export function isNear(meters, radius = NEAR_RADIUS_M) {
   return Number.isFinite(meters) && meters <= radius;
 }
+
+// Маршрут строим не сами, а отдаём Google Картам: приложению не нужно быть навигатором.
+export function googleMapsUrl(lat, lon) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return '';
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
+}

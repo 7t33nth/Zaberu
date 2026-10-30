@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import DistanceBadge from './DistanceBadge.jsx';
 import { LocationIcon, StarIcon } from './Icons.jsx';
+import { googleMapsUrl } from '../lib/geo.js';
 import { useT } from '../lib/i18n/store.js';
 
 // Центр Алматы — стартовый вид, пока геолокация не получена.
@@ -73,8 +74,8 @@ export default function MapView({ restaurants, user, onLocate, locating }) {
               title={r.name}
               alt={r.name}
             >
-              <Popup maxWidth={280} className="zaberu-popup">
-                <div className="min-w-[210px]">
+              <Popup maxWidth={300} className="zaberu-popup" autoPanPadding={[24, 72]}>
+                <div className="min-w-[220px]">
                   <div className="text-base font-extrabold leading-tight text-ink">{r.name}</div>
                   <div className="mt-1 flex items-center gap-1 text-xs font-bold text-ink">
                     <StarIcon className="h-3.5 w-3.5 text-warn" />
@@ -87,12 +88,22 @@ export default function MapView({ restaurants, user, onLocate, locating }) {
                     meters={r.distanceM}
                     className="mt-2 block text-xs font-bold text-accent-dark"
                   />
-                  <Link
-                    to={`/restaurant/${r.id}`}
-                    className="zaberu-popup-cta mt-3 inline-flex min-h-[36px] items-center justify-center rounded-lg bg-brand px-3 text-xs font-bold text-white transition-opacity hover:opacity-90"
-                  >
-                    {t('map.openMenu')}
-                  </Link>
+                  <div className="mt-3 flex gap-2">
+                    <Link
+                      to={`/restaurant/${r.id}`}
+                      className="zaberu-popup-cta inline-flex min-h-[36px] flex-1 items-center justify-center rounded-lg bg-brand px-2 text-center text-xs font-bold leading-tight text-white transition-opacity hover:opacity-90"
+                    >
+                      {t('map.openMenu')}
+                    </Link>
+                    <a
+                      href={googleMapsUrl(r.lat, r.lon)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="zaberu-popup-secondary inline-flex min-h-[36px] flex-1 items-center justify-center rounded-lg border border-line bg-card px-2 text-center text-xs font-bold leading-tight text-ink transition-colors hover:border-ink/40"
+                    >
+                      {t('map.openGoogle')}
+                    </a>
+                  </div>
                 </div>
               </Popup>
             </Marker>
@@ -102,7 +113,7 @@ export default function MapView({ restaurants, user, onLocate, locating }) {
         <UserFocus user={user} />
       </MapContainer>
 
-      <div className="pointer-events-none absolute inset-x-0 top-3 z-[1000] flex justify-center px-3">
+      <div className="pointer-events-none absolute inset-x-0 top-3 z-[650] flex justify-center px-3">
         <button
           type="button"
           onClick={onLocate}

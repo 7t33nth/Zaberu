@@ -7,8 +7,7 @@ export default {
   'offline.text': 'No connection — showing saved data',
 
   'home.title': 'Lunch without the wait',
-  'home.subtitle':
-    'Pick your dishes and pickup time. Your order will be ready right on the dot. No sign-up needed.',
+  'home.subtitle': 'Your order will be ready right on the dot',
   'home.searchPlaceholder': 'Find a restaurant',
   'home.searchAria': 'Search restaurants',
   'home.ratingAny': 'Any rating',
@@ -42,6 +41,7 @@ export default {
   'map.recenter': 'Back to my location',
   'map.locating': 'Locating…',
   'map.openMenu': 'Open menu',
+  'map.openGoogle': 'Google Maps',
   'map.aria': 'Restaurant map',
 
   'steps.dishes': 'Dishes',
@@ -193,7 +193,7 @@ export default {
   'order.showCode': 'Say or show this number at pickup',
   'order.in': 'in {time}',
   'order.ago': '{time} ago',
-  'order.showOnMap': 'Show on map',
+  'order.showOnMap': 'Open in Google Maps',
   'order.totalPaidKaspi': 'Total · paid with Kaspi Pay',
   'order.totalPaidOnline': 'Total · paid online',
   'order.commentLabel': 'Order comment',

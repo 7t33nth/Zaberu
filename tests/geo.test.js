@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   NEAR_RADIUS_M,
   distanceParts,
+  googleMapsUrl,
   haversineMeters,
   isNear,
   walkingMinutes
@@ -37,4 +38,12 @@ test('isNear: граница радиуса 1,5 км', () => {
   assert.equal(isNear(NEAR_RADIUS_M), true);
   assert.equal(isNear(NEAR_RADIUS_M + 1), false);
   assert.equal(isNear(null), false);
+});
+
+test('googleMapsUrl: ссылка на точку для Google Карт', () => {
+  assert.equal(
+    googleMapsUrl(burgerKing.lat, burgerKing.lon),
+    `https://www.google.com/maps/search/?api=1&query=${burgerKing.lat},${burgerKing.lon}`
+  );
+  assert.equal(googleMapsUrl(undefined, burgerKing.lon), '');
 });

@@ -7,8 +7,7 @@ export default {
   'offline.text': 'Желі жоқ — сақталған деректерді көрсетеміз',
 
   'home.title': 'Күтусіз түскі ас',
-  'home.subtitle':
-    'Тағамдар мен уақытты таңдаңыз. Тапсырыс дәл уақытында дайын болады. Тіркелу қажет емес.',
+  'home.subtitle': 'Тапсырыс дәл уақытында дайын болады',
   'home.searchPlaceholder': 'Мекеме іздеу',
   'home.searchAria': 'Мекемелерді іздеу',
   'home.ratingAny': 'Кез келген рейтинг',
@@ -42,6 +41,7 @@ export default {
   'map.recenter': 'Менің орныма',
   'map.locating': 'Анықтап жатырмыз…',
   'map.openMenu': 'Мәзірге өту',
+  'map.openGoogle': 'Google Карта',
   'map.aria': 'Мекемелер картасы',
 
   'steps.dishes': 'Тағамдар',
@@ -194,7 +194,7 @@ export default {
   'order.showCode': 'Беру кезінде нөмірді айтыңыз немесе көрсетіңіз',
   'order.in': '{time} кейін',
   'order.ago': '{time} бұрын',
-  'order.showOnMap': 'Картадан көрсету',
+  'order.showOnMap': 'Google Картада ашу',
   'order.totalPaidKaspi': 'Барлығы · Kaspi Pay арқылы төленді',
   'order.totalPaidOnline': 'Барлығы · онлайн төленді',
   'order.commentLabel': 'Тапсырысқа түсініктеме',

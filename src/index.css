@@ -271,10 +271,16 @@ button:disabled {
   color: rgb(var(--color-muted));
 }
 
-/* Leaflet красит все ссылки внутри карты в свой синий. Кнопка в попапе должна
-   оставаться белой на брендовом фоне. */
+/* Leaflet красит все ссылки внутри карты в свой синий. Кнопки в попапе должны
+   выглядеть как кнопки: основная — белая на брендовом фоне, вторая — цветом текста. */
 .leaflet-container .leaflet-popup-content a.zaberu-popup-cta {
   color: #fff;
+  text-decoration: none;
+}
+
+.leaflet-container .leaflet-popup-content a.zaberu-popup-secondary {
+  color: rgb(var(--color-ink));
+  text-decoration: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

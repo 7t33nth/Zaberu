@@ -4,6 +4,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { cancelOrder, markArrived, markReceived, subscribeOrder } from '../lib/api.js';
 import { restaurantById } from '../data/index.js';
 import { CANCEL_WINDOW_MS, formatClock, formatLeft, formatMoney } from '../lib/time.js';
+import { googleMapsUrl } from '../lib/geo.js';
 import { useToast } from '../components/Toast.jsx';
 import { ClockIcon, LocationIcon } from '../components/Icons.jsx';
 import { useLang, useT } from '../lib/i18n/store.js';
@@ -225,14 +226,16 @@ export default function OrderTracking() {
             <LocationIcon className="w-3.5 h-3.5 text-muted shrink-0" />
             <span>{restaurant.address}</span>
           </div>
-          <a
-            href={`https://www.google.com/maps/search/?api=1&query=${restaurant.lat},${restaurant.lon}`}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-block mt-2 font-semibold text-accent-dark hover:underline"
-          >
-            {t('order.showOnMap')}
-          </a>
+          {Number.isFinite(restaurant.lat) && Number.isFinite(restaurant.lon) && (
+            <a
+              href={googleMapsUrl(restaurant.lat, restaurant.lon)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-2 font-semibold text-accent-dark hover:underline"
+            >
+              {t('order.showOnMap')}
+            </a>
+          )}
         </div>
       )}
 
