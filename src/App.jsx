@@ -15,6 +15,8 @@ const OrderTracking = lazy(() => import('./pages/OrderTracking.jsx'));
 const MyOrders = lazy(() => import('./pages/MyOrders.jsx'));
 const AdminBoard = lazy(() => import('./pages/AdminBoard.jsx'));
 
+import { RestaurantMenuSkeleton } from './components/Skeletons.jsx';
+
 function Shell({ children }) {
   return (
     <div className="shell">
@@ -26,11 +28,11 @@ function Shell({ children }) {
 
 function PageFallback() {
   return (
-    <div className="min-h-dvh bg-paper flex items-center justify-center">
-      <span
-        className="w-8 h-8 border-2 border-line border-t-brand rounded-full animate-spin"
-        aria-hidden="true"
-      />
+    <div className="min-h-dvh bg-paper">
+      <div className="shell">
+        <TopBar />
+        <RestaurantMenuSkeleton />
+      </div>
     </div>
   );
 }

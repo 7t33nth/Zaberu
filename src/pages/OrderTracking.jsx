@@ -9,6 +9,8 @@ import { useToast } from '../components/Toast.jsx';
 import { ClockIcon, LocationIcon } from '../components/Icons.jsx';
 import { useLang, useT } from '../lib/i18n/store.js';
 import { ensureNotifyPermission, notifyIfHidden } from '../lib/notify.js';
+import OrderStatusTracker from '../components/OrderStatusTracker.jsx';
+import { OrderTrackingSkeleton } from '../components/Skeletons.jsx';
 
 const ARRIVE_WINDOW_MS = 15 * 60000;
 const LEAVE_WINDOW_MS = 10 * 60000; // за сколько до выдачи напоминаем «пора выходить»
@@ -74,11 +76,7 @@ export default function OrderTracking() {
   // и системное уведомление приходят на любом экране, а не только здесь.
 
   if (order === undefined) {
-    return (
-      <div className="flex items-center justify-center min-h-dvh text-muted">
-        {t('order.loading')}
-      </div>
-    );
+    return <OrderTrackingSkeleton />;
   }
 
   if (order === null) {
@@ -217,6 +215,11 @@ export default function OrderTracking() {
             </span>
           </div>
         )}
+      </div>
+
+      {/* Трекер прогресса заказа в реальном времени */}
+      <div className="mt-4">
+        <OrderStatusTracker orderId={order.id} initialOrder={order} />
       </div>
 
       {restaurant && (
