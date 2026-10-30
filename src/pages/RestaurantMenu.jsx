@@ -17,9 +17,11 @@ import {
   StarIcon,
   ArrowLeftIcon,
   ChevronDownIcon,
-  CheckIcon
+  CheckIcon,
+  HeartIcon
 } from '../components/Icons.jsx';
 import { useLang, useT } from '../lib/i18n/store.js';
+import { useFavorites, useIsRestaurantFavorite } from '../store/useFavorites.js';
 
 export default function RestaurantMenu() {
   const { id } = useParams();
@@ -35,14 +37,28 @@ export default function RestaurantMenu() {
   const startNew = useCart((s) => s.startNew);
   const cartSummary = useCartSummary();
 
+  const isRestaurantFav = useIsRestaurantFavorite(id);
+  const toggleRestaurant = useFavorites((s) => s.toggleRestaurant);
+  const favoriteDishIds = useFavorites((s) => s.dishIds);
+
   const dishes = useMemo(() => menu.filter((d) => d.restaurantId === id), [id]);
+  const favoriteDishes = useMemo(
+    () => dishes.filter((d) => favoriteDishIds.includes(d.id)),
+    [dishes, favoriteDishIds]
+  );
   const categories = useMemo(() => {
     const rank = (c) => {
       const i = CATEGORY_ORDER.indexOf(c);
       return i === -1 ? CATEGORY_ORDER.length : i;
     };
-    return Array.from(new Set(dishes.map((d) => d.category))).sort((a, b) => rank(a) - rank(b));
-  }, [dishes]);
+    const cats = Array.from(new Set(dishes.map((d) => d.category))).sort(
+      (a, b) => rank(a) - rank(b)
+    );
+    if (favoriteDishes.length > 0) {
+      return ['favorites', ...cats];
+    }
+    return cats;
+  }, [dishes, favoriteDishes.length]);
 
   const sectionRefs = useRef({});
   const [activeDish, setActiveDish] = useState(null);
@@ -111,14 +127,29 @@ export default function RestaurantMenu() {
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-black/70" />
         <div className="relative px-4 pt-4 pb-4 lg:px-10 lg:pt-8 lg:pb-8">
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            aria-label={t('menu.back')}
-            className="w-11 h-11 rounded-full bg-black/40 border border-white/20 flex items-center justify-center font-bold text-white hover:border-white/50 transition-colors shadow-sm"
-          >
-            <ArrowLeftIcon className="w-4 h-4" />
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              aria-label={t('menu.back')}
+              className="w-11 h-11 rounded-full bg-black/40 border border-white/20 flex items-center justify-center font-bold text-white hover:border-white/50 transition-colors shadow-sm"
+            >
+              <ArrowLeftIcon className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleRestaurant(restaurant.id)}
+              aria-label={
+                isRestaurantFav ? t('favorites.removeRestaurant') : t('favorites.addRestaurant')
+              }
+              className="w-11 h-11 rounded-full bg-black/40 border border-white/20 flex items-center justify-center font-bold text-white hover:border-white/50 transition-colors shadow-sm"
+            >
+              <HeartIcon
+                filled={isRestaurantFav}
+                className={`w-5 h-5 ${isRestaurantFav ? 'text-danger fill-danger' : 'text-white'}`}
+              />
+            </button>
+          </div>
           <div className="mt-3 lg:mt-4">
             <h1 className="font-extrabold text-xl lg:text-3xl text-white leading-tight">
               {restaurant.name}
@@ -180,25 +211,32 @@ export default function RestaurantMenu() {
                 onClick={() =>
                   sectionRefs.current[cat]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }
-                className="shrink-0 inline-flex min-h-[40px] items-center px-4 rounded-full text-sm font-semibold bg-card border border-line text-ink hover:border-ink/40 transition-colors shadow-sm"
+                className={`shrink-0 inline-flex min-h-[40px] items-center px-4 rounded-full text-sm font-semibold border transition-colors shadow-sm ${
+                  cat === 'favorites'
+                    ? 'bg-accent-soft text-accent-dark border-accent-dark/30 hover:border-accent-dark'
+                    : 'bg-card border-line text-ink hover:border-ink/40'
+                }`}
               >
-                {t(`category.${cat}`)}
+                {cat === 'favorites' ? `❤️ ${t('category.favorites')}` : t(`category.${cat}`)}
               </button>
             ))}
           </div>
 
           <div className="px-4 lg:px-0 flex flex-col gap-6 mt-4">
-            {categories.map((cat) => (
-              <section
-                key={cat}
-                ref={(el) => (sectionRefs.current[cat] = el)}
-                className="scroll-mt-16"
-              >
-                <h2 className="font-extrabold text-ink mb-2">{t(`category.${cat}`)}</h2>
-                <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-3">
-                  {dishes
-                    .filter((d) => d.category === cat)
-                    .map((dish) => (
+            {categories.map((cat) => {
+              const categoryDishes =
+                cat === 'favorites' ? favoriteDishes : dishes.filter((d) => d.category === cat);
+              return (
+                <section
+                  key={cat}
+                  ref={(el) => (sectionRefs.current[cat] = el)}
+                  className="scroll-mt-16"
+                >
+                  <h2 className="font-extrabold text-ink mb-2">
+                    {cat === 'favorites' ? `❤️ ${t('category.favorites')}` : t(`category.${cat}`)}
+                  </h2>
+                  <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-3">
+                    {categoryDishes.map((dish) => (
                       <DishCard
                         key={dish.id}
                         dish={dish}
@@ -209,9 +247,10 @@ export default function RestaurantMenu() {
                         onDecrement={decrement}
                       />
                     ))}
-                </div>
-              </section>
-            ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         </div>
 

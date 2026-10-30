@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
 import { CUISINE_LABELS } from '../data/index.js';
 import { hoursForDay, isOpenNow, ordersOpen, formatClock } from '../lib/time.js';
-import { LocationIcon, StarIcon } from './Icons.jsx';
+import { LocationIcon, StarIcon, HeartIcon } from './Icons.jsx';
 import DistanceBadge from './DistanceBadge.jsx';
 import { useT } from '../lib/i18n/store.js';
+import { useFavorites, useIsRestaurantFavorite } from '../store/useFavorites.js';
 
 function status(restaurant, now, t) {
   const { openMs, closeMs } = hoursForDay(restaurant.hours, now);
@@ -22,6 +23,8 @@ const coverFor = (restaurant) => `/images/${restaurant.id}/flash.webp`;
 export default function RestaurantCard({ restaurant, now, distanceM }) {
   const t = useT();
   const st = status(restaurant, now, t);
+  const isFavorite = useIsRestaurantFavorite(restaurant.id);
+  const toggleFavorite = useFavorites((s) => s.toggleRestaurant);
   return (
     <Link
       to={`/restaurant/${restaurant.id}`}
@@ -39,6 +42,21 @@ export default function RestaurantCard({ restaurant, now, distanceM }) {
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-black/70" />
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleFavorite(restaurant.id);
+          }}
+          aria-label={isFavorite ? t('favorites.removeRestaurant') : t('favorites.addRestaurant')}
+          className="absolute left-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white transition-transform hover:scale-110 active:scale-95"
+        >
+          <HeartIcon
+            filled={isFavorite}
+            className={`h-3.5 w-3.5 ${isFavorite ? 'text-danger fill-danger' : 'text-white'}`}
+          />
+        </button>
         <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-xs font-bold text-neutral-900">
           <StarIcon className="w-3.5 h-3.5 text-warn" />
           <span>{restaurant.rating}</span>

@@ -1,14 +1,18 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
-import { restaurants, CUISINE_GROUPS } from '../data/index.js';
+import { Link, useLocation } from 'react-router-dom';
+import { restaurants, menu, restaurantById, CUISINE_GROUPS } from '../data/index.js';
 import RestaurantCard from '../components/RestaurantCard.jsx';
 import ActiveOrderBanner from '../components/ActiveOrderBanner.jsx';
 import CitySelect from '../components/CitySelect.jsx';
 import Steps from '../components/Steps.jsx';
 import Footer from '../components/Footer.jsx';
 import InstallBanner from '../components/InstallBanner.jsx';
-import { ListIcon, LocationIcon, MapIcon, SearchIcon } from '../components/Icons.jsx';
+import Thumb from '../components/Thumb.jsx';
+import { HeartIcon, ListIcon, LocationIcon, MapIcon, SearchIcon } from '../components/Icons.jsx';
 import { NEAR_RADIUS_M, haversineMeters } from '../lib/geo.js';
+import { formatMoney } from '../lib/time.js';
 import { useT } from '../lib/i18n/store.js';
+import { useFavorites } from '../store/useFavorites.js';
 
 // Leaflet тянет заметный кусок JS/CSS, поэтому грузим карту только когда её открыли.
 const MapView = lazy(() => import('../components/MapView.jsx'));
@@ -28,6 +32,10 @@ export default function Home() {
     [4.8, '4.8+']
   ];
 
+  const location = useLocation();
+  const favoriteRestaurantIds = useFavorites((s) => s.restaurantIds);
+  const favoriteDishIds = useFavorites((s) => s.dishIds);
+
   const [search, setSearch] = useState('');
   const [cuisines, setCuisines] = useState(() => new Set());
   const [minRating, setMinRating] = useState(0);
@@ -35,12 +43,26 @@ export default function Home() {
   const [coords, setCoords] = useState(null);
   const [geoState, setGeoState] = useState('idle');
   const [nearMe, setNearMe] = useState(false);
+  const [favoritesOnly, setFavoritesOnly] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      return p.get('filter') === 'favorites' || p.get('favorites') === '1';
+    }
+    return false;
+  });
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(t);
   }, []);
+
+  useEffect(() => {
+    const p = new URLSearchParams(location.search);
+    if (p.get('filter') === 'favorites' || p.get('favorites') === '1') {
+      setFavoritesOnly(true);
+    }
+  }, [location.search]);
 
   // Геолокация нужна и карте, и фильтру «рядом со мной». Запрашиваем только по
   // действию пользователя (открыл карту / включил фильтр), а не при загрузке главной.
@@ -105,10 +127,15 @@ export default function Home() {
     [coords]
   );
 
+  const favoriteDishesList = useMemo(() => {
+    return menu.filter((d) => favoriteDishIds.includes(d.id));
+  }, [favoriteDishIds]);
+
   const nearActive = nearMe && Boolean(coords);
   const filtered = located
     .filter(
       (r) =>
+        (!favoritesOnly || favoriteRestaurantIds.includes(r.id)) &&
         r.name.toLowerCase().includes(search.trim().toLowerCase()) &&
         r.rating >= minRating &&
         (activeTags.size === 0 || r.cuisines.some((c) => activeTags.has(c))) &&
@@ -213,6 +240,28 @@ export default function Home() {
 
         <div className="lg:grid lg:grid-cols-[250px_1fr] lg:gap-10 lg:items-start lg:mt-8">
           <aside className="hidden lg:flex lg:flex-col lg:gap-4 lg:sticky lg:top-6">
+            <div className="bg-card border border-line rounded-3xl p-4">
+              <div className="text-xs font-bold text-muted uppercase tracking-wide mb-3">
+                {t('home.favoritesTitle')}
+              </div>
+              <label className="flex items-center gap-2.5 text-sm py-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={favoritesOnly}
+                  onChange={(e) => setFavoritesOnly(e.target.checked)}
+                  className="w-5 h-5 shrink-0 cursor-pointer appearance-none rounded-lg border border-line bg-card bg-center bg-no-repeat bg-[length:12px_12px] transition-colors checked:border-brand checked:bg-brand checked:bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2016%2016%27%20fill=%27none%27%20stroke=%27white%27%20stroke-width=%272.5%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27%3E%3Cpath%20d=%27M3%208.5l3.5%203.5L13%204.5%27/%3E%3C/svg%3E')] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-dark"
+                />
+                <span className={favoritesOnly ? 'text-ink font-semibold' : 'text-muted'}>
+                  {t('home.favoritesOnly')}
+                </span>
+                {favoriteRestaurantIds.length > 0 && (
+                  <span className="text-xs text-muted ml-auto">
+                    ({favoriteRestaurantIds.length})
+                  </span>
+                )}
+              </label>
+            </div>
+
             <div className="bg-card border border-line rounded-3xl p-4">
               <div className="text-xs font-bold text-muted uppercase tracking-wide mb-3">
                 {t('home.ratingLabel')}
@@ -341,20 +390,51 @@ export default function Home() {
                 </button>
               </div>
 
-              <button
-                type="button"
-                onClick={toggleNearMe}
-                aria-pressed={nearMe}
-                title={t('home.nearMeHint')}
-                className={`inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-full border px-4 text-xs font-semibold transition-colors ${
-                  nearMe
-                    ? 'border-accent-dark bg-accent-soft text-accent-dark'
-                    : 'border-line bg-card text-muted hover:text-ink'
-                }`}
-              >
-                <LocationIcon className="h-3.5 w-3.5" />
-                {t('home.nearMe')}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFavoritesOnly((prev) => !prev)}
+                  aria-pressed={favoritesOnly}
+                  title={t('home.favoritesHint')}
+                  className={`inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-full border px-4 text-xs font-semibold transition-colors ${
+                    favoritesOnly
+                      ? 'border-accent-dark bg-accent-soft text-accent-dark'
+                      : 'border-line bg-card text-muted hover:text-ink'
+                  }`}
+                >
+                  <HeartIcon
+                    filled={favoritesOnly || favoriteRestaurantIds.length > 0}
+                    className={`h-3.5 w-3.5 ${
+                      favoritesOnly
+                        ? 'text-accent-dark fill-accent-dark'
+                        : favoriteRestaurantIds.length > 0
+                          ? 'text-danger fill-danger'
+                          : 'text-muted'
+                    }`}
+                  />
+                  <span>{t('home.favorites')}</span>
+                  {favoriteRestaurantIds.length > 0 && (
+                    <span className="ml-0.5 rounded-full bg-brand/10 px-1.5 py-0.2 text-[11px] font-bold text-brand">
+                      {favoriteRestaurantIds.length}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={toggleNearMe}
+                  aria-pressed={nearMe}
+                  title={t('home.nearMeHint')}
+                  className={`inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-full border px-4 text-xs font-semibold transition-colors ${
+                    nearMe
+                      ? 'border-accent-dark bg-accent-soft text-accent-dark'
+                      : 'border-line bg-card text-muted hover:text-ink'
+                  }`}
+                >
+                  <LocationIcon className="h-3.5 w-3.5" />
+                  {t('home.nearMe')}
+                </button>
+              </div>
             </div>
 
             {geoState === 'locating' && (
@@ -379,15 +459,66 @@ export default function Home() {
             )}
 
             {view === 'list' ? (
-              <div className="flex flex-col gap-3 px-4 lg:px-0 lg:grid lg:grid-cols-2 lg:gap-5">
-                {filtered.map((r) => (
-                  <RestaurantCard key={r.id} restaurant={r} now={now} distanceM={r.distanceM} />
-                ))}
-                {filtered.length === 0 && (
-                  <div className="lg:col-span-full text-center text-muted text-sm py-12">
-                    {nearActive ? t('home.mapEmpty') : t('home.emptyResults')}
+              <div className="flex flex-col gap-6">
+                {favoritesOnly && favoriteDishesList.length > 0 && (
+                  <div className="px-4 lg:px-0">
+                    <h2 className="text-base font-extrabold text-ink mb-3 flex items-center gap-2">
+                      <span>{t('favorites.dishesTitle')}</span>
+                      <span className="text-xs font-bold text-muted">
+                        ({favoriteDishesList.length})
+                      </span>
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {favoriteDishesList.map((dish) => {
+                        const rest = restaurantById[dish.restaurantId];
+                        return (
+                          <Link
+                            key={dish.id}
+                            to={`/restaurant/${dish.restaurantId}`}
+                            className="flex gap-3 bg-card rounded-2xl p-3 border border-line hover:border-ink/20 transition-all shadow-sm"
+                          >
+                            <Thumb src={dish.image} className="w-16 h-16 rounded-xl shrink-0" />
+                            <div className="min-w-0 flex-1 flex flex-col justify-between">
+                              <div>
+                                <div className="font-bold text-ink text-sm leading-tight truncate">
+                                  {dish.name}
+                                </div>
+                                <div className="text-xs text-muted truncate mt-0.5">
+                                  {rest?.name}
+                                </div>
+                              </div>
+                              <div className="font-bold text-ink text-xs mt-1">
+                                {formatMoney(dish.price)}
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
+
+                <div>
+                  {favoritesOnly && favoriteDishesList.length > 0 && (
+                    <h2 className="text-base font-extrabold text-ink px-4 lg:px-0 mb-3">
+                      {t('favorites.restaurantsTitle')}
+                    </h2>
+                  )}
+                  <div className="flex flex-col gap-3 px-4 lg:px-0 lg:grid lg:grid-cols-2 lg:gap-5">
+                    {filtered.map((r) => (
+                      <RestaurantCard key={r.id} restaurant={r} now={now} distanceM={r.distanceM} />
+                    ))}
+                    {filtered.length === 0 && (
+                      <div className="lg:col-span-full text-center text-muted text-sm py-12">
+                        {favoritesOnly
+                          ? t('home.favoritesEmpty')
+                          : nearActive
+                            ? t('home.mapEmpty')
+                            : t('home.emptyResults')}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="px-4 lg:px-0">

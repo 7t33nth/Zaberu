@@ -328,5 +328,22 @@ export default {
   'admin.prepDemoConfirm':
     'БАРЛЫҚ тапсырыстарды (барлық мекемелер) өшіріп, «{name}» үшін жаңа демо-тапсырыстар қосу керек пе?',
   'admin.clearData': 'Деректерді тазалау',
-  'admin.clearDataConfirm': 'Осы браузердегі барлық тапсырыстарды жою керек пе?'
+  'admin.clearDataConfirm': 'Осы браузердегі барлық тапсырыстарды жою керек пе?',
+
+  'topbar.favorites': 'Таңдаулылар',
+  'home.favorites': 'Таңдаулылар',
+  'home.favoritesHint': 'Тек таңдаулы мекемелер',
+  'home.favoritesTitle': 'Таңдаулылар',
+  'home.favoritesOnly': 'Тек таңдаулылар',
+  'home.favoritesEmpty': 'Таңдаулы мекемелер әзірге жоқ',
+  'category.favorites': 'Таңдаулы тағамдар',
+  'favorites.title': 'Таңдаулылар',
+  'favorites.addRestaurant': 'Мекемені таңдаулыларға қосу',
+  'favorites.removeRestaurant': 'Мекемені таңдаулылардан өшіру',
+  'favorites.addDish': 'Тағамды таңдаулыларға қосу',
+  'favorites.removeDish': 'Тағамды таңдаулылардан өшіру',
+  'favorites.empty': 'Таңдаулыларда әзірге ештеңе жоқ',
+  'favorites.emptyHint': 'Осында сақтау үшін мекемедегі немесе тағамдағы жүрекшені басыңыз',
+  'favorites.dishesTitle': 'Таңдаулы тағамдар',
+  'favorites.restaurantsTitle': 'Таңдаулы мекемелер'
 };

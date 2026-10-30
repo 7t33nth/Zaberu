@@ -4,9 +4,10 @@ import L from 'leaflet';
 import { Link } from 'react-router-dom';
 import 'leaflet/dist/leaflet.css';
 import DistanceBadge from './DistanceBadge.jsx';
-import { LocationIcon, StarIcon } from './Icons.jsx';
+import { LocationIcon, StarIcon, HeartIcon } from './Icons.jsx';
 import { googleMapsUrl } from '../lib/geo.js';
 import { useT } from '../lib/i18n/store.js';
+import { useFavorites } from '../store/useFavorites.js';
 
 // Центр Алматы — стартовый вид, пока геолокация не получена.
 const MAP_CENTER = [43.265, 76.94];
@@ -38,6 +39,8 @@ function UserFocus({ user }) {
 
 export default function MapView({ restaurants, user, onLocate, locating }) {
   const t = useT();
+  const favoriteRestaurantIds = useFavorites((s) => s.restaurantIds);
+  const toggleRestaurant = useFavorites((s) => s.toggleRestaurant);
 
   return (
     <div
@@ -76,7 +79,31 @@ export default function MapView({ restaurants, user, onLocate, locating }) {
             >
               <Popup maxWidth={300} className="zaberu-popup" autoPanPadding={[24, 72]}>
                 <div className="min-w-[220px]">
-                  <div className="text-base font-extrabold leading-tight text-ink">{r.name}</div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="text-base font-extrabold leading-tight text-ink">{r.name}</div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleRestaurant(r.id);
+                      }}
+                      aria-label={
+                        favoriteRestaurantIds.includes(r.id)
+                          ? t('favorites.removeRestaurant')
+                          : t('favorites.addRestaurant')
+                      }
+                      className="shrink-0 p-1 -mr-1 -mt-1 text-muted hover:text-danger transition-colors"
+                    >
+                      <HeartIcon
+                        filled={favoriteRestaurantIds.includes(r.id)}
+                        className={`h-4 w-4 ${
+                          favoriteRestaurantIds.includes(r.id)
+                            ? 'text-danger fill-danger'
+                            : 'text-muted'
+                        }`}
+                      />
+                    </button>
+                  </div>
                   <div className="mt-1 flex items-center gap-1 text-xs font-bold text-ink">
                     <StarIcon className="h-3.5 w-3.5 text-warn" />
                     <span>{r.rating}</span>

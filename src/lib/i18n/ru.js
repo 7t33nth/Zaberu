@@ -326,5 +326,22 @@ export default {
   'admin.prepDemoConfirm':
     'Стереть ВСЕ заказы (все заведения) и добавить свежие демо-заказы для «{name}»?',
   'admin.clearData': 'Очистить данные',
-  'admin.clearDataConfirm': 'Удалить все заказы в этом браузере?'
+  'admin.clearDataConfirm': 'Удалить все заказы в этом браузере?',
+
+  'topbar.favorites': 'Избранное',
+  'home.favorites': 'Избранное',
+  'home.favoritesHint': 'Только избранные заведения',
+  'home.favoritesTitle': 'Избранное',
+  'home.favoritesOnly': 'Только избранные',
+  'home.favoritesEmpty': 'В избранном пока ничего нет',
+  'category.favorites': 'Любимые блюда',
+  'favorites.title': 'Избранное',
+  'favorites.addRestaurant': 'Добавить заведение в избранное',
+  'favorites.removeRestaurant': 'Удалить заведение из избранного',
+  'favorites.addDish': 'Добавить блюдо в избранное',
+  'favorites.removeDish': 'Удалить блюдо из избранного',
+  'favorites.empty': 'В избранном пока ничего нет',
+  'favorites.emptyHint': 'Нажмите на сердечко у заведения или блюда, чтобы сохранить его сюда',
+  'favorites.dishesTitle': 'Любимые блюда',
+  'favorites.restaurantsTitle': 'Любимые заведения'
 };

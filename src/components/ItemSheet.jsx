@@ -1,16 +1,33 @@
 import Sheet from './Sheet.jsx';
 import QtyControl from './QtyControl.jsx';
 import Thumb from './Thumb.jsx';
+import { HeartIcon } from './Icons.jsx';
 import { formatMoney } from '../lib/time.js';
 import { useT } from '../lib/i18n/store.js';
+import { useFavorites, useIsDishFavorite } from '../store/useFavorites.js';
 
 export default function ItemSheet({ dish, qty, disabled, onClose, onAdd, onDecrement }) {
   const t = useT();
+  const isFavorite = useIsDishFavorite(dish?.id);
+  const toggleDish = useFavorites((s) => s.toggleDish);
   return (
     <Sheet open={Boolean(dish)} onClose={onClose} label={dish?.name || t('item.defaultLabel')}>
       {dish && (
         <>
-          <Thumb src={dish.image} className="h-48 rounded-2xl mb-4 border border-line" />
+          <div className="relative mb-4">
+            <Thumb src={dish.image} className="h-48 rounded-2xl border border-line" />
+            <button
+              type="button"
+              onClick={() => toggleDish(dish.id)}
+              aria-label={isFavorite ? t('favorites.removeDish') : t('favorites.addDish')}
+              className="absolute top-3 right-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/45 backdrop-blur-sm border border-white/20 text-white transition-transform hover:scale-110 active:scale-95"
+            >
+              <HeartIcon
+                filled={isFavorite}
+                className={`h-4 w-4 ${isFavorite ? 'text-danger fill-danger' : 'text-white'}`}
+              />
+            </button>
+          </div>
           <h2 className="font-extrabold text-xl text-ink">{dish.name}</h2>
           {dish.description && <p className="text-muted text-sm mt-1">{dish.description}</p>}
           <div className="text-xs text-muted mt-2">

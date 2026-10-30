@@ -2,10 +2,14 @@ import { motion } from 'framer-motion';
 import { formatMoney } from '../lib/time.js';
 import QtyControl from './QtyControl.jsx';
 import Thumb from './Thumb.jsx';
+import { HeartIcon } from './Icons.jsx';
 import { useT } from '../lib/i18n/store.js';
+import { useFavorites, useIsDishFavorite } from '../store/useFavorites.js';
 
 export default function DishCard({ dish, qty, disabled, onOpen, onAdd, onDecrement }) {
   const t = useT();
+  const isFavorite = useIsDishFavorite(dish.id);
+  const toggleDish = useFavorites((s) => s.toggleDish);
   const soldOut = !dish.available;
   return (
     <article
@@ -13,14 +17,30 @@ export default function DishCard({ dish, qty, disabled, onOpen, onAdd, onDecreme
         soldOut ? 'border-line bg-paper/50' : 'border-line hover:border-ink/20'
       } transition-colors`}
     >
-      <button
-        type="button"
-        onClick={() => onOpen(dish)}
-        className="w-[72px] h-[72px] rounded-xl shrink-0 overflow-hidden border border-line"
-        aria-label={t('dish.detailsAria', { name: dish.name })}
-      >
-        <Thumb src={dish.image} className="w-full h-full rounded-xl" />
-      </button>
+      <div className="relative w-[72px] h-[72px] rounded-xl shrink-0 overflow-hidden border border-line">
+        <button
+          type="button"
+          onClick={() => onOpen(dish)}
+          className="w-full h-full"
+          aria-label={t('dish.detailsAria', { name: dish.name })}
+        >
+          <Thumb src={dish.image} className="w-full h-full rounded-xl" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleDish(dish.id);
+          }}
+          aria-label={isFavorite ? t('favorites.removeDish') : t('favorites.addDish')}
+          className="absolute top-1 left-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-black/45 backdrop-blur-sm text-white transition-transform hover:scale-110 active:scale-95"
+        >
+          <HeartIcon
+            filled={isFavorite}
+            className={`h-3.5 w-3.5 ${isFavorite ? 'text-danger fill-danger' : 'text-white'}`}
+          />
+        </button>
+      </div>
 
       <div className="flex-1 min-w-0 flex flex-col justify-between">
         <button type="button" onClick={() => onOpen(dish)} className="text-left">

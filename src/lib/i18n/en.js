@@ -325,5 +325,22 @@ export default {
   'admin.prepDemoConfirm':
     'Wipe ALL orders (every restaurant) and add fresh demo orders for "{name}"?',
   'admin.clearData': 'Clear data',
-  'admin.clearDataConfirm': 'Delete all orders in this browser?'
+  'admin.clearDataConfirm': 'Delete all orders in this browser?',
+
+  'topbar.favorites': 'Favorites',
+  'home.favorites': 'Favorites',
+  'home.favoritesHint': 'Only favorite restaurants',
+  'home.favoritesTitle': 'Favorites',
+  'home.favoritesOnly': 'Favorites only',
+  'home.favoritesEmpty': 'No favorite restaurants yet',
+  'category.favorites': 'Favorite dishes',
+  'favorites.title': 'Favorites',
+  'favorites.addRestaurant': 'Add restaurant to favorites',
+  'favorites.removeRestaurant': 'Remove restaurant from favorites',
+  'favorites.addDish': 'Add dish to favorites',
+  'favorites.removeDish': 'Remove dish from favorites',
+  'favorites.empty': 'No favorites yet',
+  'favorites.emptyHint': 'Tap the heart on a restaurant or dish to save it here',
+  'favorites.dishesTitle': 'Favorite dishes',
+  'favorites.restaurantsTitle': 'Favorite restaurants'
 };
