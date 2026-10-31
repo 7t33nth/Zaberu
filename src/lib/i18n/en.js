@@ -188,6 +188,7 @@ export default {
   'order.notFoundHeading': 'Order not found',
   'order.notFoundText': 'The link might be wrong, or the order was placed on a different device.',
   'order.newOrder': 'Place a new order',
+  'order.goHome': 'Go home',
   'order.numberLabel': 'Order number',
   'order.showCodeNamed': '{name}, show this number at pickup',
   'order.showCode': 'Say or show this number at pickup',
@@ -219,6 +220,9 @@ export default {
   'banner.yourOrder': 'Your order',
   'banner.ready': 'Ready for pickup',
   'banner.open': 'Open',
+
+  'resume.toOrder': 'Back to order',
+  'resume.continue': 'Continue order',
 
   'footer.faqHeading': 'Frequently asked questions',
   'footer.faq.q1': 'How does "Заберу!" work?',

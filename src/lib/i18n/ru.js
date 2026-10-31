@@ -187,6 +187,7 @@ export default {
   'order.notFoundHeading': 'Заказ не найден',
   'order.notFoundText': 'Возможно, ссылка неверна, или заказ сделан на другом устройстве.',
   'order.newOrder': 'Сделать новый заказ',
+  'order.goHome': 'На главную',
   'order.numberLabel': 'Номер заказа',
   'order.showCodeNamed': '{name}, покажите номер на выдаче',
   'order.showCode': 'Назовите или покажите номер на выдаче',
@@ -218,6 +219,9 @@ export default {
   'banner.yourOrder': 'Ваш заказ',
   'banner.ready': 'Готов, можно забирать',
   'banner.open': 'Открыть',
+
+  'resume.toOrder': 'Вернуться к заказу',
+  'resume.continue': 'Продолжить заказ',
 
   'footer.faqHeading': 'Часто задаваемые вопросы',
   'footer.faq.q1': 'Как работает «Заберу!»?',

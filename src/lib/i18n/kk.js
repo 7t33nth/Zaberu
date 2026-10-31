@@ -189,6 +189,7 @@ export default {
   'order.notFoundHeading': 'Тапсырыс табылмады',
   'order.notFoundText': 'Сілтеме дұрыс болмауы немесе тапсырыс басқа құрылғыда жасалуы мүмкін.',
   'order.newOrder': 'Жаңа тапсырыс беру',
+  'order.goHome': 'Басты бетке',
   'order.numberLabel': 'Тапсырыс нөмірі',
   'order.showCodeNamed': '{name}, беру кезінде нөмірді көрсетіңіз',
   'order.showCode': 'Беру кезінде нөмірді айтыңыз немесе көрсетіңіз',
@@ -220,6 +221,9 @@ export default {
   'banner.yourOrder': 'Сіздің тапсырысыңыз',
   'banner.ready': 'Дайын, алуға болады',
   'banner.open': 'Ашу',
+
+  'resume.toOrder': 'Тапсырысқа оралу',
+  'resume.continue': 'Тапсырысты жалғастыру',
 
   'footer.faqHeading': 'Жиі қойылатын сұрақтар',
   'footer.faq.q1': '«Заберу!» қалай жұмыс істейді?',

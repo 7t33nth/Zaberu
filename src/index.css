@@ -133,6 +133,17 @@ button:disabled {
   position: relative;
 }
 
+/* Плавающая кнопка «Вернуться к заказу» (ResumeOrderBar) перекрывает низ экрана.
+   Добавляем запас, чтобы последний блок страницы можно было дочитать. */
+body.has-resume-order-bar .shell {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 6rem);
+}
+
+/* Баннер установки приложения тоже прижат к низу — поднимаем его над кнопкой. */
+body.has-resume-order-bar .install-banner {
+  bottom: calc(env(safe-area-inset-bottom) + 6rem);
+}
+
 @media (min-width: 640px) {
   html {
     font-size: 18px;

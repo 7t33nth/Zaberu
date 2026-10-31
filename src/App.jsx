@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import TopBar from './components/TopBar.jsx';
 import OfflineBanner from './components/OfflineBanner.jsx';
+import ResumeOrderBar from './components/ResumeOrderBar.jsx';
 import { useToast } from './components/Toast.jsx';
 import { useOrderNotifications } from './lib/useOrderNotifications.js';
 import { restaurants } from './data/index.js';
@@ -86,6 +87,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+      <ResumeOrderBar />
     </>
   );
 }

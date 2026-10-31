@@ -136,7 +136,7 @@ export default function InstallBanner() {
       <AnimatePresence>
         {visible && (
           <motion.div
-            className="pointer-events-none fixed inset-x-0 bottom-0 z-20 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+            className="install-banner pointer-events-none fixed inset-x-0 bottom-0 z-20 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
             initial={{ y: 140, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 140, opacity: 0 }}

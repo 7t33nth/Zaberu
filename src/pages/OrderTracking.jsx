@@ -284,7 +284,7 @@ export default function OrderTracking() {
             to="/"
             className="block text-center w-full bg-brand text-white font-bold py-4 rounded-xl"
           >
-            {t('order.newOrder')}
+            {t('order.goHome')}
           </Link>
         )}
         {!finished && (
