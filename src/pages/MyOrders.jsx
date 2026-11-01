@@ -17,6 +17,7 @@ export default function MyOrders() {
   const [toast, toastNode] = useToast();
   const STATUS_LABEL = {
     pending: t('orderStatus.pending'),
+    cooking: t('orderStatus.cooking'),
     ready: t('orderStatus.ready'),
     done: t('orderStatus.done'),
     cancelled: t('orderStatus.cancelled')

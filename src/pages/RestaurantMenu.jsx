@@ -8,10 +8,9 @@ import CartSidebar from '../components/CartSidebar.jsx';
 import CheckoutSheet from '../components/CheckoutSheet.jsx';
 import Sheet from '../components/Sheet.jsx';
 import Steps from '../components/Steps.jsx';
-import ActiveOrderBanner from '../components/ActiveOrderBanner.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { useCart, useCartSummary } from '../store/useCart.js';
-import { hoursForDay, formatClock, ordersOpen, pluralPortions } from '../lib/time.js';
+import { isOpenNow, pluralPortions } from '../lib/time.js';
 import {
   LocationIcon,
   StarIcon,
@@ -79,8 +78,7 @@ export default function RestaurantMenu() {
     );
   }
 
-  const open = ordersOpen(restaurant.hours);
-  const { closeMs } = hoursForDay(restaurant.hours);
+  const openNow = isOpenNow(restaurant.hours);
 
   function handleAdd(dish) {
     const result = add(dish);
@@ -182,18 +180,17 @@ export default function RestaurantMenu() {
       </div>
 
       <div className="pt-4 lg:max-w-[1200px] lg:mx-auto lg:px-10">
-        <ActiveOrderBanner />
-      </div>
-
-      <div className="lg:max-w-[1200px] lg:mx-auto lg:px-10">
-        {!open && (
+        {!openNow && (
           <div
             role="status"
             className="mx-4 lg:mx-0 mb-3 rounded-xl bg-warn-soft text-warn text-sm font-semibold px-4 py-3 border border-warn/20"
           >
-            {t('menu.closedNotice', { time: formatClock(closeMs) })}
+            {t('menu.preorderNotice')}
           </div>
         )}
+      </div>
+
+      <div className="lg:max-w-[1200px] lg:mx-auto lg:px-10">
         {otherCart && (
           <div className="mx-4 lg:mx-0 mb-3 rounded-xl bg-paper border border-line text-sm text-muted px-4 py-3">
             {t('menu.otherCartNotice', { name: restaurantById[cartRestaurant]?.name })}
@@ -241,7 +238,6 @@ export default function RestaurantMenu() {
                         key={dish.id}
                         dish={dish}
                         qty={cartRestaurant === id ? lines[dish.id] || 0 : 0}
-                        disabled={!open}
                         onOpen={setActiveDish}
                         onAdd={handleAdd}
                         onDecrement={decrement}
@@ -262,7 +258,6 @@ export default function RestaurantMenu() {
             onInc={handleAdd}
             onDec={decrement}
             onCheckout={() => setCheckoutOpen(true)}
-            disabled={!open}
           />
         </div>
       </div>
@@ -270,7 +265,6 @@ export default function RestaurantMenu() {
       <ItemSheet
         dish={activeDish}
         qty={activeDish && cartRestaurant === id ? lines[activeDish.id] || 0 : 0}
-        disabled={!open}
         onClose={() => setActiveDish(null)}
         onAdd={handleAdd}
         onDecrement={decrement}

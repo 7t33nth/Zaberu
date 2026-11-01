@@ -133,15 +133,24 @@ button:disabled {
   position: relative;
 }
 
-/* Плавающая кнопка «Вернуться к заказу» (ResumeOrderBar) перекрывает низ экрана.
+/* Плавающая панель активных заказов перекрывает низ экрана.
    Добавляем запас, чтобы последний блок страницы можно было дочитать. */
-body.has-resume-order-bar .shell {
-  padding-bottom: calc(env(safe-area-inset-bottom) + 6rem);
+body.has-active-orders-bar .shell {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 5.25rem);
 }
 
 /* Баннер установки приложения тоже прижат к низу — поднимаем его над кнопкой. */
-body.has-resume-order-bar .install-banner {
-  bottom: calc(env(safe-area-inset-bottom) + 6rem);
+body.has-active-orders-bar .install-banner {
+  bottom: calc(env(safe-area-inset-bottom) + 5.25rem);
+}
+
+/* На экране меню с непустой корзиной панель заказов стоит над CartBar — обоим нужно место. */
+body.has-active-orders-bar.has-cart-bar .shell {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 10.5rem);
+}
+
+body.has-active-orders-bar.has-cart-bar .install-banner {
+  bottom: calc(env(safe-area-inset-bottom) + 10.5rem);
 }
 
 @media (min-width: 640px) {

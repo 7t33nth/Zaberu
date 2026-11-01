@@ -31,6 +31,8 @@ export default {
   'home.geoUnsupported': 'This browser does not support geolocation.',
   'home.geoError': 'Could not determine your location. Please try again.',
   'home.mapEmpty': 'No places within this radius yet.',
+  'home.closedHeading': 'Closed until morning',
+  'home.closedHint': 'Opens later — you can pre-order',
 
   'geo.meters': '~{value} m',
   'geo.km': '~{value} km',
@@ -64,13 +66,12 @@ export default {
   'city.almaty': 'Almaty',
   'city.astana': 'Astana',
   'city.shymkent': 'Shymkent',
-
-  'restaurantStatus.closedToday': 'No more orders for today',
   'restaurantStatus.openUntil': 'Open until {time}',
-  'restaurantStatus.opensAt': 'Opens at {time}, you can order ahead',
+  'restaurantStatus.opensAt': 'Opens at {time}',
 
   'menu.back': 'Back to restaurants',
-  'menu.closedNotice': 'Not taking orders anymore today: the restaurant is open until {time}.',
+  'menu.preorderNotice':
+    'This restaurant is closed. You can place a pre-order for the next working day.',
   'menu.otherCartNotice': 'Your cart has items from {name}. Adding a dish here will replace it.',
   'menu.conflictHeading': 'Order from a different restaurant?',
   'menu.conflictText':
@@ -122,6 +123,7 @@ export default {
   'cart.title': 'Your order',
   'cart.empty': 'Still empty — add dishes from the menu on the left.',
   'cart.chooseTime': 'Choose pickup time',
+  'cart.continue': 'Continue order',
   'cartbar.step': 'step 2 of 3',
 
   'checkout.sheetLabel': 'Checkout',
@@ -134,6 +136,10 @@ export default {
   'checkout.pickupAtLabel': 'Pick up at',
   'checkout.timePlaceholder': 'HH:MM',
   'checkout.waitIn': 'in {time}',
+  'checkout.tomorrow': 'Tomorrow',
+  'checkout.tomorrowAt': 'tomorrow at {time}',
+  'checkout.preorderNotice':
+    'This restaurant is closed now. You can pre-order for the next working day.',
   'checkout.prepHint':
     "Prep takes ~{prep}, the kitchen is open until {close} — pickup time has to fall in that window, otherwise we'll suggest the closest one that works.",
   'checkout.quickPick': 'Or pick quickly',
@@ -153,7 +159,7 @@ export default {
   'checkout.pay': 'Pay',
   'checkout.payBusy': 'Paying…',
   'checkout.slotJustTaken': '{time} was just taken. Picked the closest one instead: {next}.',
-  'checkout.noSlotsToday': 'No free time left for today.',
+  'checkout.noSlotsToday': 'No free time left.',
   'checkout.timeBusyCorrected':
     'The kitchen is already full at {time} — set the closest free time instead: {next}.',
   'checkout.timeTooFarCorrected':
@@ -176,6 +182,7 @@ export default {
     'Your cart has dishes from another restaurant. Replace them with this order?',
 
   'orderStatus.pending': 'Preparing',
+  'orderStatus.cooking': 'Cooking',
   'orderStatus.ready': 'Ready',
   'orderStatus.done': 'Picked up',
   'orderStatus.cancelled': 'Cancelled',
@@ -212,17 +219,25 @@ export default {
   'order.toastReady': "Order's ready, come on over!",
   'order.qrHint': 'Show the QR code at the counter',
   'order.receivedQuestion': 'Did you get your order?',
-  'order.receivedHint': 'Confirm that you picked it up so the kitchen can close the order.',
-  'order.receivedYes': 'Yes, I did',
+  'order.receivedHint': 'Confirm that you picked it up and the order will close right away.',
+  'order.receivedYes': 'Yes, I got it!',
   'order.receivedThanks': 'Thanks! Pickup confirmed.',
   'order.receivedClosed': 'The order is already closed — no confirmation needed.',
+  'order.cancelledTitle': 'Order cancelled',
+  'order.cancelledByYou': 'You cancelled the order',
+  'order.cancelNoReason': 'No reason given',
+  'order.cancelledDismissHint': 'Tap “Got it” to remove the order from your list.',
+  'order.cancelledAck': 'Got it',
 
-  'banner.yourOrder': 'Your order',
-  'banner.ready': 'Ready for pickup',
-  'banner.open': 'Open',
-
-  'resume.toOrder': 'Back to order',
-  'resume.continue': 'Continue order',
+  'activeOrders.single': 'Order {code} • {status}',
+  'activeOrders.many': 'Active orders: {count}',
+  'activeOrders.open': 'Open',
+  'activeOrders.choose': 'Choose',
+  'activeOrders.sheetLabel': 'Active orders',
+  'activeOrders.sheetHint': 'Select an order to track its status',
+  'activeOrders.sheetLabelCombined': 'Orders and cart',
+  'activeOrders.sheetHintCombined': 'Open your cart or pick an order.',
+  'activeOrders.ordersSection': 'Orders',
 
   'footer.faqHeading': 'Frequently asked questions',
   'footer.faq.q1': 'How does "Заберу!" work?',
@@ -233,7 +248,7 @@ export default {
     'No. No accounts or passwords — just an order number and, if you like, a name to make pickup easier.',
   'footer.faq.q3': 'Can I change or cancel an order after placing it?',
   'footer.faq.a3':
-    "You can cancel within the first minute after placing it — there's a button on the order page. After that the contents and time are locked in; if something's wrong, contact the restaurant directly at the address on your order page.",
+    "You can cancel within the first three minutes after placing it — there's a button on the order page. After that the contents and time are locked in; if something's wrong, contact the restaurant directly at the address on your order page.",
   'footer.faq.q4': 'What payment methods are available?',
   'footer.faq.a4': 'Card online or Kaspi Pay — payment happens right when you place the order.',
   'footer.faq.q5': "What if I'm late for my pickup time?",
@@ -289,6 +304,20 @@ export default {
   'admin.receivedLocked': 'You cannot close the order until the customer confirms pickup',
   'admin.cancelOrder': 'Cancel order',
   'admin.cancelConfirm': 'Cancel this order and free up the slot?',
+  'admin.cancelReasonPrompt': 'Reason for the customer (you can leave it empty):',
+  'admin.cancelModalTitle': 'Cancel this order?',
+  'admin.cancelModalText':
+    'Order {code} will be cancelled and the slot freed. The customer will see the reason on the receipt screen.',
+  'admin.cancelModalTextNoCode':
+    'The order will be cancelled and the slot freed. The customer will see the reason on the receipt screen.',
+  'admin.cancelReasonLabel': 'Reason (optional)',
+  'admin.cancelReasonPlaceholder': 'For example: out of ingredients',
+  'admin.cancelReasonHint': 'If left empty, the customer will see “No reason given”.',
+  'admin.cancelDismiss': 'Keep order',
+  'admin.cancelConfirmBtn': 'Cancel order',
+  'admin.cancelling': 'Cancelling…',
+  'admin.awaitingReceivedShort': 'Waiting for the customer to confirm pickup',
+  'admin.closesWhenReceived': 'The order closes automatically when the customer confirms pickup',
   'admin.actionFailed': 'Something went wrong. Check your connection and try again.',
   'admin.restaurantLabel': 'Restaurant',
   'admin.searchByCodeAria': 'Find order by number',

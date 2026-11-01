@@ -6,21 +6,19 @@ import {
   cancelOrderByStaff,
   clearDoneOrders,
   markCooking,
-  markDone,
   markReady,
   resetAll,
   seedDemoOrders,
-  startCooking,
-  acceptOrder,
   subscribeOrders,
   backendName
 } from '../lib/api.js';
 import { BASELINE_WAIT_MIN, TARGET_WAIT_MIN, computeMetrics } from '../lib/metrics.js';
-import { formatClock, formatCountdown, RECEIVE_GRACE_MS } from '../lib/time.js';
+import { formatClock, formatCountdown } from '../lib/time.js';
 import ThemeToggle from '../components/ThemeToggle.jsx';
 import LangSwitch from '../components/LangSwitch.jsx';
 import { ChatIcon } from '../components/Icons.jsx';
 import { useToast } from '../components/Toast.jsx';
+import Sheet from '../components/Sheet.jsx';
 import { onStaffAuthChange, signInStaff, signOutStaff } from '../lib/staffAuth.js';
 import { allowedRestaurantsFor, isRestaurantAllowed } from '../lib/staffAccess.js';
 import { useLang, useT } from '../lib/i18n/store.js';
@@ -154,19 +152,11 @@ function Metric({ label, value, hint, tone }) {
   );
 }
 
-function OrderCard({ order, now, onAccept, onReady, onDone, onCancel, t }) {
+function OrderCard({ order, now, onAccept, onReady, onCancel, t }) {
   const msLeft = order.pickupAt - now;
   const isReady = order.status === 'ready';
   const isCooking = order.status === 'cooking';
-  const isPending = order.status === 'pending';
   const urgent = !isReady && msLeft < 3 * 60000;
-  // «Выдано» доступно только после подтверждения клиента (кнопка на странице заказа).
-  // Если клиент так и не ответил, через RECEIVE_GRACE_MS после заявленного времени
-  // подтверждение считается автоматическим — иначе очередь из «мёртвых» заказов
-  // никогда не закрыть без Cloud Functions.
-  const autoConfirmAt = order.pickupAt + RECEIVE_GRACE_MS;
-  const autoConfirmed = !order.receivedAt && now >= autoConfirmAt;
-  const canIssue = Boolean(order.receivedAt) || autoConfirmed;
   return (
     <div
       className={`rounded-2xl p-4 border flex flex-col gap-3 ${
@@ -203,11 +193,7 @@ function OrderCard({ order, now, onAccept, onReady, onDone, onCancel, t }) {
         <div className="text-xs font-bold text-accent-dark">{t('admin.receivedByClient')}</div>
       )}
       {isReady && !order.receivedAt && (
-        <div className={`text-xs font-semibold ${autoConfirmed ? 'text-warn' : 'text-muted'}`}>
-          {autoConfirmed
-            ? t('admin.receivedAuto')
-            : t('admin.awaitingReceived', { time: formatClock(autoConfirmAt) })}
-        </div>
+        <div className="text-xs font-semibold text-muted">{t('admin.awaitingReceivedShort')}</div>
       )}
       <ul className="text-sm text-muted flex flex-col gap-0.5">
         {order.items.map((it) => (
@@ -223,15 +209,11 @@ function OrderCard({ order, now, onAccept, onReady, onDone, onCancel, t }) {
         </div>
       )}
       {isReady ? (
-        <button
-          type="button"
-          onClick={() => onDone(order.id)}
-          disabled={!canIssue}
-          title={canIssue ? undefined : t('admin.receivedLocked')}
-          className="bg-accent text-primary font-bold py-3 rounded-xl transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {t('admin.markDoneBtn')}
-        </button>
+        // Заказ закрывается сам, когда клиент подтверждает получение на экране чека:
+        // отдельная кнопка «Выдано» на кухне больше не нужна и только дублирует действие.
+        <div className="rounded-xl bg-accent-soft px-3 py-2 text-xs font-semibold text-accent-dark">
+          {t('admin.closesWhenReceived')}
+        </div>
       ) : isCooking ? (
         <button
           type="button"
@@ -266,6 +248,9 @@ function Board({ staff, allowedRestaurants }) {
   const t = useT();
   const lang = useLang();
   const [toast, toastNode] = useToast();
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelBusy, setCancelBusy] = useState(false);
   const allowedId = (id) => isRestaurantAllowed(staff.restaurantIds, id);
   // allowedRestaurants не пуст: AdminBoard не пускает сюда, если доступа нет ни к одному
   // заведению каталога (например, в staff/{email} опечатка в id).
@@ -367,15 +352,36 @@ function Board({ staff, allowedRestaurants }) {
   }
 
   function cancelWithConfirm(id) {
-    if (!window.confirm(t('admin.cancelConfirm'))) return;
-    run(() => cancelOrderByStaff(id));
+    // window.prompt в установленной PWA/на iOS может быть заблокирован и молча вернуть
+    // null — кнопка выглядела «мёртвой». Причину спрашиваем собственной шторкой.
+    const order = mine.find((o) => o.id === id);
+    setCancelReason('');
+    setCancelTarget(order || { id });
   }
 
-  // markReady/markDone раньше вызывались из карточки напрямую: отказ Firestore (например,
+  async function confirmCancellation() {
+    if (!cancelTarget || cancelBusy) return;
+    setCancelBusy(true);
+    try {
+      const ok = await cancelOrderByStaff(cancelTarget.id, cancelReason);
+      if (!ok) {
+        toast(t('admin.actionFailed'));
+        return;
+      }
+      setCancelTarget(null);
+      setCancelReason('');
+    } catch (err) {
+      console.error(err);
+      toast(t('admin.actionFailed'));
+    } finally {
+      setCancelBusy(false);
+    }
+  }
+
+  // markReady раньше вызывался из карточки напрямую: отказ Firestore (например,
   // заказ уже отменён) давал необработанный reject, и кнопка просто не реагировала.
   const acceptOrderFn = (id) => run(() => markCooking(id));
   const readyOrder = (id) => run(() => markReady(id));
-  const doneOrder = (id) => run(() => markDone(id));
 
   return (
     <div className="min-h-dvh bg-paper text-ink">
@@ -506,9 +512,7 @@ function Board({ staff, allowedRestaurants }) {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <section aria-label={t('admin.cookingAria')}>
-            <h2 className="font-bold mb-3">
-              Готовятся · {pending.length}
-            </h2>
+            <h2 className="font-bold mb-3">Готовятся · {pending.length}</h2>
             <div
               className="grid gap-3"
               style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}
@@ -520,7 +524,6 @@ function Board({ staff, allowedRestaurants }) {
                   now={now}
                   onAccept={acceptOrderFn}
                   onReady={readyOrder}
-                  onDone={doneOrder}
                   onCancel={cancelWithConfirm}
                   t={t}
                 />
@@ -530,9 +533,7 @@ function Board({ staff, allowedRestaurants }) {
           </section>
 
           <section aria-label={t('admin.inProgressAria') || 'В работе'}>
-            <h2 className="font-bold mb-3">
-              Принят кухней · {cooking.length}
-            </h2>
+            <h2 className="font-bold mb-3">Принят кухней · {cooking.length}</h2>
             <div
               className="grid gap-3"
               style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}
@@ -544,7 +545,6 @@ function Board({ staff, allowedRestaurants }) {
                   now={now}
                   onAccept={acceptOrderFn}
                   onReady={readyOrder}
-                  onDone={doneOrder}
                   onCancel={cancelWithConfirm}
                   t={t}
                 />
@@ -554,9 +554,7 @@ function Board({ staff, allowedRestaurants }) {
           </section>
 
           <section aria-label={t('admin.readyAria')}>
-            <h2 className="font-bold mb-3">
-              Ждут клиента · {ready.length}
-            </h2>
+            <h2 className="font-bold mb-3">Ждут клиента · {ready.length}</h2>
             <div
               className="grid gap-3"
               style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}
@@ -568,7 +566,6 @@ function Board({ staff, allowedRestaurants }) {
                   now={now}
                   onAccept={acceptOrderFn}
                   onReady={readyOrder}
-                  onDone={doneOrder}
                   onCancel={cancelWithConfirm}
                   t={t}
                 />
@@ -632,6 +629,55 @@ function Board({ staff, allowedRestaurants }) {
           </footer>
         )}
       </main>
+
+      <Sheet
+        open={Boolean(cancelTarget)}
+        onClose={() => {
+          if (!cancelBusy) setCancelTarget(null);
+        }}
+        label={t('admin.cancelModalTitle')}
+      >
+        <h2 className="font-extrabold text-xl text-ink">{t('admin.cancelModalTitle')}</h2>
+        <p className="text-sm text-muted mt-1">
+          {cancelTarget?.code
+            ? t('admin.cancelModalText', { code: cancelTarget.code })
+            : t('admin.cancelModalTextNoCode')}
+        </p>
+
+        <label className="block mt-4 text-sm font-semibold text-ink" htmlFor="cancel-reason">
+          {t('admin.cancelReasonLabel')}
+        </label>
+        <textarea
+          id="cancel-reason"
+          value={cancelReason}
+          onChange={(e) => setCancelReason(e.target.value)}
+          maxLength={200}
+          rows={3}
+          disabled={cancelBusy}
+          placeholder={t('admin.cancelReasonPlaceholder')}
+          className="mt-2 w-full resize-none rounded-xl border border-line bg-paper px-3 py-2.5 text-sm text-ink placeholder:text-muted outline-none focus:ring-2 focus:ring-accent-dark disabled:opacity-60"
+        />
+        <p className="mt-1 text-xs text-muted">{t('admin.cancelReasonHint')}</p>
+
+        <div className="mt-5 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setCancelTarget(null)}
+            disabled={cancelBusy}
+            className="flex-1 rounded-xl border border-line bg-card py-3 font-semibold text-ink transition-opacity hover:opacity-80 disabled:opacity-40"
+          >
+            {t('admin.cancelDismiss')}
+          </button>
+          <button
+            type="button"
+            onClick={confirmCancellation}
+            disabled={cancelBusy}
+            className="flex-1 rounded-xl bg-danger py-3 font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+          >
+            {cancelBusy ? t('admin.cancelling') : t('admin.cancelConfirmBtn')}
+          </button>
+        </div>
+      </Sheet>
     </div>
   );
 }

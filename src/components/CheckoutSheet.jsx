@@ -7,13 +7,13 @@ import { placeOrder, subscribeSlots } from '../lib/api.js';
 import { SlotFullError } from '../lib/errors.js';
 import { addMyOrderId, getSavedName, saveName } from '../lib/myOrders.js';
 import {
+  DAY_MS,
   HORIZON_MIN,
   buildSlots,
-  ceilToSlot,
   formatClock,
   formatMinutes,
   formatMoney,
-  hoursForDay,
+  serviceWindow,
   startOfDay
 } from '../lib/time.js';
 import { LocationIcon, CloseIcon } from './Icons.jsx';
@@ -124,6 +124,11 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
     };
   }, [open, restaurant.id]);
 
+  const service = useMemo(
+    () => serviceWindow(restaurant.hours, now, summary.prepMinutes),
+    [restaurant.hours, summary.prepMinutes, now]
+  );
+
   const slots = useMemo(
     () =>
       buildSlots({
@@ -137,6 +142,8 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
     [restaurant, summary.prepMinutes, summary.units, loads, now]
   );
   const firstAvailable = slots.find((s) => s.available);
+  const slotsAreNextDay = slots.length > 0 && startOfDay(slots[0].start) > startOfDay(now);
+  const selectedIsNextDay = selected != null && startOfDay(selected) > startOfDay(now);
 
   // выбранный слот исчез (заняли или время прошло) — переносим на ближайший свободный
   useEffect(() => {
@@ -162,8 +169,6 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
     if (selected != null) setTimeText(formatClock(selected));
   }, [selected]);
 
-  const { closeMs } = hoursForDay(restaurant.hours, now);
-
   function pickSlot(start) {
     setSelected(start);
     setNotice('');
@@ -178,15 +183,23 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
 
   // Проверяем введённое время при уходе с поля — подбираем ближайший слот с учётом часов
   // работы, готовки и текущей загрузки кухни (тот же buildSlots, что и у быстрых чипов ниже).
+  // Для предзаказа на следующий день введённые часы относим к дню ближайшей смены.
   function commitTypedTime() {
     const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(timeText);
     if (!match) {
       if (selected != null) setTimeText(formatClock(selected));
       return;
     }
-    const typedMs = ceilToSlot(
-      startOfDay(now) + (Number(match[1]) * 60 + Number(match[2])) * 60000
-    );
+
+    const minutes = Number(match[1]) * 60 + Number(match[2]);
+    const openDay = startOfDay(service.openMs);
+    const openDate = new Date(service.openMs);
+    const openMinutes = openDate.getHours() * 60 + openDate.getMinutes();
+    // Смена через полночь (например, 12:00–02:00): время до открытия относится к
+    // следующему календарному дню, иначе «01:00» указало бы на прошлую ночь.
+    const crossesMidnight = service.closeMs - openDay > DAY_MS;
+    let typedMs = openDay + minutes * 60000;
+    if (crossesMidnight && minutes < openMinutes) typedMs += DAY_MS;
 
     const exact = slots.find((s) => s.start === typedMs);
     if (exact?.available) {
@@ -252,7 +265,11 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
     }
   }
 
-  const waitMin = selected ? formatMinutes(selected - now, lang) : null;
+  const waitLabel = selected
+    ? selectedIsNextDay
+      ? t('checkout.tomorrowAt', { time: formatClock(selected) })
+      : t('checkout.waitIn', { time: formatMinutes(selected - now, lang) })
+    : null;
 
   return (
     <Sheet open={open} onClose={busy ? () => {} : onClose} label={t('checkout.sheetLabel')}>
@@ -290,6 +307,12 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
           <h2 className="font-extrabold text-xl text-ink mt-2">{t('checkout.whenPickup')}</h2>
           <p className="text-sm text-muted mt-1">{t('checkout.whenPickupSubtitle')}</p>
 
+          {!service.open && (
+            <div className="mt-3 rounded-xl bg-warn-soft text-warn text-sm font-semibold px-4 py-3 border border-warn/20">
+              {t('checkout.preorderNotice')}
+            </div>
+          )}
+
           {slots.length === 0 || !firstAvailable ? (
             <div className="mt-6 rounded-xl bg-paper p-5 text-center text-sm text-muted">
               {t('checkout.noSlots')}
@@ -312,22 +335,23 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
                     className="mt-1 block w-full bg-transparent text-5xl font-extrabold text-ink leading-none outline-none placeholder:text-muted/50 caret-[rgb(var(--color-ink))]"
                   />
                 </label>
-                {waitMin && (
-                  <div className="text-sm text-muted pb-1 shrink-0">
-                    {t('checkout.waitIn', { time: waitMin })}
-                  </div>
-                )}
+                {waitLabel && <div className="text-sm text-muted pb-1 shrink-0">{waitLabel}</div>}
               </div>
               <p className="text-xs text-muted mt-2">
                 {t('checkout.prepHint', {
                   prep: formatMinutes(summary.prepMinutes * 60000, lang),
-                  close: formatClock(closeMs)
+                  close: formatClock(service.closeMs)
                 })}
               </p>
 
               <div className="mt-5">
-                <div className="text-xs font-semibold text-muted mb-2">
-                  {t('checkout.quickPick')}
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="text-xs font-semibold text-muted">{t('checkout.quickPick')}</div>
+                  {slotsAreNextDay && (
+                    <span className="rounded-full bg-accent-soft text-accent-dark px-2.5 py-0.5 text-[11px] font-bold">
+                      {t('checkout.tomorrow')}
+                    </span>
+                  )}
                 </div>
                 <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
                   {slots.map((s) => (
@@ -370,8 +394,15 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
               <span className="block text-xs text-accent-dark font-medium">
                 {restaurant.name}: {t('checkout.pickupAtLabel').toLowerCase()}
               </span>
-              <span className="block text-2xl font-extrabold text-ink">
-                {formatClock(selected)}
+              <span className="mt-1 flex items-center gap-2">
+                <span className="block text-2xl font-extrabold text-ink">
+                  {formatClock(selected)}
+                </span>
+                {selectedIsNextDay && (
+                  <span className="rounded-full bg-accent-dark/10 px-2 py-0.5 text-[11px] font-bold text-accent-dark">
+                    {t('checkout.tomorrow')}
+                  </span>
+                )}
               </span>
               <span className="inline-flex items-center gap-1 text-xs text-accent-dark mt-0.5 font-medium">
                 <LocationIcon className="w-3.5 h-3.5 text-accent-dark shrink-0" />

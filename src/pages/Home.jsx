@@ -2,7 +2,6 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react
 import { Link, useLocation } from 'react-router-dom';
 import { restaurants, menu, restaurantById, CUISINE_GROUPS } from '../data/index.js';
 import RestaurantCard from '../components/RestaurantCard.jsx';
-import ActiveOrderBanner from '../components/ActiveOrderBanner.jsx';
 import CitySelect from '../components/CitySelect.jsx';
 import Steps from '../components/Steps.jsx';
 import Footer from '../components/Footer.jsx';
@@ -10,7 +9,7 @@ import InstallBanner from '../components/InstallBanner.jsx';
 import Thumb from '../components/Thumb.jsx';
 import { HeartIcon, ListIcon, LocationIcon, MapIcon, SearchIcon } from '../components/Icons.jsx';
 import { NEAR_RADIUS_M, haversineMeters } from '../lib/geo.js';
-import { formatMoney } from '../lib/time.js';
+import { formatMoney, isOpenNow } from '../lib/time.js';
 import { useT } from '../lib/i18n/store.js';
 import { useFavorites } from '../store/useFavorites.js';
 
@@ -143,6 +142,11 @@ export default function Home() {
     )
     .sort((a, b) => (nearActive ? a.distanceM - b.distanceM : 0));
 
+  // Открытые заведения всегда выше закрытых. Внутри групп сохраняем выбранную
+  // сортировку (по расстоянию, если включён фильтр «рядом со мной»).
+  const openRestaurants = filtered.filter((r) => isOpenNow(r.hours, now));
+  const closedRestaurants = filtered.filter((r) => !isOpenNow(r.hours, now));
+
   const searchBox = (id) => (
     <div className="relative">
       <label className="sr-only" htmlFor={id}>
@@ -236,8 +240,6 @@ export default function Home() {
       </header>
 
       <div className="lg:max-w-[1340px] lg:mx-auto lg:px-10">
-        <ActiveOrderBanner />
-
         <div className="lg:grid lg:grid-cols-[250px_1fr] lg:gap-10 lg:items-start lg:mt-8">
           <aside className="hidden lg:flex lg:flex-col lg:gap-4 lg:sticky lg:top-6">
             <div className="bg-card border border-line rounded-3xl p-4">
@@ -411,7 +413,9 @@ export default function Home() {
                     onClick={showMap}
                     aria-pressed={view === 'map'}
                     className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-3 text-xs font-bold transition-colors ${
-                      view === 'map' ? 'bg-primary text-white shadow-sm' : 'text-muted hover:text-ink'
+                      view === 'map'
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'text-muted hover:text-ink'
                     }`}
                   >
                     <MapIcon className="h-3.5 w-3.5" />
@@ -504,9 +508,37 @@ export default function Home() {
                     </h2>
                   )}
                   <div className="flex flex-col gap-3 px-4 lg:px-0 lg:grid lg:grid-cols-2 lg:gap-5">
-                    {filtered.map((r) => (
+                    {openRestaurants.map((r) => (
                       <RestaurantCard key={r.id} restaurant={r} now={now} distanceM={r.distanceM} />
                     ))}
+
+                    {closedRestaurants.length > 0 && (
+                      <div className="lg:col-span-full pt-1">
+                        <div className="flex items-center gap-3">
+                          <span className="h-px flex-1 bg-line" aria-hidden="true" />
+                          <div className="text-center">
+                            <div className="text-xs font-bold uppercase tracking-wide text-muted">
+                              {t('home.closedHeading')}
+                            </div>
+                            <div className="text-[11px] text-muted mt-0.5">
+                              {t('home.closedHint')}
+                            </div>
+                          </div>
+                          <span className="h-px flex-1 bg-line" aria-hidden="true" />
+                        </div>
+                      </div>
+                    )}
+
+                    {closedRestaurants.map((r) => (
+                      <RestaurantCard
+                        key={r.id}
+                        restaurant={r}
+                        now={now}
+                        distanceM={r.distanceM}
+                        closed
+                      />
+                    ))}
+
                     {filtered.length === 0 && (
                       <div className="lg:col-span-full text-center text-muted text-sm py-12">
                         {favoritesOnly

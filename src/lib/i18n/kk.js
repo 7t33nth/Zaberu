@@ -31,6 +31,8 @@ export default {
   'home.geoUnsupported': 'Бұл браузер геолокацияны қолдамайды.',
   'home.geoError': 'Орныңызды анықтау мүмкін болмады. Қайталап көріңіз.',
   'home.mapEmpty': 'Бұл радиуста әзірге мекеме жоқ.',
+  'home.closedHeading': 'Таңертеңге дейін жабық',
+  'home.closedHint': 'Кейінірек ашылады — алдын ала тапсырыс бере аласыз',
 
   'geo.meters': '~{value} м',
   'geo.km': '~{value} км',
@@ -64,13 +66,11 @@ export default {
   'city.almaty': 'Алматы',
   'city.astana': 'Астана',
   'city.shymkent': 'Шымкент',
-
-  'restaurantStatus.closedToday': 'Бүгінге тапсырыс қабылдау аяқталды',
   'restaurantStatus.openUntil': '{time} дейін ашық',
-  'restaurantStatus.opensAt': '{time} ашылады, алдын ала тапсырыс беруге болады',
+  'restaurantStatus.opensAt': '{time} ашылады',
 
   'menu.back': 'Мекемелерге қайту',
-  'menu.closedNotice': 'Бүгін тапсырыс қабылданбайды: мекеме {time} дейін жұмыс істейді.',
+  'menu.preorderNotice': 'Мекеме жабық. Тапсырысты алдағы жұмыс күніне рәсімдеуге болады.',
   'menu.otherCartNotice':
     'Себетте {name} мекемесінің тағамдары бар. Осы жерден тағам қоссаңыз, себетті ауыстырамыз.',
   'menu.conflictHeading': 'Басқа мекемеден тапсырыс бересіз бе?',
@@ -124,6 +124,7 @@ export default {
   'cart.title': 'Сіздің тапсырысыңыз',
   'cart.empty': 'Әзірге бос — сол жақтағы мәзірден тағам қосыңыз.',
   'cart.chooseTime': 'Уақытты таңдау',
+  'cart.continue': 'Тапсырысты жалғастыру',
   'cartbar.step': '2-қадам, 3-тен',
 
   'checkout.sheetLabel': 'Тапсырысты рәсімдеу',
@@ -136,6 +137,10 @@ export default {
   'checkout.pickupAtLabel': 'Алу уақыты',
   'checkout.timePlaceholder': 'СС:ММ',
   'checkout.waitIn': '{time} кейін',
+  'checkout.tomorrow': 'Ертең',
+  'checkout.tomorrowAt': 'ертең {time}-де',
+  'checkout.preorderNotice':
+    'Мекеме қазір жабық. Жақын арадағы жұмыс күніне алдын ала тапсырыс бере аласыз.',
   'checkout.prepHint':
     'Дайындалу ~{prep} алады, ас үй {close} дейін жұмыс істейді — уақытты тек осы аралықта қоюға болады, әйтпесе жақын қолжетімді уақытты ұсынамыз.',
   'checkout.quickPick': 'Немесе жылдам таңдаңыз',
@@ -155,7 +160,7 @@ export default {
   'checkout.pay': 'Төлеу',
   'checkout.payBusy': 'Төлену…',
   'checkout.slotJustTaken': '{time} уақыты жаңа ғана бос емес болды. Ең жақыны таңдалды: {next}.',
-  'checkout.noSlotsToday': 'Бүгінге бос уақыт қалмады.',
+  'checkout.noSlotsToday': 'Бос уақыт қалмады.',
   'checkout.timeBusyCorrected':
     '{time} уақытында ас үй бос емес — ең жақын бос уақытты қойдық: {next}.',
   'checkout.timeTooFarCorrected':
@@ -177,6 +182,7 @@ export default {
     'Себетте басқа мекеменің тағамдары бар. Оларды осы тапсырыспен ауыстырасыз ба?',
 
   'orderStatus.pending': 'Дайындалуда',
+  'orderStatus.cooking': 'Дайындалуда',
   'orderStatus.ready': 'Дайын',
   'orderStatus.done': 'Берілді',
   'orderStatus.cancelled': 'Бас тартылды',
@@ -213,17 +219,25 @@ export default {
   'order.toastReady': 'Тапсырыс дайын, келіңіз!',
   'order.qrHint': 'QR-кодты кассада көрсетіңіз',
   'order.receivedQuestion': 'Тапсырысты алдыңыз ба?',
-  'order.receivedHint': 'Тапсырысты алғаныңызды растаңыз — сонда ас үй оны жаба алады.',
-  'order.receivedYes': 'Иә, алдым',
+  'order.receivedHint': 'Тапсырысты алғаныңызды растаңыз — ол бірден жабылады.',
+  'order.receivedYes': 'Иә, алдым!',
   'order.receivedThanks': 'Рақмет! Алу расталды.',
   'order.receivedClosed': 'Тапсырыс жабылған — растау қажет емес.',
+  'order.cancelledTitle': 'Тапсырыстан бас тартылды',
+  'order.cancelledByYou': 'Сіз тапсырыстан бас тарттыңыз',
+  'order.cancelNoReason': 'Себебі көрсетілмеген',
+  'order.cancelledDismissHint': 'Тізімнен алып тастау үшін «Түсіндім» түймесін басыңыз.',
+  'order.cancelledAck': 'Түсіндім',
 
-  'banner.yourOrder': 'Сіздің тапсырысыңыз',
-  'banner.ready': 'Дайын, алуға болады',
-  'banner.open': 'Ашу',
-
-  'resume.toOrder': 'Тапсырысқа оралу',
-  'resume.continue': 'Тапсырысты жалғастыру',
+  'activeOrders.single': 'Тапсырыс {code} • {status}',
+  'activeOrders.many': 'Белсенді тапсырыстар: {count}',
+  'activeOrders.open': 'Ашу',
+  'activeOrders.choose': 'Таңдау',
+  'activeOrders.sheetLabel': 'Белсенді тапсырыстар',
+  'activeOrders.sheetHint': 'Күйін бақылау үшін тапсырысты таңдаңыз',
+  'activeOrders.sheetLabelCombined': 'Тапсырыстар мен себет',
+  'activeOrders.sheetHintCombined': 'Себетті ашыңыз немесе тапсырысты таңдаңыз.',
+  'activeOrders.ordersSection': 'Тапсырыстар',
 
   'footer.faqHeading': 'Жиі қойылатын сұрақтар',
   'footer.faq.q1': '«Заберу!» қалай жұмыс істейді?',
@@ -234,7 +248,7 @@ export default {
     'Жоқ. Ешқандай аккаунт пен құпия сөз керек емес — тек тапсырыс нөмірі және қаласаңыз, беру кезінде ыңғайлы болу үшін есіміңіз.',
   'footer.faq.q3': 'Рәсімдегеннен кейін тапсырысты өзгертуге немесе бас тартуға бола ма?',
   'footer.faq.a3':
-    'Рәсімдегеннен кейінгі бірінші минутта тапсырыс бетіндегі түймемен бас тартуға болады. Одан кейін құрамы мен уақыты бекітіледі — бір нәрсе дұрыс болмаса, тапсырыс бетіндегі мекенжай бойынша мекемеге тікелей хабарласыңыз.',
+    'Рәсімдегеннен кейінгі алғашқы үш минутта тапсырыс бетіндегі түймемен бас тартуға болады. Одан кейін құрамы мен уақыты бекітіледі — бір нәрсе дұрыс болмаса, тапсырыс бетіндегі мекенжай бойынша мекемеге тікелей хабарласыңыз.',
   'footer.faq.q4': 'Қандай төлем тәсілдері бар?',
   'footer.faq.a4':
     'Картамен онлайн немесе Kaspi Pay арқылы — төлем тапсырысты рәсімдеу кезінде бірден өтеді.',
@@ -292,6 +306,20 @@ export default {
   'admin.receivedLocked': 'Клиент алуды растамайынша, тапсырысты жабуға болмайды',
   'admin.cancelOrder': 'Тапсырысты болдырмау',
   'admin.cancelConfirm': 'Тапсырысты болдырмай, слотты босату керек пе?',
+  'admin.cancelReasonPrompt': 'Клиентке көрсетілетін бас тарту себебі (бос қалдыруға болады):',
+  'admin.cancelModalTitle': 'Тапсырысты болдырмау керек пе?',
+  'admin.cancelModalText':
+    '{code} тапсырысы болдырылмайды, слот босатылады. Клиент себебін чек экранында көреді.',
+  'admin.cancelModalTextNoCode':
+    'Тапсырыс болдырылмайды, слот босатылады. Клиент себебін чек экранында көреді.',
+  'admin.cancelReasonLabel': 'Болдырмау себебі (міндетті емес)',
+  'admin.cancelReasonPlaceholder': 'Мысалы: ингредиенттер таусылды',
+  'admin.cancelReasonHint': 'Бос қалдырсаңыз, клиент «Себебі көрсетілмеген» деп көреді.',
+  'admin.cancelDismiss': 'Болдырмау',
+  'admin.cancelConfirmBtn': 'Тапсырысты болдырмау',
+  'admin.cancelling': 'Болдырылуда…',
+  'admin.awaitingReceivedShort': 'Клиенттің алуды растауын күтіп жатырмыз',
+  'admin.closesWhenReceived': 'Клиент алуды растағанда тапсырыс өзі жабылады',
   'admin.actionFailed': 'Болмады. Байланысты тексеріп, қайта көріңіз.',
   'admin.restaurantLabel': 'Мекеме',
   'admin.searchByCodeAria': 'Тапсырысты нөмірі бойынша табу',

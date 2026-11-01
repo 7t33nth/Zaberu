@@ -26,6 +26,17 @@ export function addMyOrderId(id) {
   }
 }
 
+// Клиент «убрал» заказ с глаз долой: он остаётся в базе (история/метрики кухни),
+// но это устройство больше не показывает его в панели и «Моих заказах».
+export function removeMyOrderId(id) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(getMyOrderIds().filter((x) => x !== id)));
+    window.dispatchEvent(new Event(MY_ORDERS_EVENT));
+  } catch {
+    /* приватный режим: не критично */
+  }
+}
+
 export const getSavedName = () => {
   try {
     return localStorage.getItem(NAME_KEY) || '';

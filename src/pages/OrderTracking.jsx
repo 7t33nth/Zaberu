@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { cancelOrder, markArrived, markReceived, subscribeOrder } from '../lib/api.js';
+import { removeMyOrderId } from '../lib/myOrders.js';
 import { restaurantById } from '../data/index.js';
 import { CANCEL_WINDOW_MS, formatClock, formatLeft, formatMoney } from '../lib/time.js';
 import { googleMapsUrl } from '../lib/geo.js';
@@ -17,6 +18,7 @@ const OVERDUE_WINDOW_MS = 5 * 60000; // через сколько после в�
 
 export default function OrderTracking() {
   const { orderId } = useParams();
+  const navigate = useNavigate();
   const t = useT();
   const lang = useLang();
   const STATUS = {
@@ -114,7 +116,8 @@ export default function OrderTracking() {
     if (!window.confirm(t('order.cancelConfirm'))) return;
     setBusy(true);
     try {
-      await cancelOrder(order.id);
+      const ok = await cancelOrder(order.id);
+      if (!ok) toast(t('order.actionFailed'));
     } catch (err) {
       console.error(err);
       toast(t('order.actionFailed'));
@@ -123,7 +126,8 @@ export default function OrderTracking() {
     }
   }
 
-  // Подтверждение получения: единственный способ разблокировать кухне кнопку «Выдано».
+  // Подтверждение получения сразу закрывает заказ: статус 'done', финальный шаг
+  // прогресс-бара закрашивается, кухне больше не нужно ничего нажимать.
   // Если заказ уже закрыли (или отменили), переход не сработает — объясняем почему.
   async function confirmReceived() {
     setBusy(true);
@@ -136,6 +140,13 @@ export default function OrderTracking() {
     } finally {
       setBusy(false);
     }
+  }
+
+  // Клиент ознакомился с отменой: убираем заказ с этого устройства и возвращаемся
+  // на главную. В базе заказ остаётся — он нужен кухне для истории и метрик.
+  function acknowledgeCancellation() {
+    removeMyOrderId(order.id);
+    navigate('/');
   }
 
   return (
@@ -152,9 +163,8 @@ export default function OrderTracking() {
           {order.name ? t('order.showCodeNamed', { name: order.name }) : t('order.showCode')}
         </div>
 
-        {/* Подтверждение получения: пока клиент не нажал «Да», кухня не может закрыть
-            заказ в одностороннем порядке. Через 3 часа после выдачи это право появляется
-            само — см. AdminBoard и RECEIVE_GRACE_MS. */}
+        {/* Подтверждение получения: по нажатию заказ сразу становится 'done',
+            финальный шаг прогресс-бара закрашивается. */}
         {order.status === 'ready' && !order.receivedAt && (
           <div className="mx-auto mt-5 max-w-[380px] rounded-xl2 border border-accent bg-accent-soft p-4 text-left">
             <div className="font-extrabold text-ink">{t('order.receivedQuestion')}</div>
@@ -172,6 +182,27 @@ export default function OrderTracking() {
         {order.status === 'ready' && order.receivedAt && (
           <div className="mx-auto mt-5 max-w-[380px] rounded-xl2 border border-accent bg-accent-soft px-4 py-3 text-sm font-bold text-accent-dark">
             {t('order.receivedThanks')}
+          </div>
+        )}
+
+        {/* Отменённый заказ не исчезает сам: показываем причину и даём клиенту
+            явно убрать его («Понял(а)»). Причина от кухни может быть пустой. */}
+        {order.status === 'cancelled' && (
+          <div className="mx-auto mt-5 max-w-[400px] rounded-xl2 border border-danger bg-danger-soft p-4 text-left">
+            <div className="font-extrabold text-danger">{t('order.cancelledTitle')}</div>
+            <p className="mt-1 text-sm font-semibold text-ink">
+              {order.cancelledBy === 'customer'
+                ? t('order.cancelledByYou')
+                : order.cancelReason?.trim() || t('order.cancelNoReason')}
+            </p>
+            <p className="mt-1 text-xs text-muted">{t('order.cancelledDismissHint')}</p>
+            <button
+              type="button"
+              onClick={acknowledgeCancellation}
+              className="mt-3 w-full rounded-xl bg-danger py-3 font-bold text-white transition-opacity hover:opacity-90"
+            >
+              {t('order.cancelledAck')}
+            </button>
           </div>
         )}
 
@@ -279,7 +310,7 @@ export default function OrderTracking() {
             </p>
           </>
         )}
-        {finished && (
+        {order.status === 'done' && (
           <Link
             to="/"
             className="block text-center w-full bg-brand text-white font-bold py-4 rounded-xl"

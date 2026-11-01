@@ -1,7 +1,7 @@
 // Автономный бэкенд: данные лежат в localStorage, вкладки/окна одного браузера
 // синхронизируются через BroadcastChannel и событие storage. Работает без интернета и без настройки.
 import { SlotFullError } from '../errors.js';
-import { dayKey, startOfDay } from '../time.js';
+import { CANCEL_WINDOW_MS, dayKey, startOfDay } from '../time.js';
 import { subscribeWithDayRollover } from '../dayRollover.js';
 
 const KEY = 'ep_db_v1';
@@ -78,13 +78,17 @@ export function subscribeOrder(id, cb) {
   return subscribe((db) => db.orders[id] || null, cb);
 }
 
-// { [slotStartMs]: занятые порции } для заведения (только сегодня, без отменённых)
+// { [slotStartMs]: занятые порции } для заведения. Включаем не только сегодняшние
+// заказы, но и предзаказы на следующие дни — иначе в чекауте закрытого заведения
+// все будущие слоты выглядели бы свободными.
 export function subscribeSlots(restaurantId, cb) {
   return subscribeWithDayRollover(() =>
     subscribe((db) => {
+      const from = startOfDay();
       const loads = {};
       for (const o of Object.values(db.orders)) {
-        if (o.restaurantId !== restaurantId || o.status === 'cancelled' || !isToday(o)) continue;
+        if (o.restaurantId !== restaurantId || o.status === 'cancelled' || o.pickupAt < from)
+          continue;
         loads[o.pickupAt] = (loads[o.pickupAt] || 0) + o.units;
       }
       return loads;
@@ -104,7 +108,7 @@ export async function placeOrder(order, { capacity, codePrefix }) {
     .reduce((s, o) => s + o.units, 0);
   if (used + order.units > capacity) throw new SlotFullError();
 
-  const seqKey = `${order.restaurantId}_${dayKey()}`;
+  const seqKey = `${order.restaurantId}_${dayKey(order.pickupAt)}`;
   const seq = (db.seq[seqKey] || 0) + 1;
   db.seq[seqKey] = seq;
 
@@ -139,12 +143,44 @@ export async function transitionOrder(id, from, patch) {
 
 // Отмена клиентом или кухней — слот освобождается сам собой, так как занятость здесь
 // всегда считается заново по живым заказам (см. subscribeSlots).
-export async function cancelOrder(id, { allowReady = false } = {}) {
+// by/reason нужны клиенту, чтобы показать причину отмены: «Вы отменили заказ» или
+// текст, который ввёл сотрудник. Окно самостоятельной отмены — CANCEL_WINDOW_MS.
+export async function cancelOrder(id, { allowReady = false, by = 'customer', reason = '' } = {}) {
   const db = read();
-  const status = db.orders[id]?.status;
-  if (status !== 'pending' && !(allowReady && status === 'ready')) return;
-  db.orders[id].status = 'cancelled';
+  const order = db.orders[id];
+  const status = order?.status;
+  // Кухня может снять заказ на любом этапе — в том числе уже готовящийся,
+  // если ингредиенты закончились. Клиент — только свежий pending или готовый
+  // (последнее разрешено лишь вызывающему с allowReady).
+  const cancellable =
+    status === 'pending' ||
+    (allowReady && status === 'ready') ||
+    (by === 'staff' && status === 'cooking');
+  if (!cancellable) return false;
+  if (
+    by === 'customer' &&
+    status === 'pending' &&
+    Date.now() > (order.createdAt || 0) + CANCEL_WINDOW_MS
+  ) {
+    return false;
+  }
+
+  // cancelledFrom нужен прогресс-бару: красный крестик ставится на тот шаг,
+  // в котором заказ был в момент отмены, а cancelledAt — окну 30-минутного показа.
+  const patch = {
+    status: 'cancelled',
+    cancelledBy: by,
+    cancelledAt: Date.now(),
+    cancelledFrom: status
+  };
+  if (by === 'staff')
+    patch.cancelReason = String(reason || '')
+      .trim()
+      .slice(0, 200);
+
+  db.orders[id] = { ...order, ...patch };
   write(db);
+  return true;
 }
 
 export async function resetAll() {

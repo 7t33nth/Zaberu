@@ -1,18 +1,20 @@
 import { Link } from 'react-router-dom';
 import { CUISINE_LABELS } from '../data/index.js';
-import { hoursForDay, isOpenNow, ordersOpen, formatClock } from '../lib/time.js';
+import { formatClock, serviceStatus } from '../lib/time.js';
 import { LocationIcon, StarIcon, HeartIcon } from './Icons.jsx';
 import DistanceBadge from './DistanceBadge.jsx';
 import { useT } from '../lib/i18n/store.js';
 import { useFavorites, useIsRestaurantFavorite } from '../store/useFavorites.js';
 
 function status(restaurant, now, t) {
-  const { openMs, closeMs } = hoursForDay(restaurant.hours, now);
-  if (!ordersOpen(restaurant.hours, now))
-    return { text: t('restaurantStatus.closedToday'), tone: 'closed' };
-  if (isOpenNow(restaurant.hours, now))
-    return { text: t('restaurantStatus.openUntil', { time: formatClock(closeMs) }), tone: 'open' };
-  return { text: t('restaurantStatus.opensAt', { time: formatClock(openMs) }), tone: 'soon' };
+  const state = serviceStatus(restaurant.hours, now);
+  if (state.open) {
+    return {
+      text: t('restaurantStatus.openUntil', { time: formatClock(state.closeMs) }),
+      tone: 'open'
+    };
+  }
+  return { text: t('restaurantStatus.opensAt', { time: formatClock(state.openMs) }), tone: 'soon' };
 }
 
 // Обложка лежит рядом с остальными картинками заведения:
@@ -20,7 +22,7 @@ function status(restaurant, now, t) {
 // Если файла нет — прячем <img>, остаются тёмная подложка и градиент.
 const coverFor = (restaurant) => `/images/${restaurant.id}/flash.webp`;
 
-export default function RestaurantCard({ restaurant, now, distanceM }) {
+export default function RestaurantCard({ restaurant, now, distanceM, closed = false }) {
   const t = useT();
   const st = status(restaurant, now, t);
   const isFavorite = useIsRestaurantFavorite(restaurant.id);
@@ -28,7 +30,9 @@ export default function RestaurantCard({ restaurant, now, distanceM }) {
   return (
     <Link
       to={`/restaurant/${restaurant.id}`}
-      className="block overflow-hidden rounded-3xl bg-card border border-line active:scale-[0.99] transition-all hover:shadow-lg"
+      className={`block overflow-hidden rounded-3xl bg-card border border-line active:scale-[0.99] transition-all hover:shadow-lg ${
+        closed ? 'opacity-75 hover:opacity-100' : ''
+      }`}
     >
       {/* Верхняя половина: изображение с градиентом затемнения сверху вниз */}
       <div className="relative h-28 bg-paper">

@@ -49,28 +49,53 @@ service cloud.firestore {
                     && !('readyAt' in request.resource.data)
                     && !('arrivedAt' in request.resource.data)
                     && !('receivedAt' in request.resource.data)
-                    && !('issuedAt' in request.resource.data);
+                    && !('issuedAt' in request.resource.data)
+                    && !('cancelledBy' in request.resource.data)
+                    && !('cancelReason' in request.resource.data)
+                    && !('cancelledAt' in request.resource.data)
+                    && !('cancelledFrom' in request.resource.data);
       // Клиент без входа может: 1) отметить своё прибытие (arrivedAt, таймстамп);
       // 2) подтвердить получение готового заказа (receivedAt) — без этого кухня не может
-      // закрыть заказ в одностороннем порядке; 3) отменить СВЕЖИЙ (ещё 'pending') заказ
-      // в течение 1 минуты после создания — окно намеренно короткое, чтобы это не
-      // превращалось в лазейку для отмены уже готовящихся заказов. Статус заказа
-      // (готово/выдано) меняет только вошедший сотрудник СВОЕГО заведения.
+      // закрыть заказ в одностороннем порядке; 3) подтвердить получение и сразу закрыть
+      // заказ (receivedAt + issuedAt + status 'done') — отдельное действие кухни
+      // «Выдано» больше не нужно; 4) отменить СВЕЖИЙ (ещё 'pending') заказ в течение
+      // 3 минут после создания. Статус заказа (готово/выдано) в остальных случаях
+      // меняет только вошедший сотрудник СВОЕГО заведения.
       allow update: if (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['arrivedAt'])
                          && request.resource.data.arrivedAt is int)
                     || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['receivedAt'])
                         && request.resource.data.receivedAt is int
                         && resource.data.status == 'ready')
-                    || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+                    // Подтверждение получения сразу завершает заказ: финальный шаг
+                    // прогресс-бара закрашивается, кухня ничего дополнительно не нажимает.
+                    || (request.resource.data.diff(resource.data).affectedKeys()
+                          .hasOnly(['receivedAt', 'issuedAt', 'status'])
+                        && request.resource.data.receivedAt is int
+                        && request.resource.data.issuedAt is int
+                        && request.resource.data.status == 'done'
+                        && resource.data.status == 'ready')
+                    // 180000 = CANCEL_WINDOW_MS в lib/time.js — меняя одно, меняйте и другое.
+                    || (request.resource.data.diff(resource.data).affectedKeys()
+                          .hasOnly(['status', 'cancelledBy', 'cancelledAt', 'cancelledFrom'])
                         && request.resource.data.status == 'cancelled'
                         && resource.data.status == 'pending'
-                        && request.time.toMillis() < resource.data.createdAt + 60000)
+                        && (!('cancelledBy' in request.resource.data)
+                            || request.resource.data.cancelledBy == 'customer')
+                        // Клиент отменяет только свежий заказ, поэтому шаг всегда pending.
+                        && (!('cancelledAt' in request.resource.data)
+                            || request.resource.data.cancelledAt is int)
+                        && (!('cancelledFrom' in request.resource.data)
+                            || request.resource.data.cancelledFrom == 'pending')
+                        && request.time.toMillis() < resource.data.createdAt + 180000)
+                    // Кухня может отменить заказ и сохранить причину для клиента.
                     // «Выдано» — только после подтверждения клиента. Если клиент не
                     // ответил за 3 часа после заявленного времени, подтверждение
                     // считается автоматическим (10800000 = RECEIVE_GRACE_MS в lib/time.js).
                     || (isStaffFor(resource.data.restaurantId)
                         && request.resource.data.diff(resource.data).affectedKeys()
-                             .hasOnly(['status', 'readyAt', 'arrivedAt', 'issuedAt', 'acceptedAt'])
+                             .hasOnly(['status', 'readyAt', 'arrivedAt', 'issuedAt', 'acceptedAt',
+                                       'cancelledBy', 'cancelReason', 'cancelledAt',
+                                       'cancelledFrom'])
                         && (request.resource.data.status != 'done'
                             || resource.data.receivedAt != null
                             || request.time.toMillis() >= resource.data.pickupAt + 10800000));

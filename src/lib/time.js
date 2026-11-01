@@ -2,12 +2,13 @@
 
 export const SLOT_MIN = 5;
 export const SLOT_MS = SLOT_MIN * 60 * 1000;
+export const DAY_MS = 24 * 60 * 60 * 1000;
 export const HORIZON_MIN = 180; // на сколько вперёд показываем слоты
 export const FREE_UNITS = 2; // первые 2 порции без надбавки — готовятся заодно с первой
 // Сколько времени после оформления клиент может сам отменить ещё не подтверждённый заказ.
 // Значение задублировано в firestore.rules (Firestore-правила не умеют импортировать JS) —
 // меняя одно, меняйте и другое.
-export const CANCEL_WINDOW_MS = 60000;
+export const CANCEL_WINDOW_MS = 3 * 60 * 1000;
 // Сколько ждём подтверждения получения от клиента, прежде чем кухня сможет закрыть
 // заказ сама. Значение задублировано в firestore.rules (10800000) — меняя одно,
 // меняйте и другое.
@@ -43,6 +44,77 @@ export function hoursForDay(hoursStr, now = Date.now()) {
   return { openMs: base + open * 60000, closeMs: base + close * 60000 };
 }
 
+function windowForDay(hoursStr, dayStart) {
+  const { open, close } = parseHours(hoursStr);
+  return { openMs: dayStart + open * 60000, closeMs: dayStart + close * 60000 };
+}
+
+// Состояние заведения в конкретный момент. Учитываем смены, которые переходят через
+// полночь (например, 12:00–02:00): после 00:00 заведение всё ещё открыто со вчерашней
+// смены, хотя сегодняшняя ещё не началась.
+export function serviceStatus(hoursStr, now = Date.now()) {
+  const todayStart = startOfDay(now);
+  const today = windowForDay(hoursStr, todayStart);
+  const yesterday = windowForDay(hoursStr, todayStart - DAY_MS);
+
+  if (now >= today.openMs && now < today.closeMs) {
+    return {
+      open: true,
+      openMs: today.openMs,
+      closeMs: today.closeMs,
+      dayStart: todayStart,
+      isNextDay: false
+    };
+  }
+  if (now >= yesterday.openMs && now < yesterday.closeMs) {
+    return {
+      open: true,
+      openMs: yesterday.openMs,
+      closeMs: yesterday.closeMs,
+      dayStart: todayStart - DAY_MS,
+      isNextDay: false
+    };
+  }
+  if (now < today.openMs) {
+    return {
+      open: false,
+      openMs: today.openMs,
+      closeMs: today.closeMs,
+      dayStart: todayStart,
+      isNextDay: false
+    };
+  }
+  return {
+    open: false,
+    openMs: today.openMs + DAY_MS,
+    closeMs: today.closeMs + DAY_MS,
+    dayStart: todayStart + DAY_MS,
+    isNextDay: true
+  };
+}
+
+// Окно, для которого имеет смысл строить слоты: текущая смена, если до закрытия ещё
+// можно успеть приготовить хотя бы одну порцию, иначе ближайшая следующая смена.
+// Благодаря этому закрытые заведения сразу предлагают предзаказ на следующее открытие.
+export function serviceWindow(hoursStr, now = Date.now(), prepMinutes = 0) {
+  const status = serviceStatus(hoursStr, now);
+  const prepMs = prepMinutes * 60000;
+
+  if (status.open && now + prepMs + SLOT_MS <= status.closeMs) return status;
+
+  // Для закрытого заведения serviceStatus уже вернул ближайшее открытие. Если же смена
+  // ещё идёт, но кухня не успевает, берём следующую смену от дня текущей смены.
+  const nextDayStart = status.open ? status.dayStart + DAY_MS : status.dayStart;
+  const next = windowForDay(hoursStr, nextDayStart);
+  return {
+    open: false,
+    openMs: next.openMs,
+    closeMs: next.closeMs,
+    dayStart: nextDayStart,
+    isNextDay: startOfDay(next.openMs) > startOfDay(now)
+  };
+}
+
 // Время до готовности заказа = самое долгое блюдо в нём (первая партия готовится вместе с ним)
 // + сколько ещё "порций кухни" (по slotCapacity — реальная пропускная способность именно этой
 // кухни) нужно докрутить сверх первых FREE_UNITS порций. Так большой заказ у маленькой кухни
@@ -59,13 +131,13 @@ export function estimatePrepMinutes(lines, capacity) {
 
 // Заведение ещё принимает заказы на сегодня?
 export function ordersOpen(hoursStr, now = Date.now()) {
-  const { closeMs } = hoursForDay(hoursStr, now);
-  return now + 2 * SLOT_MS < closeMs;
+  const status = serviceStatus(hoursStr, now);
+  if (!status.open) return false;
+  return now + 2 * SLOT_MS < status.closeMs;
 }
 
 export function isOpenNow(hoursStr, now = Date.now()) {
-  const { openMs, closeMs } = hoursForDay(hoursStr, now);
-  return now >= openMs && now < closeMs;
+  return serviceStatus(hoursStr, now).open;
 }
 
 /**
@@ -73,13 +145,14 @@ export function isOpenNow(hoursStr, now = Date.now()) {
  *  loads    — { [slotStartMs]: занятые порции }
  *  capacity — сколько порций кухня успевает за один слот
  *  units    — сколько порций в текущем заказе
- * Слот доступен, если в него ещё помещается весь заказ.
+ * Слот доступен, если в него ещё помещается весь заказ. Если заведение уже закрыто,
+ * слоты строятся на ближайшую следующую смену (следующий рабочий день).
  */
 export function buildSlots({ hours, prepMinutes, loads = {}, capacity, units, now = Date.now() }) {
-  const { openMs, closeMs } = hoursForDay(hours, now);
-  const readyAt = Math.max(now, openMs) + prepMinutes * 60000;
+  const service = serviceWindow(hours, now, prepMinutes);
+  const readyAt = service.open ? now + prepMinutes * 60000 : service.openMs + prepMinutes * 60000;
   const first = ceilToSlot(readyAt);
-  const last = Math.min(closeMs - SLOT_MS, first + HORIZON_MIN * 60000);
+  const last = Math.min(service.closeMs - SLOT_MS, first + HORIZON_MIN * 60000);
   const slots = [];
   for (let start = first; start <= last; start += SLOT_MS) {
     const used = loads[start] || 0;

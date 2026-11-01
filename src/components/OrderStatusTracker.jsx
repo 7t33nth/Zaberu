@@ -78,6 +78,24 @@ function CheckIcon({ className = 'w-3.5 h-3.5' }) {
   );
 }
 
+function CrossIcon({ className = 'w-3.5 h-3.5' }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <line x1="6" y1="6" x2="18" y2="18" />
+      <line x1="18" y1="6" x2="6" y2="18" />
+    </svg>
+  );
+}
+
 const STEPS = [
   {
     key: 'pending',
@@ -190,9 +208,32 @@ export default function OrderStatusTracker({ orderId, initialOrder = null }) {
   const isDone = status === 'done';
   const isCancelled = status === 'cancelled';
 
-  let currentStepIdx = 0;
-  if (status === 'cooking') currentStepIdx = 1;
-  else if (status === 'ready' || isDone) currentStepIdx = 2;
+  const stepIndexFromStatus = (s) => {
+    if (s === 'cooking') return 1;
+    if (s === 'ready' || s === 'done') return 2;
+    return 0;
+  };
+
+  // Красный крестик ставится на шаг, в котором заказ был в момент отмены.
+  // cancelledFrom появился позже, поэтому для старых отменённых заказов
+  // восстанавливаем шаг по сохранённым таймстампам.
+  const cancelledStepIdx = isCancelled
+    ? order.cancelledFrom
+      ? stepIndexFromStatus(order.cancelledFrom)
+      : order.readyAt
+        ? 2
+        : order.acceptedAt
+          ? 1
+          : 0
+    : null;
+
+  const currentStepIdx = isCancelled
+    ? cancelledStepIdx
+    : status === 'cooking'
+      ? 1
+      : status === 'ready' || isDone
+        ? 2
+        : 0;
 
   const currentStep = STEPS[Math.min(currentStepIdx, STEPS.length - 1)];
 
@@ -203,7 +244,9 @@ export default function OrderStatusTracker({ orderId, initialOrder = null }) {
         {isCancelled ? (
           <div>
             <div className="text-sm font-extrabold text-danger">Заказ отменён</div>
-            <div className="text-xs text-muted mt-0.5">Этот заказ был отменён</div>
+            <div className="text-xs text-muted mt-0.5">
+              Отменён на этапе «{STEPS[cancelledStepIdx].label}»
+            </div>
           </div>
         ) : isDone ? (
           <div>
@@ -218,69 +261,71 @@ export default function OrderStatusTracker({ orderId, initialOrder = null }) {
         )}
       </div>
 
-      {/* Горизонтальная шкала с тремя шагами */}
-      {!isCancelled && (
-        <div className="relative">
+      {/* Горизонтальная шкала с тремя шагами. У отменённого заказа она остаётся,
+          но шаг отмены закрашивается красным крестиком, а не зелёной галочкой. */}
+      <div className="relative">
+        <div
+          className="absolute top-4 left-0 right-0 -translate-y-1/2 h-0.5 bg-line"
+          style={{ marginLeft: 'calc((100%/3)/2)', marginRight: 'calc((100%/3)/2)' }}
+        >
           <div
-            className="absolute top-4 left-0 right-0 -translate-y-1/2 h-0.5 bg-line"
-            style={{ marginLeft: 'calc((100%/3)/2)', marginRight: 'calc((100%/3)/2)' }}
-          >
-            <div
-              className="h-full bg-accent-dark transition-all duration-500 ease-out"
-              style={{
-                width: isDone
-                  ? '100%'
-                  : currentStepIdx === 0
-                    ? '0%'
-                    : currentStepIdx === 1
-                      ? '50%'
-                      : '100%'
-              }}
-            />
-          </div>
-          <div className="relative grid grid-cols-3">
-            {STEPS.map((step, idx) => {
-              const isCompleted = isDone || idx < currentStepIdx;
-              const isCurrent = !isDone && idx === currentStepIdx;
-              const Icon = step.Icon;
+            className="h-full bg-accent-dark transition-all duration-500 ease-out"
+            style={{
+              width: currentStepIdx === 0 ? '0%' : currentStepIdx === 1 ? '50%' : '100%'
+            }}
+          />
+        </div>
+        <div className="relative grid grid-cols-3">
+          {STEPS.map((step, idx) => {
+            const isCancelledStep = isCancelled && idx === cancelledStepIdx;
+            const isCompleted = isCancelled
+              ? idx < cancelledStepIdx
+              : isDone || idx < currentStepIdx;
+            const isCurrent = !isCancelled && !isDone && idx === currentStepIdx;
+            const Icon = step.Icon;
 
-              return (
-                <div key={step.key} className="flex flex-col items-center">
-                  <div
-                    className={`relative z-10 flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-300 ${
-                      isCompleted
+            return (
+              <div key={step.key} className="flex flex-col items-center">
+                <div
+                  className={`relative z-10 flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-300 ${
+                    isCancelledStep
+                      ? 'border-danger bg-danger text-white ring-4 ring-danger/20'
+                      : isCompleted
                         ? 'border-accent-dark bg-accent-dark text-white'
                         : isCurrent
                           ? 'border-accent-dark bg-card text-accent-dark ring-4 ring-accent/30 animate-pulse'
                           : 'border-line bg-paper text-muted'
-                    }`}
-                    aria-current={isCurrent ? 'step' : undefined}
-                  >
-                    {isCompleted ? (
-                      <CheckIcon className="w-4 h-4 stroke-[2.5] block" />
-                    ) : (
-                      <Icon className="w-4 h-4 block" />
-                    )}
-                  </div>
-                  <div className="mt-2 w-full flex justify-center px-1">
-                    <span
-                      className={`text-[11px] font-semibold leading-tight text-center ${
-                        isCurrent
+                  }`}
+                  aria-current={isCurrent || isCancelledStep ? 'step' : undefined}
+                >
+                  {isCancelledStep ? (
+                    <CrossIcon className="w-4 h-4 stroke-[2.5] block" />
+                  ) : isCompleted ? (
+                    <CheckIcon className="w-4 h-4 stroke-[2.5] block" />
+                  ) : (
+                    <Icon className="w-4 h-4 block" />
+                  )}
+                </div>
+                <div className="mt-2 w-full flex justify-center px-1">
+                  <span
+                    className={`text-[11px] font-semibold leading-tight text-center ${
+                      isCancelledStep
+                        ? 'text-danger font-bold'
+                        : isCurrent
                           ? 'text-ink font-bold'
                           : isCompleted
                             ? 'text-accent-dark'
                             : 'text-muted'
-                      }`}
-                    >
-                      {step.label}
-                    </span>
-                  </div>
+                    }`}
+                  >
+                    {step.label}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 }

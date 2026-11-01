@@ -31,6 +31,8 @@ export default {
   'home.geoUnsupported': 'Этот браузер не поддерживает геолокацию.',
   'home.geoError': 'Не удалось определить местоположение. Попробуйте ещё раз.',
   'home.mapEmpty': 'В этом радиусе пока нет заведений.',
+  'home.closedHeading': 'Закрыты до утра',
+  'home.closedHint': 'Откроются позже — можно оформить предзаказ',
 
   'geo.meters': '~{value} м',
   'geo.km': '~{value} км',
@@ -65,12 +67,12 @@ export default {
   'city.astana': 'Астана',
   'city.shymkent': 'Шымкент',
 
-  'restaurantStatus.closedToday': 'Заказы на сегодня закончились',
   'restaurantStatus.openUntil': 'Открыто до {time}',
-  'restaurantStatus.opensAt': 'Откроется в {time}, заказать можно заранее',
+  'restaurantStatus.opensAt': 'Откроется в {time}',
 
   'menu.back': 'Назад к заведениям',
-  'menu.closedNotice': 'Сегодня заказы уже не принимаются: заведение работает до {time}.',
+  'menu.preorderNotice':
+    'Заведение сейчас закрыто. Можно оформить предзаказ на следующее открытие.',
   'menu.otherCartNotice': 'В корзине блюда из {name}. Если добавите блюдо отсюда, корзину заменим.',
   'menu.conflictHeading': 'Заказать из другого заведения?',
   'menu.conflictText':
@@ -123,6 +125,7 @@ export default {
   'cart.title': 'Ваш заказ',
   'cart.empty': 'Пока пусто — добавьте блюда из меню слева.',
   'cart.chooseTime': 'Выбрать время',
+  'cart.continue': 'Продолжить заказ',
   'cartbar.step': 'шаг 2 из 3',
 
   'checkout.sheetLabel': 'Оформление заказа',
@@ -135,6 +138,10 @@ export default {
   'checkout.pickupAtLabel': 'Забрать в',
   'checkout.timePlaceholder': 'ЧЧ:ММ',
   'checkout.waitIn': 'через {time}',
+  'checkout.tomorrow': 'Завтра',
+  'checkout.tomorrowAt': 'завтра в {time}',
+  'checkout.preorderNotice':
+    'Заведение сейчас закрыто. Можно сделать предзаказ на ближайший рабочий день.',
   'checkout.prepHint':
     'Готовка займёт ~{prep}, кухня работает до {close} — время можно поставить только в этих пределах, иначе подберём ближайшее доступное.',
   'checkout.quickPick': 'Или выберите быстро',
@@ -154,7 +161,7 @@ export default {
   'checkout.pay': 'Оплатить',
   'checkout.payBusy': 'Оплата…',
   'checkout.slotJustTaken': 'Время {time} только что заняли. Выбрано ближайшее: {next}.',
-  'checkout.noSlotsToday': 'Свободного времени на сегодня не осталось.',
+  'checkout.noSlotsToday': 'Свободного времени не осталось.',
   'checkout.timeBusyCorrected':
     'На {time} кухня уже занята — поставили ближайшее свободное время: {next}.',
   'checkout.timeTooFarCorrected':
@@ -175,6 +182,7 @@ export default {
   'myorders.repeatConfirm': 'В корзине блюда из другого заведения. Заменить их на этот заказ?',
 
   'orderStatus.pending': 'Готовится',
+  'orderStatus.cooking': 'Готовится',
   'orderStatus.ready': 'Готово',
   'orderStatus.done': 'Выдан',
   'orderStatus.cancelled': 'Отменён',
@@ -211,17 +219,25 @@ export default {
   'order.toastReady': 'Заказ готов, подходите!',
   'order.qrHint': 'Покажите QR-код на кассе',
   'order.receivedQuestion': 'Получили ли вы заказ?',
-  'order.receivedHint': 'Подтвердите, что забрали заказ, — так кухня сможет его закрыть.',
-  'order.receivedYes': 'Да, получил',
+  'order.receivedHint': 'Подтвердите, что забрали заказ, — он сразу закроется.',
+  'order.receivedYes': 'Да, получил(а)!',
   'order.receivedThanks': 'Спасибо! Получение подтверждено.',
   'order.receivedClosed': 'Заказ уже закрыт — подтверждение больше не нужно.',
+  'order.cancelledTitle': 'Заказ отменён',
+  'order.cancelledByYou': 'Вы отменили заказ',
+  'order.cancelNoReason': 'Без объяснения причин',
+  'order.cancelledDismissHint': 'Нажмите «Понял(а)», чтобы убрать заказ из списка.',
+  'order.cancelledAck': 'Понял(а)',
 
-  'banner.yourOrder': 'Ваш заказ',
-  'banner.ready': 'Готов, можно забирать',
-  'banner.open': 'Открыть',
-
-  'resume.toOrder': 'Вернуться к заказу',
-  'resume.continue': 'Продолжить заказ',
+  'activeOrders.single': 'Заказ {code} • {status}',
+  'activeOrders.many': 'Активные заказы: {count}',
+  'activeOrders.open': 'Открыть',
+  'activeOrders.choose': 'Выбрать',
+  'activeOrders.sheetLabel': 'Активные заказы',
+  'activeOrders.sheetHint': 'Выберите заказ, чтобы отслеживать его статус',
+  'activeOrders.sheetLabelCombined': 'Заказы и корзина',
+  'activeOrders.sheetHintCombined': 'Откройте корзину или выберите заказ.',
+  'activeOrders.ordersSection': 'Заказы',
 
   'footer.faqHeading': 'Часто задаваемые вопросы',
   'footer.faq.q1': 'Как работает «Заберу!»?',
@@ -232,7 +248,7 @@ export default {
     'Нет. Никаких аккаунтов и паролей — только номер заказа и, по желанию, имя для удобства выдачи.',
   'footer.faq.q3': 'Можно ли изменить или отменить заказ после оформления?',
   'footer.faq.a3':
-    'Отменить можно в первую минуту после оформления — кнопка на странице заказа. Дальше состав и время уже фиксируются, и если что-то пошло не так, свяжитесь напрямую с заведением по адресу на странице заказа.',
+    'Отменить можно в первые три минуты после оформления — кнопка на странице заказа. Дальше состав и время уже фиксируются, и если что-то пошло не так, свяжитесь напрямую с заведением по адресу на странице заказа.',
   'footer.faq.q4': 'Какие способы оплаты доступны?',
   'footer.faq.a4':
     'Картой онлайн или через Kaspi Pay — оплата проходит сразу при оформлении заказа.',
@@ -290,6 +306,20 @@ export default {
   'admin.receivedLocked': 'Пока клиент не подтвердил получение, закрыть заказ нельзя',
   'admin.cancelOrder': 'Отменить заказ',
   'admin.cancelConfirm': 'Отменить заказ и освободить слот?',
+  'admin.cancelReasonPrompt': 'Причина отмены для клиента (можно оставить пустой):',
+  'admin.cancelModalTitle': 'Отменить заказ?',
+  'admin.cancelModalText':
+    'Заказ {code} будет отменён, а слот освободится. Клиент увидит причину на экране чека.',
+  'admin.cancelModalTextNoCode':
+    'Заказ будет отменён, а слот освободится. Клиент увидит причину на экране чека.',
+  'admin.cancelReasonLabel': 'Причина отмены (необязательно)',
+  'admin.cancelReasonPlaceholder': 'Например: закончились ингредиенты',
+  'admin.cancelReasonHint': 'Если оставить пустым, клиент увидит «Без объяснения причин».',
+  'admin.cancelDismiss': 'Не отменять',
+  'admin.cancelConfirmBtn': 'Отменить заказ',
+  'admin.cancelling': 'Отменяем…',
+  'admin.awaitingReceivedShort': 'Ждём подтверждения получения от клиента',
+  'admin.closesWhenReceived': 'Заказ закроется сам, когда клиент подтвердит получение',
   'admin.actionFailed': 'Не получилось. Проверьте соединение и попробуйте ещё раз.',
   'admin.restaurantLabel': 'Заведение',
   'admin.searchByCodeAria': 'Найти заказ по номеру',

@@ -12,7 +12,7 @@ globalThis.localStorage = {
 const local = await import('../src/lib/backends/local.js');
 const { SlotFullError } = await import('../src/lib/errors.js');
 const { computeMetrics, waitMs } = await import('../src/lib/metrics.js');
-const { ceilToSlot, SLOT_MS } = await import('../src/lib/time.js');
+const { ceilToSlot, DAY_MS, SLOT_MS, startOfDay } = await import('../src/lib/time.js');
 
 const base = (over = {}) => ({
   restaurantId: 'r01',
@@ -108,6 +108,87 @@ test('повторная отмена не освобождает чужое м�
   stop();
 });
 
+test('клиентская отмена сохраняет автора, причина кухни — отдельно', async () => {
+  await local.resetAll();
+  const byClient = await local.placeOrder(base(), opts);
+  const byStaff = await local.placeOrder(base(), opts);
+
+  await local.cancelOrder(byClient.id);
+  await local.cancelOrder(byStaff.id, {
+    allowReady: true,
+    by: 'staff',
+    reason: '  нет ингредиентов  '
+  });
+
+  let orders = [];
+  local.subscribeOrders(['r01'], (x) => (orders = x))();
+  const clientOrder = orders.find((x) => x.id === byClient.id);
+  const staffOrder = orders.find((x) => x.id === byStaff.id);
+
+  assert.equal(clientOrder.cancelledBy, 'customer');
+  assert.equal(clientOrder.cancelReason, undefined);
+  assert.equal(clientOrder.cancelledFrom, 'pending');
+  assert.ok(clientOrder.cancelledAt >= byClient.createdAt);
+  assert.equal(staffOrder.cancelledBy, 'staff');
+  assert.equal(staffOrder.cancelReason, 'нет ингредиентов');
+  assert.equal(staffOrder.cancelledFrom, 'pending');
+});
+
+test('кухня может отменить готовящийся заказ, клиент — нет', async () => {
+  await local.resetAll();
+  const o = await local.placeOrder(base(), opts);
+  const acceptedAt = Date.now();
+  await local.transitionOrder(o.id, 'pending', { status: 'cooking', acceptedAt });
+
+  // клиентская отмена готовящегося заказа не проходит
+  assert.equal(await local.cancelOrder(o.id), false);
+
+  assert.equal(await local.cancelOrder(o.id, { by: 'staff', reason: 'нет ингредиентов' }), true);
+
+  let orders = [];
+  local.subscribeOrders(['r01'], (x) => (orders = x))();
+  const cancelled = orders.find((x) => x.id === o.id);
+  assert.equal(cancelled.status, 'cancelled');
+  assert.equal(cancelled.cancelledBy, 'staff');
+  assert.equal(cancelled.cancelledFrom, 'cooking');
+  assert.ok(cancelled.cancelledAt >= acceptedAt);
+});
+
+test('клиент не может отменить заказ после трёх минут', async () => {
+  await local.resetAll();
+  const a = await local.placeOrder(base(), opts);
+
+  const db = JSON.parse(localStorage.getItem('ep_db_v1'));
+  db.orders[a.id].createdAt = Date.now() - 4 * 60000;
+  localStorage.setItem('ep_db_v1', JSON.stringify(db));
+
+  assert.equal(await local.cancelOrder(a.id), false);
+  let orders = [];
+  local.subscribeOrders(['r01'], (x) => (orders = x))();
+  assert.equal(orders.find((x) => x.id === a.id).status, 'pending');
+});
+
+test('подтверждение получения сразу закрывает заказ и заполняет issuedAt', async () => {
+  await local.resetAll();
+  const a = await local.placeOrder(base(), opts);
+  await local.transitionOrder(a.id, 'pending', { status: 'ready' });
+
+  const now = Date.now();
+  const ok = await local.transitionOrder(a.id, 'ready', {
+    receivedAt: now,
+    issuedAt: now,
+    status: 'done'
+  });
+  assert.equal(ok, true);
+
+  let orders = [];
+  local.subscribeOrders(['r01'], (x) => (orders = x))();
+  const done = orders.find((x) => x.id === a.id);
+  assert.equal(done.status, 'done');
+  assert.equal(done.receivedAt, now);
+  assert.equal(done.issuedAt, now);
+});
+
 test('клиент не может отменить готовый заказ', async () => {
   await local.resetAll();
   const a = await local.placeOrder(base(), opts);
@@ -141,6 +222,17 @@ test('переход статуса не срабатывает из неожи�
   let orders = [];
   local.subscribeOrders(['r01'], (x) => (orders = x))();
   assert.equal(orders.find((x) => x.id === a.id).status, 'cancelled');
+});
+
+test('подписка на слоты учитывает предзаказы на следующий день', async () => {
+  await local.resetAll();
+  const tomorrow = startOfDay() + DAY_MS + 10 * 60 * 60 * 1000;
+  const order = await local.placeOrder(base({ pickupAt: tomorrow }), opts);
+
+  let loads = {};
+  const stop = local.subscribeSlots('r01', (x) => (loads = x));
+  assert.equal(loads[order.pickupAt], 2);
+  stop();
 });
 
 test('незавершённый вчерашний заказ остаётся в списке кухни, а завершённый — нет', async () => {

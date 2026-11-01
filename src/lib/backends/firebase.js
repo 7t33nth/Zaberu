@@ -14,7 +14,7 @@ import {
 } from 'firebase/firestore';
 import { firebaseApp } from '../firebaseApp.js';
 import { SlotFullError } from '../errors.js';
-import { dayKey, startOfDay } from '../time.js';
+import { dayKey, startOfDay, DAY_MS } from '../time.js';
 import { subscribeWithDayRollover } from '../dayRollover.js';
 
 const db = getFirestore(firebaseApp);
@@ -108,20 +108,31 @@ export function subscribeOrder(id, cb) {
 }
 
 export function subscribeSlots(restaurantId, cb) {
-  // dayRef() без второго аргумента считает сегодняшнюю дату — при пересоздании подписки
-  // после полуночи она пересчитается сама.
-  return subscribeWithDayRollover(() =>
-    onSnapshot(
-      dayRef(restaurantId),
-      (snap) => {
-        const raw = snap.exists() ? snap.data().slots || {} : {};
-        const loads = {};
-        for (const [k, v] of Object.entries(raw)) loads[Number(k)] = v;
-        cb(loads);
-      },
-      (err) => console.error('slots subscription failed', err)
-    )
-  );
+  // Смотрим сегодняшний и завтрашний день: после закрытия чекаут предлагает предзаказ
+  // на следующий рабочий день, и занятость этих слотов тоже должна быть видна.
+  // dayRef()/startOfDay() пересчитываются при пересоздании подписки после полуночи.
+  return subscribeWithDayRollover(() => {
+    const refs = [dayRef(restaurantId), dayRef(restaurantId, startOfDay() + DAY_MS)];
+    const loads = [{}, {}];
+    const toLoads = (snap) => {
+      const raw = snap.exists() ? snap.data().slots || {} : {};
+      const out = {};
+      for (const [k, v] of Object.entries(raw)) out[Number(k)] = v;
+      return out;
+    };
+    const emit = () => cb({ ...loads[0], ...loads[1] });
+    const stops = refs.map((ref, i) =>
+      onSnapshot(
+        ref,
+        (snap) => {
+          loads[i] = toLoads(snap);
+          emit();
+        },
+        (err) => console.error('slots subscription failed', err)
+      )
+    );
+    return () => stops.forEach((stop) => stop());
+  });
 }
 
 export async function placeOrder(order, { capacity, codePrefix }) {
@@ -152,25 +163,44 @@ export async function updateOrder(id, patch) {
   await updateDoc(doc(db, 'orders', id), patch);
 }
 
-// Отмена заказа — клиентом (в течение минуты, это проверяют правила) или сотрудником
+// Отмена заказа — клиентом (в течение трёх минут, это проверяют правила) или сотрудником
 // кухни. Слот освобождается в той же транзакции: счётчик занятости и статус заказа
 // не должны разъезжаться, иначе «отменённый» заказ навсегда держит место в слоте.
 // allowReady — отмена уже готового заказа (гость не пришёл); правила Firestore разрешают
 // это только сотруднику, поэтому клиентский вызов оставляет флаг выключенным.
-export async function cancelOrder(id, { allowReady = false } = {}) {
+// by/reason сохраняем, чтобы клиент видел, кто и почему отменил заказ.
+export async function cancelOrder(id, { allowReady = false, by = 'customer', reason = '' } = {}) {
   const orderRef = doc(db, 'orders', id);
-  await runTransaction(db, async (tx) => {
+  return runTransaction(db, async (tx) => {
     const snap = await tx.get(orderRef);
-    if (!snap.exists()) return;
+    if (!snap.exists()) return false;
     const order = snap.data();
-    const cancellable = order.status === 'pending' || (allowReady && order.status === 'ready');
-    if (!cancellable) return;
+    const status = order.status;
+    // Кухня может отменить заказ на любом этапе, включая готовящийся; клиент —
+    // только pending (окно проверяют правила) или ready при allowReady.
+    const cancellable =
+      status === 'pending' ||
+      (allowReady && status === 'ready') ||
+      (by === 'staff' && status === 'cooking');
+    if (!cancellable) return false;
 
     const ref = dayRef(order.restaurantId, order.pickupAt);
     const daySnap = await tx.get(ref);
     const slotKey = String(order.pickupAt);
 
-    tx.update(orderRef, { status: 'cancelled' });
+    // cancelledFrom нужен прогресс-бару: красный крестик ставится на тот шаг,
+    // в котором заказ был в момент отмены, а cancelledAt — окну 30-минутного показа.
+    const patch = {
+      status: 'cancelled',
+      cancelledBy: by,
+      cancelledAt: Date.now(),
+      cancelledFrom: status
+    };
+    if (by === 'staff')
+      patch.cancelReason = String(reason || '')
+        .trim()
+        .slice(0, 200);
+    tx.update(orderRef, patch);
     // Если документа дня нет (например, его почистили вручную), писать в days нечего:
     // создать его здесь нельзя — правила разрешают create только с seq = 1 и одним слотом
     // (то есть первого заказа дня). Слота тоже нет, так что и освобождать нечего.
@@ -178,6 +208,7 @@ export async function cancelOrder(id, { allowReady = false } = {}) {
       const used = daySnap.data().slots?.[slotKey] || 0;
       tx.set(ref, { slots: { [slotKey]: Math.max(0, used - order.units) } }, { merge: true });
     }
+    return true;
   });
 }
 

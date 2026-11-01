@@ -230,11 +230,23 @@ test('unauthenticated cannot confirm receipt of an order that is not ready yet',
   await assertFails(updateDoc(doc(db, 'orders', 'o1'), { receivedAt: Date.now() }));
 });
 
-test('confirming receipt cannot also change the status', async () => {
+test('confirming receipt closes the order atomically (receivedAt + issuedAt + done)', async () => {
   await seed(async (db) => setDoc(doc(db, 'orders', 'rc2'), readyOrder()));
   const db = testEnv.unauthenticatedContext().firestore();
+  await assertSucceeds(
+    updateDoc(doc(db, 'orders', 'rc2'), {
+      receivedAt: Date.now(),
+      issuedAt: Date.now(),
+      status: 'done'
+    })
+  );
+});
+
+test('confirming receipt without issuedAt cannot sneak the status to done', async () => {
+  await seed(async (db) => setDoc(doc(db, 'orders', 'rc2b'), readyOrder()));
+  const db = testEnv.unauthenticatedContext().firestore();
   await assertFails(
-    updateDoc(doc(db, 'orders', 'rc2'), { receivedAt: Date.now(), status: 'done' })
+    updateDoc(doc(db, 'orders', 'rc2b'), { receivedAt: Date.now(), status: 'done' })
   );
 });
 
@@ -283,18 +295,106 @@ test('unauthenticated can self-cancel a fresh pending order', async () => {
   await assertSucceeds(updateDoc(doc(db, 'orders', 'o1'), { status: 'cancelled' }));
 });
 
-test('unauthenticated cannot self-cancel an order older than the 1-minute window', async () => {
+test('unauthenticated self-cancel can store customer attribution', async () => {
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertSucceeds(
+    updateDoc(doc(db, 'orders', 'o1'), {
+      status: 'cancelled',
+      cancelledBy: 'customer',
+      cancelledAt: Date.now(),
+      cancelledFrom: 'pending'
+    })
+  );
+});
+
+test('unauthenticated self-cancel cannot fake the cancelled step', async () => {
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertFails(
+    updateDoc(doc(db, 'orders', 'o1'), {
+      status: 'cancelled',
+      cancelledFrom: 'ready'
+    })
+  );
+});
+
+test('unauthenticated cannot pretend a staff cancellation', async () => {
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertFails(
+    updateDoc(doc(db, 'orders', 'o1'), { status: 'cancelled', cancelledBy: 'staff' })
+  );
+});
+
+test('unauthenticated cannot self-cancel an order older than the 3-minute window', async () => {
   await seed(async (db) =>
     setDoc(doc(db, 'orders', 'old'), {
       restaurantId: 'r01',
       status: 'pending',
       units: 1,
       pickupAt: soon(),
-      createdAt: Date.now() - 120000
+      createdAt: Date.now() - 4 * 60000
     })
   );
   const db = testEnv.unauthenticatedContext().firestore();
   await assertFails(updateDoc(doc(db, 'orders', 'old'), { status: 'cancelled' }));
+});
+
+test('unauthenticated can still self-cancel 2 minutes after creation', async () => {
+  await seed(async (db) =>
+    setDoc(doc(db, 'orders', 'twoMin'), {
+      restaurantId: 'r01',
+      status: 'pending',
+      units: 1,
+      pickupAt: soon(),
+      createdAt: Date.now() - 2 * 60000
+    })
+  );
+  const db = testEnv.unauthenticatedContext().firestore();
+  await assertSucceeds(updateDoc(doc(db, 'orders', 'twoMin'), { status: 'cancelled' }));
+});
+
+test('staff can cancel with a reason visible to the customer', async () => {
+  await seed(async (db) =>
+    setDoc(doc(db, 'orders', 'readyReason'), {
+      restaurantId: 'r01',
+      status: 'ready',
+      units: 1,
+      pickupAt: soon(),
+      createdAt: Date.now()
+    })
+  );
+  const db = ctxFor('staffA@example.com');
+  await assertSucceeds(
+    updateDoc(doc(db, 'orders', 'readyReason'), {
+      status: 'cancelled',
+      cancelledBy: 'staff',
+      cancelReason: 'Закончились ингредиенты',
+      cancelledAt: Date.now(),
+      cancelledFrom: 'ready'
+    })
+  );
+});
+
+test('staff can cancel a cooking order and keep the cancelled step', async () => {
+  await seed(async (db) =>
+    setDoc(doc(db, 'orders', 'cookingCancel'), {
+      restaurantId: 'r01',
+      status: 'cooking',
+      units: 1,
+      pickupAt: soon(),
+      createdAt: Date.now(),
+      acceptedAt: Date.now()
+    })
+  );
+  const db = ctxFor('staffA@example.com');
+  await assertSucceeds(
+    updateDoc(doc(db, 'orders', 'cookingCancel'), {
+      status: 'cancelled',
+      cancelledBy: 'staff',
+      cancelReason: 'Нет ингредиентов',
+      cancelledAt: Date.now(),
+      cancelledFrom: 'cooking'
+    })
+  );
 });
 
 test('unauthenticated cannot cancel an order that is already ready', async () => {

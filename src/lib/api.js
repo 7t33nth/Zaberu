@@ -52,10 +52,12 @@ export async function placeOrder({ restaurant, lines, pickupAt, name = '', comme
 
 const patch = (id, fields) => backendPromise.then((b) => b.updateOrder(id, fields));
 const transition = (id, from, fields) =>
-  backendPromise.then((b) => b.transitionOrder(id, from, fields)).then((ok) => {
-    if (ok === false) throw new Error('transition_failed');
-    return ok;
-  });
+  backendPromise
+    .then((b) => b.transitionOrder(id, from, fields))
+    .then((ok) => {
+      if (ok === false) throw new Error('transition_failed');
+      return ok;
+    });
 
 export const markCooking = (id) =>
   transition(id, 'pending', { status: 'cooking', acceptedAt: Date.now() });
@@ -67,14 +69,23 @@ export const markReady = (id) =>
 
 export const markDone = (id) => transition(id, 'ready', { status: 'done', issuedAt: Date.now() });
 export const markArrived = (id) => patch(id, { arrivedAt: Date.now() });
-// Клиент подтверждает, что забрал заказ. Только из 'ready' и только этот флаг:
-// статус по-прежнему меняет кухня, но уже после подтверждения (или авто-подтверждения
-// через RECEIVE_GRACE_MS — см. AdminBoard и firestore.rules).
-export const markReceived = (id) => transition(id, 'ready', { receivedAt: Date.now() });
-export const cancelOrder = (id) => backendPromise.then((b) => b.cancelOrder(id));
+// Клиент подтверждает, что забрал заказ, и это сразу закрывает его: статус 'done',
+// issuedAt для метрик и заполненный финальный шаг прогресс-бара. Отдельное действие
+// кухни «Выдано» больше не нужно.
+export const markReceived = (id) => {
+  const now = Date.now();
+  return backendPromise.then((b) =>
+    b.transitionOrder(id, 'ready', { receivedAt: now, issuedAt: now, status: 'done' })
+  );
+};
+// Клиентская отмена: backend сам проставляет cancelledBy/cancelReason, а правила
+// Firestore дополнительно проверяют трёхминутное окно.
+export const cancelOrder = (id) =>
+  backendPromise.then((b) => b.cancelOrder(id, { by: 'customer' }));
 // Кухня может отменить и готовый заказ (гость не пришёл) — клиенту это запрещено правилами.
-export const cancelOrderByStaff = (id) =>
-  backendPromise.then((b) => b.cancelOrder(id, { allowReady: true }));
+// reason уходит в заказ, чтобы клиент увидел причину отмены на экране чека.
+export const cancelOrderByStaff = (id, reason = '') =>
+  backendPromise.then((b) => b.cancelOrder(id, { allowReady: true, by: 'staff', reason }));
 export const resetAll = () => backendPromise.then((b) => b.resetAll());
 export const clearDoneOrders = (restaurantId) =>
   backendPromise.then((b) => b.clearDoneOrders(restaurantId));
