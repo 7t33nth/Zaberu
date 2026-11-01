@@ -41,9 +41,17 @@ export default function RestaurantMenu() {
   const favoriteDishIds = useFavorites((s) => s.dishIds);
 
   const dishes = useMemo(() => menu.filter((d) => d.restaurantId === id), [id]);
+  // «В корзине» — те же блюда, что лежат в корзине этого заведения. Показываем их
+  // отдельной секцией вверху, чтобы на мобильном не приходилось открывать корзину,
+  // чтобы вспомнить состав заказа.
+  const cartDishes = useMemo(
+    () => (cartRestaurant === id ? cartSummary.lines.map(({ dish }) => dish) : []),
+    [cartRestaurant, id, cartSummary.lines]
+  );
+  const cartDishIds = useMemo(() => new Set(cartDishes.map((d) => d.id)), [cartDishes]);
   const favoriteDishes = useMemo(
-    () => dishes.filter((d) => favoriteDishIds.includes(d.id)),
-    [dishes, favoriteDishIds]
+    () => dishes.filter((d) => favoriteDishIds.includes(d.id) && !cartDishIds.has(d.id)),
+    [dishes, favoriteDishIds, cartDishIds]
   );
   const categories = useMemo(() => {
     const rank = (c) => {
@@ -53,11 +61,11 @@ export default function RestaurantMenu() {
     const cats = Array.from(new Set(dishes.map((d) => d.category))).sort(
       (a, b) => rank(a) - rank(b)
     );
-    if (favoriteDishes.length > 0) {
-      return ['favorites', ...cats];
-    }
-    return cats;
-  }, [dishes, favoriteDishes.length]);
+    const head = [];
+    if (cartDishes.length > 0) head.push('cart');
+    if (favoriteDishes.length > 0) head.push('favorites');
+    return [...head, ...cats];
+  }, [dishes, cartDishes.length, favoriteDishes.length]);
 
   const sectionRefs = useRef({});
   const [activeDish, setActiveDish] = useState(null);
@@ -109,6 +117,12 @@ export default function RestaurantMenu() {
   }
 
   const otherCart = cartRestaurant && cartRestaurant !== id && Object.keys(lines).length > 0;
+  const categoryLabel = (cat) =>
+    cat === 'cart'
+      ? `🛒 ${t('category.cart')}`
+      : cat === 'favorites'
+        ? `❤️ ${t('category.favorites')}`
+        : t(`category.${cat}`);
 
   return (
     <div className="pb-32 lg:pb-16">
@@ -165,7 +179,7 @@ export default function RestaurantMenu() {
                 onClick={() => setAddressOpen(true)}
                 aria-haspopup="dialog"
                 aria-label={`${restaurant.address} — ${t('address.openAria')}`}
-                className="inline-flex min-w-0 items-start gap-1 text-left underline decoration-white/30 underline-offset-4 transition-colors hover:text-white hover:decoration-white/60"
+                className="inline-flex min-w-0 items-start gap-1 text-left font-semibold text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:text-accent/90 hover:decoration-accent"
               >
                 <LocationIcon className="mt-0.5 w-3.5 h-3.5 shrink-0" />
                 <span className="min-w-0">{restaurant.address}</span>
@@ -209,12 +223,14 @@ export default function RestaurantMenu() {
                   sectionRefs.current[cat]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }
                 className={`shrink-0 inline-flex min-h-[40px] items-center px-4 rounded-full text-sm font-semibold border transition-colors shadow-sm ${
-                  cat === 'favorites'
-                    ? 'bg-accent-soft text-accent-dark border-accent-dark/30 hover:border-accent-dark'
-                    : 'bg-card border-line text-ink hover:border-ink/40'
+                  cat === 'cart'
+                    ? 'lg:hidden bg-brand-soft text-brand border-brand/30 hover:border-brand'
+                    : cat === 'favorites'
+                      ? 'bg-accent-soft text-accent-dark border-accent-dark/30 hover:border-accent-dark'
+                      : 'bg-card border-line text-ink hover:border-ink/40'
                 }`}
               >
-                {cat === 'favorites' ? `❤️ ${t('category.favorites')}` : t(`category.${cat}`)}
+                {categoryLabel(cat)}
               </button>
             ))}
           </div>
@@ -222,22 +238,25 @@ export default function RestaurantMenu() {
           <div className="px-4 lg:px-0 flex flex-col gap-6 mt-4">
             {categories.map((cat) => {
               const categoryDishes =
-                cat === 'favorites' ? favoriteDishes : dishes.filter((d) => d.category === cat);
+                cat === 'cart'
+                  ? cartDishes
+                  : cat === 'favorites'
+                    ? favoriteDishes
+                    : dishes.filter((d) => d.category === cat);
               return (
                 <section
                   key={cat}
                   ref={(el) => (sectionRefs.current[cat] = el)}
-                  className="scroll-mt-16"
+                  className={`scroll-mt-16 ${cat === 'cart' ? 'lg:hidden' : ''}`}
                 >
-                  <h2 className="font-extrabold text-ink mb-2">
-                    {cat === 'favorites' ? `❤️ ${t('category.favorites')}` : t(`category.${cat}`)}
-                  </h2>
+                  <h2 className="font-extrabold text-ink mb-2">{categoryLabel(cat)}</h2>
                   <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-3">
                     {categoryDishes.map((dish) => (
                       <DishCard
                         key={dish.id}
                         dish={dish}
                         qty={cartRestaurant === id ? lines[dish.id] || 0 : 0}
+                        highlighted={cat === 'cart'}
                         onOpen={setActiveDish}
                         onAdd={handleAdd}
                         onDecrement={decrement}

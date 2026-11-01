@@ -2,7 +2,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { subscribeOrder } from '../lib/api.js';
-import { MY_ORDERS_EVENT, getMyOrderIds } from '../lib/myOrders.js';
+import { MY_ORDERS_EVENT, getMyOrderIds, isOrderAcknowledged } from '../lib/myOrders.js';
 import { restaurantById } from '../data/index.js';
 import { formatClock, formatMoney, pluralPortions } from '../lib/time.js';
 import { BagIcon, ChevronDownIcon, ReceiptIcon } from './Icons.jsx';
@@ -76,6 +76,9 @@ export default function ActiveOrdersBar() {
     .filter((order) => {
       if (!order || order.status === 'done') return false;
       if (order.status === 'cancelled') {
+        // «Понял(а)» убирает отменённый заказ только из активной панели —
+        // в истории он остаётся навсегда.
+        if (isOrderAcknowledged(order.id)) return false;
         return now - (order.cancelledAt || order.createdAt || 0) < CANCELLED_VISIBLE_MS;
       }
       if (order.status === 'ready') {
@@ -132,6 +135,9 @@ export default function ActiveOrdersBar() {
   const single = orderCount === 1 ? visibleOrders[0] : null;
   const combined = showCartInBar && orderCount > 0;
   const cartOnly = showCartInBar && orderCount === 0;
+  // Компактный состав корзины для нижней панели: количество и названия без картинок,
+  // длинный список обрезается CSS — интерфейс не должен разрастаться на весь экран.
+  const cartDishNames = cart.lines.map(({ dish, qty }) => `${qty}× ${dish.name}`).join(' · ');
 
   // Цвет панели отражает статус заказа на любом экране, в том числе когда рядом
   // собрана корзина. Приоритет: красный (есть отменённый заказ), затем зелёный
@@ -153,8 +159,11 @@ export default function ActiveOrdersBar() {
   let secondary = '';
   let to = null;
   if (cartOnly) {
-    primary = t('cart.continue');
-    secondary = `${pluralPortions(cart.units, lang)} · ${formatMoney(cart.total)}`;
+    const cartRestaurantName = restaurantById[cart.restaurantId]?.name;
+    primary = cartRestaurantName
+      ? t('cart.continueIn', { name: cartRestaurantName })
+      : t('cart.continue');
+    secondary = [cartDishNames, formatMoney(cart.total)].filter(Boolean).join(' · ');
     to = cartPath;
   } else if (single && !showCartInBar) {
     primary = t('activeOrders.single', { code: single.code, status: statusText(single) });
@@ -252,6 +261,9 @@ export default function ActiveOrdersBar() {
               <span className="block text-xs text-muted mt-0.5">
                 {pluralPortions(cart.units, lang)} · {formatMoney(cart.total)}
               </span>
+              {cartDishNames && (
+                <span className="block truncate text-xs text-muted mt-0.5">{cartDishNames}</span>
+              )}
             </span>
             <ChevronDownIcon
               className="h-4 w-4 shrink-0 -rotate-90 text-muted"

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { subscribeOrder } from '../lib/api.js';
-import { getMyOrderIds } from '../lib/myOrders.js';
+import { clearAllOrderAttention, getMyOrderIds } from '../lib/myOrders.js';
 import { useCart } from '../store/useCart.js';
 import { restaurantById } from '../data/index.js';
 import { formatClock, formatMoney } from '../lib/time.js';
@@ -22,8 +22,22 @@ export default function MyOrders() {
     done: t('orderStatus.done'),
     cancelled: t('orderStatus.cancelled')
   };
+  // Цвет статуса в истории: отменённый — красный, готовый/выданный — зелёный.
+  // Серые бейджи сливались, и человек не понимал с первого взгляда, что с заказом.
+  const STATUS_TONE = {
+    cancelled: 'bg-danger text-white',
+    ready: 'bg-accent text-primary',
+    done: 'bg-accent-soft text-accent-dark',
+    cooking: 'bg-brand-soft text-brand',
+    pending: 'bg-paper text-muted border border-line'
+  };
   const [ids] = useState(getMyOrderIds);
   const [orders, setOrders] = useState({});
+
+  // Открыли историю — индикатор «посмотри, что случилось» больше не нужен.
+  useEffect(() => {
+    clearAllOrderAttention();
+  }, []);
 
   useEffect(() => {
     const unsubs = ids.map((id) =>
@@ -33,6 +47,12 @@ export default function MyOrders() {
   }, [ids]);
 
   const list = ids.map((id) => orders[id]).filter(Boolean);
+  const cancelText = (order) =>
+    order.cancelledBy === 'customer'
+      ? t('order.cancelledByYou')
+      : order.cancelledBy === 'system'
+        ? t('order.cancelledTimeout')
+        : order.cancelReason?.trim() || t('order.cancelNoReason');
 
   // Повтор заказа: наполняем корзину тем же составом и уводим в меню заведения.
   // Если в корзине уже лежит другое заведение — сначала спрашиваем, иначе человек
@@ -87,7 +107,11 @@ export default function MyOrders() {
                   </div>
                   <div className="text-2xl font-extrabold text-ink mt-0.5">{order.code}</div>
                 </div>
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-paper text-muted shrink-0">
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    STATUS_TONE[order.status] || STATUS_TONE.pending
+                  }`}
+                >
                   {STATUS_LABEL[order.status] || order.status}
                 </span>
               </div>
@@ -95,6 +119,9 @@ export default function MyOrders() {
                 <span>{t('myorders.pickupAt', { time: formatClock(order.pickupAt) })}</span>
                 <span>{formatMoney(order.total)}</span>
               </div>
+              {order.status === 'cancelled' && (
+                <div className="mt-1 text-xs font-semibold text-danger">{cancelText(order)}</div>
+              )}
             </Link>
             <button
               type="button"

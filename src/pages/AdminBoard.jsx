@@ -1,18 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { restaurants, restaurantById } from '../data/index.js';
 import {
-  canReset,
   cancelOrderByStaff,
-  clearDoneOrders,
   markCooking,
   markReady,
-  resetAll,
-  seedDemoOrders,
   subscribeOrders,
   backendName
 } from '../lib/api.js';
-import { BASELINE_WAIT_MIN, TARGET_WAIT_MIN, computeMetrics } from '../lib/metrics.js';
+import { computeMetrics } from '../lib/metrics.js';
 import { formatClock, formatCountdown } from '../lib/time.js';
 import ThemeToggle from '../components/ThemeToggle.jsx';
 import LangSwitch from '../components/LangSwitch.jsx';
@@ -220,7 +216,7 @@ function OrderCard({ order, now, onAccept, onReady, onCancel, t }) {
           onClick={() => onReady(order.id)}
           className="bg-primary text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity"
         >
-          Готов к выдаче
+          {t('admin.markReadyBtn')}
         </button>
       ) : (
         <button
@@ -228,7 +224,7 @@ function OrderCard({ order, now, onAccept, onReady, onCancel, t }) {
           onClick={() => onAccept && onAccept(order.id)}
           className="bg-accent text-primary font-bold py-3 rounded-xl transition-opacity hover:opacity-90"
         >
-          Принять в работу
+          {t('admin.acceptBtn')}
         </button>
       )}
       <button
@@ -318,15 +314,6 @@ function Board({ staff, allowedRestaurants }) {
     .sort((a, b) => b.issuedAt - a.issuedAt)
     .slice(0, 6);
 
-  const waitTone =
-    metrics.avgWaitMs == null
-      ? ''
-      : metrics.avgWaitMs <= TARGET_WAIT_MIN * 60000
-        ? 'text-accent-dark'
-        : metrics.avgWaitMs <= (BASELINE_WAIT_MIN * 60000) / 2
-          ? 'text-warn'
-          : 'text-danger';
-
   // Ошибки записи раньше уходили в никуда: кнопка выглядела «мёртвой», причина — только
   // в консоли. Показываем короткое сообщение, детали оставляем в консоли.
   async function run(action) {
@@ -336,19 +323,6 @@ function Board({ staff, allowedRestaurants }) {
       console.error(err);
       toast(t('admin.actionFailed'));
     }
-  }
-
-  async function clearStats() {
-    if (!window.confirm(t('admin.clearStatsConfirm', { name: restaurant.name }))) return;
-    run(() => clearDoneOrders(restaurantId));
-  }
-
-  async function prepForDemo() {
-    if (!window.confirm(t('admin.prepDemoConfirm', { name: restaurant.name }))) return;
-    run(async () => {
-      await resetAll();
-      await seedDemoOrders(restaurantId);
-    });
   }
 
   function cancelWithConfirm(id) {
@@ -416,7 +390,7 @@ function Board({ staff, allowedRestaurants }) {
               inputMode="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={t('admin.searchByCodePlaceholder')}
+              placeholder={t('admin.searchByCodePlaceholder', {})}
               className="bg-card border border-line rounded-lg px-3 py-1.5 text-base sm:text-sm text-ink placeholder:text-muted outline-none focus:ring-2 focus:ring-accent-dark w-44"
             />
           </label>
@@ -431,11 +405,8 @@ function Board({ staff, allowedRestaurants }) {
           >
             {sound ? t('admin.soundOn') : t('admin.soundOff')}
           </button>
-          <span className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-accent" />
-            {backendName === 'firebase' ? t('admin.sharedDb') : t('admin.localMode')}
-          </span>
-          <Link to="/" className="inline-flex min-h-[40px] items-center hover:text-ink">
+          {backendName === 'firebase' ? t('admin.sharedDb') : null}
+          <Link to="/" className="inline-flex min-h-[40px] items-center hover:text-ink hidden">
             {t('admin.clientSide')}
           </Link>
           <LangSwitch />
@@ -451,12 +422,6 @@ function Board({ staff, allowedRestaurants }) {
         </div>
       </header>
 
-      {backendName !== 'firebase' && (
-        <div className="bg-warn-soft text-warn text-sm font-semibold px-6 py-2.5 border-b border-warn/20">
-          {t('admin.localModeHint')}
-        </div>
-      )}
-
       <main className="p-6 flex flex-col gap-6">
         <section
           aria-label={t('admin.metricsAria')}
@@ -464,26 +429,13 @@ function Board({ staff, allowedRestaurants }) {
           style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))' }}
         >
           <Metric
-            label={t('admin.avgWait')}
-            value={formatWait(metrics.avgWaitMs, lang)}
-            tone={waitTone}
-            hint={t('admin.avgWaitHint', { baseline: BASELINE_WAIT_MIN, target: TARGET_WAIT_MIN })}
-          />
-          <Metric
-            label={t('admin.onTarget')}
-            value={
-              metrics.onTargetShare == null ? '—' : `${Math.round(metrics.onTargetShare * 100)}%`
-            }
-            hint={t('admin.onTargetHint', { count: metrics.doneCount })}
-          />
-          <Metric
             label={t('admin.issuedLastHour')}
             value={metrics.issuedLastHour}
             hint={t('admin.ordersUnit')}
           />
           <Metric
             label={t('admin.peakLoad')}
-            value={`${Math.round(metrics.peakLoad * 100)}%`}
+            value={`${Math.round((metrics.peakLoad || 0) * 100)}%`}
             hint={t('admin.peakLoadHint', { capacity: restaurant.slotCapacity })}
           />
         </section>
@@ -511,8 +463,10 @@ function Board({ staff, allowedRestaurants }) {
         </section>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <section aria-label={t('admin.cookingAria')}>
-            <h2 className="font-bold mb-3">Готовятся · {pending.length}</h2>
+          <section aria-label={t('admin.pendingAria')}>
+            <h2 className="font-bold mb-3">
+              {t('admin.pending')} · {pending.length}
+            </h2>
             <div
               className="grid gap-3"
               style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}
@@ -529,11 +483,13 @@ function Board({ staff, allowedRestaurants }) {
                 />
               ))}
             </div>
-            {pending.length === 0 && <p className="text-muted text-sm">{t('admin.noCooking')}</p>}
+            {pending.length === 0 && <p className="text-muted text-sm">{t('admin.noPending')}</p>}
           </section>
 
-          <section aria-label={t('admin.inProgressAria') || 'В работе'}>
-            <h2 className="font-bold mb-3">Принят кухней · {cooking.length}</h2>
+          <section aria-label={t('admin.cookingAria')}>
+            <h2 className="font-bold mb-3">
+              {t('admin.cooking')} · {cooking.length}
+            </h2>
             <div
               className="grid gap-3"
               style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}
@@ -550,11 +506,13 @@ function Board({ staff, allowedRestaurants }) {
                 />
               ))}
             </div>
-            {cooking.length === 0 && <p className="text-muted text-sm">Нет заказов в работе</p>}
+            {cooking.length === 0 && <p className="text-muted text-sm">{t('admin.noCooking')}</p>}
           </section>
 
           <section aria-label={t('admin.readyAria')}>
-            <h2 className="font-bold mb-3">Ждут клиента · {ready.length}</h2>
+            <h2 className="font-bold mb-3">
+              {t('admin.ready')} · {ready.length}
+            </h2>
             <div
               className="grid gap-3"
               style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}
@@ -589,44 +547,6 @@ function Board({ staff, allowedRestaurants }) {
               ))}
             </ul>
           </section>
-        )}
-
-        {/* Демо- и сброс-кнопки имеют смысл только на локальном бэкенде: в общей базе
-            «добавить демо-заказы» писало бы фейковые заказы в прод, а resetAll там
-            намеренно недоступен. */}
-        {canReset && (
-          <footer className="flex flex-wrap gap-3 pt-4 border-t border-line text-sm">
-            <button
-              type="button"
-              onClick={() => run(() => seedDemoOrders(restaurantId))}
-              className="px-4 py-2 rounded-lg bg-card border border-line hover:bg-line"
-            >
-              {t('admin.addDemoOrders')}
-            </button>
-            <button
-              type="button"
-              onClick={clearStats}
-              className="px-4 py-2 rounded-lg bg-card border border-line hover:bg-line"
-            >
-              {t('admin.clearStats')}
-            </button>
-            <button
-              type="button"
-              onClick={prepForDemo}
-              className="px-4 py-2 rounded-lg bg-brand text-white font-semibold hover:opacity-90"
-            >
-              {t('admin.prepDemo')}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (window.confirm(t('admin.clearDataConfirm'))) run(() => resetAll());
-              }}
-              className="px-4 py-2 rounded-lg text-muted hover:text-ink"
-            >
-              {t('admin.clearData')}
-            </button>
-          </footer>
         )}
       </main>
 

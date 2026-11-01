@@ -86,6 +86,10 @@ export const cancelOrder = (id) =>
 // reason уходит в заказ, чтобы клиент увидел причину отмены на экране чека.
 export const cancelOrderByStaff = (id, reason = '') =>
   backendPromise.then((b) => b.cancelOrder(id, { allowReady: true, by: 'staff', reason }));
+// Автоматическая отмена готового заказа, который не забрали за 3 часа
+// (RECEIVE_GRACE_MS). cancelledBy = 'system' — клиент увидит «Вы не забрали заказ».
+export const autoCancelExpiredOrder = (id) =>
+  backendPromise.then((b) => b.cancelOrder(id, { allowReady: true, by: 'system' }));
 export const resetAll = () => backendPromise.then((b) => b.resetAll());
 export const clearDoneOrders = (restaurantId) =>
   backendPromise.then((b) => b.clearDoneOrders(restaurantId));

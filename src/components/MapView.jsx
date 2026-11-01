@@ -8,9 +8,19 @@ import { LocationIcon, StarIcon, HeartIcon } from './Icons.jsx';
 import { googleMapsUrl } from '../lib/geo.js';
 import { useT } from '../lib/i18n/store.js';
 import { useFavorites } from '../store/useFavorites.js';
+import { formatClock, serviceStatus } from '../lib/time.js';
 
 // Центр Алматы — стартовый вид, пока геолокация не получена.
 const MAP_CENTER = [43.265, 76.94];
+
+// Часы работы в человекочитаемом виде: "с 10:00 до 23:45". Круглосуточные
+// заведения (00:00-24:00) показываем отдельной подписью, чтобы не читалось как "с 00:00 до 00:00".
+function hoursLabel(r, t) {
+  const [open, close] = (r.hours || '').split('-');
+  if (!open || !close) return r.hoursText || '';
+  if (open === '00:00' && close === '24:00') return t('map.hoursRoundClock');
+  return t('map.hoursFromTo', { open, close });
+}
 
 const restaurantIcon = L.divIcon({
   className: 'zaberu-marker',
@@ -68,14 +78,18 @@ export default function MapView({ restaurants, user, onLocate, locating }) {
           </Marker>
         )}
 
-        {restaurants.map((r) =>
-          Number.isFinite(r.lat) && Number.isFinite(r.lon) ? (
+        {restaurants.map((r) => {
+          if (!Number.isFinite(r.lat) || !Number.isFinite(r.lon)) return null;
+          const status = serviceStatus(r.hours);
+          return (
             <Marker
               key={r.id}
               position={[r.lat, r.lon]}
               icon={restaurantIcon}
               title={r.name}
               alt={r.name}
+              opacity={status.open ? 1 : 0.55}
+              zIndexOffset={status.open ? 0 : -100}
             >
               <Popup maxWidth={300} className="zaberu-popup" autoPanPadding={[24, 72]}>
                 <div className="min-w-[220px]">
@@ -111,6 +125,18 @@ export default function MapView({ restaurants, user, onLocate, locating }) {
                       · {r.cuisines.slice(0, 2).join(' · ')}
                     </span>
                   </div>
+                  <div className="mt-2 text-xs leading-snug">
+                    <div
+                      className={`font-bold ${status.open ? 'text-accent-dark' : 'text-danger'}`}
+                    >
+                      {status.open
+                        ? t('map.statusOpen')
+                        : status.isNextDay
+                          ? t('map.closedTomorrow', { time: formatClock(status.openMs) })
+                          : t('map.closedUntil', { time: formatClock(status.openMs) })}
+                    </div>
+                    <div className="mt-0.5 font-semibold text-muted">{hoursLabel(r, t)}</div>
+                  </div>
                   <DistanceBadge
                     meters={r.distanceM}
                     className="mt-2 block text-xs font-bold text-accent-dark"
@@ -134,8 +160,8 @@ export default function MapView({ restaurants, user, onLocate, locating }) {
                 </div>
               </Popup>
             </Marker>
-          ) : null
-        )}
+          );
+        })}
 
         <UserFocus user={user} />
       </MapContainer>

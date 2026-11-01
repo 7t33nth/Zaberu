@@ -14,7 +14,7 @@ import {
 } from 'firebase/firestore';
 import { firebaseApp } from '../firebaseApp.js';
 import { SlotFullError } from '../errors.js';
-import { dayKey, startOfDay, DAY_MS } from '../time.js';
+import { dayKey, startOfDay, DAY_MS, RECEIVE_GRACE_MS } from '../time.js';
 import { subscribeWithDayRollover } from '../dayRollover.js';
 
 const db = getFirestore(firebaseApp);
@@ -177,11 +177,17 @@ export async function cancelOrder(id, { allowReady = false, by = 'customer', rea
     const order = snap.data();
     const status = order.status;
     // Кухня может отменить заказ на любом этапе, включая готовящийся; клиент —
-    // только pending (окно проверяют правила) или ready при allowReady.
+    // только pending (окно проверяют правила) или ready при allowReady. Система
+    // отменяет готовый заказ, который не забрали за RECEIVE_GRACE_MS.
+    const systemExpired =
+      by === 'system' &&
+      status === 'ready' &&
+      Date.now() >= (order.readyAt || order.pickupAt || 0) + RECEIVE_GRACE_MS;
     const cancellable =
       status === 'pending' ||
-      (allowReady && status === 'ready') ||
-      (by === 'staff' && status === 'cooking');
+      (allowReady && status === 'ready' && by !== 'system') ||
+      (by === 'staff' && status === 'cooking') ||
+      systemExpired;
     if (!cancellable) return false;
 
     const ref = dayRef(order.restaurantId, order.pickupAt);

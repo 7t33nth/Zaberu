@@ -6,15 +6,27 @@ import { HeartIcon } from './Icons.jsx';
 import { useT } from '../lib/i18n/store.js';
 import { useFavorites, useIsDishFavorite } from '../store/useFavorites.js';
 
-export default function DishCard({ dish, qty, disabled, onOpen, onAdd, onDecrement }) {
+export default function DishCard({
+  dish,
+  qty,
+  disabled,
+  onOpen,
+  onAdd,
+  onDecrement,
+  highlighted = false
+}) {
   const t = useT();
   const isFavorite = useIsDishFavorite(dish.id);
   const toggleDish = useFavorites((s) => s.toggleDish);
   const soldOut = !dish.available;
   return (
     <article
-      className={`flex gap-3 bg-card rounded-xl2 p-3 border ${
-        soldOut ? 'border-line bg-paper/50' : 'border-line hover:border-ink/20'
+      className={`flex gap-3 rounded-xl2 p-3 border ${
+        soldOut
+          ? 'border-line bg-paper/50'
+          : highlighted
+            ? 'border-brand/30 bg-brand-soft hover:border-brand/50'
+            : 'border-line bg-card hover:border-ink/20'
       } transition-colors`}
     >
       <div className="relative w-[72px] h-[72px] rounded-xl shrink-0 overflow-hidden border border-line">

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { cancelOrder, markArrived, markReceived, subscribeOrder } from '../lib/api.js';
-import { removeMyOrderId } from '../lib/myOrders.js';
+import { acknowledgeOrder, clearOrderAttention } from '../lib/myOrders.js';
 import { restaurantById } from '../data/index.js';
 import { CANCEL_WINDOW_MS, formatClock, formatLeft, formatMoney } from '../lib/time.js';
 import { googleMapsUrl } from '../lib/geo.js';
@@ -33,6 +33,11 @@ export default function OrderTracking() {
   const [toast, toastNode] = useToast();
 
   useEffect(() => subscribeOrder(orderId, setOrder), [orderId]);
+
+  // Открыли чек — считаем, что человек увидел изменения по этому заказу.
+  useEffect(() => {
+    if (order?.id) clearOrderAttention(order.id);
+  }, [order?.id]);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -134,6 +139,7 @@ export default function OrderTracking() {
     try {
       const ok = await markReceived(order.id);
       if (!ok) toast(t('order.receivedClosed'));
+      else acknowledgeOrder(order.id);
     } catch (err) {
       console.error(err);
       toast(t('order.actionFailed'));
@@ -142,10 +148,10 @@ export default function OrderTracking() {
     }
   }
 
-  // Клиент ознакомился с отменой: убираем заказ с этого устройства и возвращаемся
-  // на главную. В базе заказ остаётся — он нужен кухне для истории и метрик.
+  // Клиент ознакомился с отменой: убираем заказ только из активной панели.
+  // В истории заказов он остаётся — старые чеки нельзя терять.
   function acknowledgeCancellation() {
-    removeMyOrderId(order.id);
+    acknowledgeOrder(order.id);
     navigate('/');
   }
 
@@ -159,6 +165,12 @@ export default function OrderTracking() {
 
         <div className="text-sm text-muted mt-8">{t('order.numberLabel')}</div>
         <div className="text-7xl font-extrabold text-ink leading-none mt-2">{order.code}</div>
+        {/* Старый чек нельзя показывать как действующий: по нему уже не выдадут еду. */}
+        {finished && (
+          <div className="mt-3 inline-flex items-center rounded-full border border-danger/40 bg-danger-soft px-3 py-1 text-xs font-bold uppercase tracking-wide text-danger">
+            {t('order.receiptStale')}
+          </div>
+        )}
         <div className="text-sm text-muted mt-2">
           {order.name ? t('order.showCodeNamed', { name: order.name }) : t('order.showCode')}
         </div>
@@ -193,7 +205,9 @@ export default function OrderTracking() {
             <p className="mt-1 text-sm font-semibold text-ink">
               {order.cancelledBy === 'customer'
                 ? t('order.cancelledByYou')
-                : order.cancelReason?.trim() || t('order.cancelNoReason')}
+                : order.cancelledBy === 'system'
+                  ? t('order.cancelledTimeout')
+                  : order.cancelReason?.trim() || t('order.cancelNoReason')}
             </p>
             <p className="mt-1 text-xs text-muted">{t('order.cancelledDismissHint')}</p>
             <button

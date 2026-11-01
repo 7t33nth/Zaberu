@@ -1,11 +1,13 @@
 // Автономный бэкенд: данные лежат в localStorage, вкладки/окна одного браузера
 // синхронизируются через BroadcastChannel и событие storage. Работает без интернета и без настройки.
 import { SlotFullError } from '../errors.js';
-import { CANCEL_WINDOW_MS, dayKey, startOfDay } from '../time.js';
+import { CANCEL_WINDOW_MS, RECEIVE_GRACE_MS, dayKey, startOfDay } from '../time.js';
 import { subscribeWithDayRollover } from '../dayRollover.js';
 
 const KEY = 'ep_db_v1';
-const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
+// История заказов живёт на этом устройстве; 30 дней хватает, чтобы показать старые чеки,
+// но база не растёт бесконечно.
+const HISTORY_MS = 30 * 24 * 60 * 60 * 1000;
 
 const listeners = new Set();
 const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('ep_db') : null;
@@ -26,7 +28,7 @@ function notify() {
 }
 
 function write(db) {
-  const cutoff = Date.now() - TWO_DAYS;
+  const cutoff = Date.now() - HISTORY_MS;
   for (const [id, o] of Object.entries(db.orders)) {
     if (o.createdAt < cutoff) delete db.orders[id];
   }
@@ -151,11 +153,17 @@ export async function cancelOrder(id, { allowReady = false, by = 'customer', rea
   const status = order?.status;
   // Кухня может снять заказ на любом этапе — в том числе уже готовящийся,
   // если ингредиенты закончились. Клиент — только свежий pending или готовый
-  // (последнее разрешено лишь вызывающему с allowReady).
+  // (последнее разрешено лишь вызывающему с allowReady). Система отменяет готовый
+  // заказ, который никто не забрал за RECEIVE_GRACE_MS.
+  const systemExpired =
+    by === 'system' &&
+    status === 'ready' &&
+    Date.now() >= (order.readyAt || order.pickupAt || 0) + RECEIVE_GRACE_MS;
   const cancellable =
     status === 'pending' ||
-    (allowReady && status === 'ready') ||
-    (by === 'staff' && status === 'cooking');
+    (allowReady && status === 'ready' && by !== 'system') ||
+    (by === 'staff' && status === 'cooking') ||
+    systemExpired;
   if (!cancellable) return false;
   if (
     by === 'customer' &&

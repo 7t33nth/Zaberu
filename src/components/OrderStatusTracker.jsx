@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { doc, getFirestore, onSnapshot } from 'firebase/firestore';
 import { firebaseApp } from '../lib/firebaseApp.js';
 import { subscribeOrder } from '../lib/api.js';
+import { useT } from '../lib/i18n/store.js';
 
 // SVG-иконки для шагов статуса заказа
 function ClipboardCheckIcon({ className = 'w-5 h-5' }) {
@@ -99,25 +100,26 @@ function CrossIcon({ className = 'w-3.5 h-3.5' }) {
 const STEPS = [
   {
     key: 'pending',
-    label: 'Заказ создан',
-    subtitle: 'Ожидает подтверждения кухней',
+    labelKey: 'orderStatus.pending',
+    subtitleKey: 'orderStep.pendingSubtitle',
     Icon: ClipboardCheckIcon
   },
   {
     key: 'cooking',
-    label: 'Принят кухней',
-    subtitle: 'Повар начнёт готовить ближе к указанному времени',
+    labelKey: 'orderStatus.cooking',
+    subtitleKey: 'orderStep.cookingSubtitle',
     Icon: ChefHatIcon
   },
   {
     key: 'ready',
-    label: 'Готов к выдаче',
-    subtitle: 'Можно подойти к стойке выдачи',
+    labelKey: 'orderStatus.ready',
+    subtitleKey: 'orderStep.readySubtitle',
     Icon: BellRingIcon
   }
 ];
 
 export default function OrderStatusTracker({ orderId, initialOrder = null }) {
+  const t = useT();
   const [order, setOrder] = useState(initialOrder);
   const [loading, setLoading] = useState(!initialOrder);
   const [error, setError] = useState(null);
@@ -243,20 +245,26 @@ export default function OrderStatusTracker({ orderId, initialOrder = null }) {
       <div className="mb-4">
         {isCancelled ? (
           <div>
-            <div className="text-sm font-extrabold text-danger">Заказ отменён</div>
+            <div className="text-sm font-extrabold text-danger">
+              {t('orderStep.cancelledTitle')}
+            </div>
             <div className="text-xs text-muted mt-0.5">
-              Отменён на этапе «{STEPS[cancelledStepIdx].label}»
+              {t('orderStep.cancelledSubtitle', {
+                step: t(STEPS[cancelledStepIdx].labelKey)
+              })}
             </div>
           </div>
         ) : isDone ? (
           <div>
-            <div className="text-sm font-extrabold text-accent-dark">Заказ выдан</div>
-            <div className="text-xs text-muted mt-0.5">Приятного аппетита!</div>
+            <div className="text-sm font-extrabold text-accent-dark">
+              {t('orderStep.doneTitle')}
+            </div>
+            <div className="text-xs text-muted mt-0.5">{t('orderStep.doneSubtitle')}</div>
           </div>
         ) : (
           <div>
-            <div className="text-sm font-extrabold text-ink">{currentStep.label}</div>
-            <div className="text-xs text-muted mt-0.5">{currentStep.subtitle}</div>
+            <div className="text-sm font-extrabold text-ink">{t(currentStep.labelKey)}</div>
+            <div className="text-xs text-muted mt-0.5">{t(currentStep.subtitleKey)}</div>
           </div>
         )}
       </div>
@@ -318,7 +326,7 @@ export default function OrderStatusTracker({ orderId, initialOrder = null }) {
                             : 'text-muted'
                     }`}
                   >
-                    {step.label}
+                    {t(step.labelKey)}
                   </span>
                 </div>
               </div>

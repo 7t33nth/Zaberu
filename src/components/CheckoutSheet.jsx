@@ -17,6 +17,7 @@ import {
   startOfDay
 } from '../lib/time.js';
 import { LocationIcon, CloseIcon } from './Icons.jsx';
+import Thumb from './Thumb.jsx';
 import { useLang, useT } from '../lib/i18n/store.js';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -416,11 +417,15 @@ export default function CheckoutSheet({ open, onClose, restaurant }) {
 
           <ul className="mt-4 flex flex-col gap-2 max-h-40 overflow-y-auto">
             {summary.lines.map(({ dish, qty }) => (
-              <li key={dish.id} className="flex justify-between text-sm">
-                <span className="text-ink">
+              <li key={dish.id} className="flex items-center gap-3 text-sm">
+                <Thumb
+                  src={dish.image}
+                  className="h-10 w-10 shrink-0 rounded-lg border border-line"
+                />
+                <span className="min-w-0 flex-1 text-ink">
                   <b>{qty}×</b> {dish.name}
                 </span>
-                <span className="text-muted">{formatMoney(qty * dish.price)}</span>
+                <span className="shrink-0 text-muted">{formatMoney(qty * dish.price)}</span>
               </li>
             ))}
           </ul>

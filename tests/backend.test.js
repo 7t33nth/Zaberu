@@ -12,7 +12,9 @@ globalThis.localStorage = {
 const local = await import('../src/lib/backends/local.js');
 const { SlotFullError } = await import('../src/lib/errors.js');
 const { computeMetrics, waitMs } = await import('../src/lib/metrics.js');
-const { ceilToSlot, DAY_MS, SLOT_MS, startOfDay } = await import('../src/lib/time.js');
+const { ceilToSlot, DAY_MS, RECEIVE_GRACE_MS, SLOT_MS, startOfDay } = await import(
+  '../src/lib/time.js'
+);
 
 const base = (over = {}) => ({
   restaurantId: 'r01',
@@ -199,6 +201,29 @@ test('клиент не может отменить готовый заказ', 
   let orders = [];
   local.subscribeOrders(['r01'], (x) => (orders = x))();
   assert.equal(orders.find((x) => x.id === a.id).status, 'ready');
+});
+
+test('система отменяет готовый заказ только после трёх часов ожидания', async () => {
+  await local.resetAll();
+  const fresh = await local.placeOrder(base(), opts);
+  await local.transitionOrder(fresh.id, 'pending', { status: 'ready', readyAt: Date.now() });
+  assert.equal(await local.cancelOrder(fresh.id, { allowReady: true, by: 'system' }), false);
+
+  const expired = await local.placeOrder(base(), opts);
+  await local.transitionOrder(expired.id, 'pending', {
+    status: 'ready',
+    readyAt: Date.now() - RECEIVE_GRACE_MS - 1000
+  });
+  assert.equal(await local.cancelOrder(expired.id, { allowReady: true, by: 'system' }), true);
+
+  let orders = [];
+  local.subscribeOrders(['r01'], (x) => (orders = x))();
+  const cancelled = orders.find((x) => x.id === expired.id);
+  const stillReady = orders.find((x) => x.id === fresh.id);
+  assert.equal(cancelled.status, 'cancelled');
+  assert.equal(cancelled.cancelledBy, 'system');
+  assert.equal(cancelled.cancelledFrom, 'ready');
+  assert.equal(stillReady.status, 'ready');
 });
 
 test('выданный заказ отменить нельзя', async () => {

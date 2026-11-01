@@ -87,6 +87,18 @@ service cloud.firestore {
                         && (!('cancelledFrom' in request.resource.data)
                             || request.resource.data.cancelledFrom == 'pending')
                         && request.time.toMillis() < resource.data.createdAt + 180000)
+                    // Невостребованный готовый заказ автоматически отменяется через
+                    // 3 часа (10800000 = RECEIVE_GRACE_MS в lib/time.js). Клиент без
+                    // входа может инициировать только этот переход и только после срока.
+                    || (request.resource.data.diff(resource.data).affectedKeys()
+                          .hasOnly(['status', 'cancelledBy', 'cancelledAt', 'cancelledFrom'])
+                        && request.resource.data.status == 'cancelled'
+                        && resource.data.status == 'ready'
+                        && resource.data.readyAt is int
+                        && request.resource.data.cancelledBy == 'system'
+                        && request.resource.data.cancelledFrom == 'ready'
+                        && request.resource.data.cancelledAt is int
+                        && request.time.toMillis() >= resource.data.readyAt + 10800000)
                     // Кухня может отменить заказ и сохранить причину для клиента.
                     // «Выдано» — только после подтверждения клиента. Если клиент не
                     // ответил за 3 часа после заявленного времени, подтверждение
